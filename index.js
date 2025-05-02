@@ -1,6 +1,24 @@
 const PayButton = document.querySelector('.payment')
 
 PayButton.addEventListener('click', () => {
+    // Create status message display
+    const statusDisplay = document.createElement('div');
+    statusDisplay.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 5px;
+        z-index: 1001;
+        max-width: 80%;
+        text-align: center;
+        font-family: Arial, sans-serif;
+    `;
+    document.body.appendChild(statusDisplay);
+
     // Create scanning frame
     const frame = document.createElement('div');
     frame.style.cssText = `
@@ -34,9 +52,13 @@ PayButton.addEventListener('click', () => {
 
     // Check if browser supports getUserMedia
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        statusDisplay.textContent = 'Инициализация камеры...';
+        
         // Request camera access
         navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
             .then(function(stream) {
+                statusDisplay.textContent = 'Камера активирована. Пожалуйста, наведите на QR-код';
+                
                 // Create video element
                 const video = document.createElement('video');
                 document.body.appendChild(video);
@@ -75,15 +97,19 @@ PayButton.addEventListener('click', () => {
                             );
                             
                             if (code) {
-                                console.log("Found QR code:", code.data);
+                                statusDisplay.textContent = `QR-код обнаружен: ${code.data}`;
                                 scanning = false;
                                 stream.getTracks().forEach(track => track.stop());
                                 video.remove();
                                 frame.remove();
                                 // Handle the QR code data here
-                                alert("QR Code detected: " + code.data);
+                                setTimeout(() => {
+                                    statusDisplay.textContent = 'Сканирование завершено';
+                                    setTimeout(() => statusDisplay.remove(), 2000);
+                                }, 2000);
                             }
                         } catch (e) {
+                            statusDisplay.textContent = `Ошибка сканирования: ${e.message}`;
                             console.error("QR scanning error:", e);
                         }
                     }
@@ -95,11 +121,11 @@ PayButton.addEventListener('click', () => {
                 requestAnimationFrame(scan);
             })
             .catch(function(error) {
+                statusDisplay.textContent = `Ошибка доступа к камере: ${error.message}. Пожалуйста, проверьте разрешения`;
                 console.error("Camera error:", error);
-                alert("Could not access camera. Please ensure you have given permission.");
             });
     } else {
-        alert("Sorry, your browser does not support camera access");
+        statusDisplay.textContent = "Извините, ваш браузер не поддерживает доступ к камере";
     }
 })
 
