@@ -23,7 +23,17 @@ function updateUserUI(userData, isAuthenticated) {
 // Функция аутентификации
 async function authenticate() {
     try {
+        // Получаем initData из Telegram WebApp
         const initData = window.Telegram.WebApp.initData;
+        
+        // Проверяем, что initData существует
+        if (!initData) {
+            console.error('No initData available from Telegram WebApp');
+            const user = window.Telegram.WebApp.initDataUnsafe.user || {};
+            updateUserUI(user, false);
+            return;
+        }
+
         const response = await fetch('https://185.84.162.89:8000/auth/telegram', {
             method: 'POST',
             headers: {
@@ -37,7 +47,8 @@ async function authenticate() {
         });
 
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            const errorData = await response.json();
+            throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
         }
 
         const data = await response.json();
