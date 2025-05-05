@@ -32,9 +32,8 @@ async function authenticate() {
             body: JSON.stringify({
                 initData: initData
             }),
-            // Игнорируем ошибки сертификата в режиме разработки
             mode: 'cors',
-            credentials: 'include'
+            credentials: 'same-origin'
         });
 
         if (!response.ok) {
