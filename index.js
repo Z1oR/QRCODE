@@ -24,7 +24,7 @@ function updateUserUI(userData, isAuthenticated) {
 async function authenticate() {
     try {
         const initData = window.Telegram.WebApp.initData;
-        const response = await fetch('http://185.84.162.89:8000/auth/telegram', {
+        const response = await fetch('https://185.84.162.89:8000/auth/telegram', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
