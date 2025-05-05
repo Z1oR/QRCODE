@@ -31,7 +31,10 @@ async function authenticate() {
             },
             body: JSON.stringify({
                 initData: initData
-            })
+            }),
+            // Игнорируем ошибки сертификата в режиме разработки
+            mode: 'cors',
+            credentials: 'include'
         });
 
         if (!response.ok) {
