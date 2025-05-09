@@ -1,29 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
+
+    <!-- <script src="https://telegram.org/js/telegram-web-app.js"></script> -->
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+
+
+
     <link rel="stylesheet" href="index.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@Llncol</title>
 </head>
 <body>
-    <div id="auth-status" class="auth-status">
-        <div id="user-info">
-            <p>Status: <span id="status-text">Checking...</span></p>
-            <p>Username: <span id="username">-</span></p>
-            <p>Telegram ID: <span id="telegram-id">-</span></p>
-        </div>
-    </div>
-
-    <div id="payment-section" class="payment-section hidden">
+    <div id="payment-section">
         <div class="payment">
             <img src="./image/qr_code_scanner_32dp_E3E3E3_FILL0_wght400_GRAD0_opsz40.svg" alt="QR code scanner">
         </div>
         <h2>Scan to pay</h2>
     </div>
 
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <h3 class="qrinfo">data: ----</h3>
+    
+
+    <p>By @Llncol</p>
     <script src="index.js"></script>
 </body>
 </html>
