@@ -1,0 +1,298 @@
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  text-decoration: none;
+  color: white;
+  font-family: "Inter", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+}
+
+body {
+  background-color: rgb(20, 20, 21);
+}
+
+.main__screen {
+  width: 100%;
+  height: 100%;
+}
+.main__screen .container__main .header__main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-top: 20px;
+}
+.main__screen .container__main .header__main .content__main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 40px;
+}
+.main__screen .container__main .header__main .content__main p {
+  font-size: 14px;
+  color: grey;
+}
+.main__screen .container__main .header__main .content__main .logo__header {
+  width: 100px;
+  height: 100px;
+  -o-object-fit: cover;
+     object-fit: cover;
+}
+.main__screen .container__main .header__main .btn__main {
+  display: flex;
+  padding-bottom: 20px;
+}
+.main__screen .container__main .header__main .btn__main button {
+  margin-left: 20px;
+  padding: 15px 45px;
+  display: flex;
+  align-content: center;
+  justify-content: center;
+  background-color: #38404B;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.main__screen .container__main .header__main .btn__main button img {
+  display: flex;
+  align-content: center;
+  justify-content: cente;
+  width: 20px;
+  height: 20px;
+  -o-object-fit: cover;
+     object-fit: cover;
+  margin-right: 10px;
+}
+.main__screen .btn_market_main {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  padding: 20px;
+}
+.main__screen .btn_market_main .item__main {
+  display: flex;
+  align-items: center;
+  align-content: center;
+  justify-content: left;
+  flex-direction: row;
+  width: 100%;
+  height: 55px;
+  background: linear-gradient(135deg, rgb(27, 27, 29), rgb(42, 42, 43));
+  margin-bottom: 20px;
+  margin-left: 20px;
+  margin-right: 20px;
+  border-radius: 15px;
+  cursor: pointer;
+}
+.main__screen .btn_market_main .item__main img {
+  margin-left: 20px;
+  margin-right: 20px;
+  width: 50px;
+}
+.main__screen .btn_market_main .item__main h3 {
+  font-size: 16px;
+}
+.main__screen .btn_market_main .item__main p {
+  margin-top: 5px;
+  font-size: 14px;
+  color: grey;
+}
+.main__screen .btn_market_main .item__main:hover {
+  background: linear-gradient(135deg, rgb(27, 27, 29), rgb(56, 56, 56));
+}
+
+.buy__screen {
+  width: 100%;
+  min-height: 100vh;
+  padding: 20px;
+}
+.buy__screen .buy__container {
+  max-width: 100%;
+  margin: 0 auto;
+}
+.buy__screen .buy__container .filters__bar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.buy__screen .buy__container .filters__bar .filter__item {
+  position: relative;
+  display: inline-block;
+  min-width: 100px;
+}
+.buy__screen .buy__container .filters__bar .filter__item .filter__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 15px;
+  background-color: #38404B;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+.buy__screen .buy__container .filters__bar .filter__item .filter__header .filter__header-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.buy__screen .buy__container .filters__bar .filter__item .filter__header .filter__header-content .filter__label {
+  color: grey;
+  font-size: 12px;
+}
+.buy__screen .buy__container .filters__bar .filter__item .filter__header .filter__header-content .filter__value {
+  color: white;
+  font-weight: 500;
+  font-size: 16px;
+}
+.buy__screen .buy__container .filters__bar .filter__item .filter__header .filter__arrow-icon {
+  color: white;
+  font-size: 14px;
+  margin-left: 12px;
+}
+.buy__screen .buy__container .filters__bar .filter__item .filter__dropdown {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 4px;
+  background-color: rgb(20, 20, 21);
+  border-radius: 8px;
+  overflow: hidden;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+.buy__screen .buy__container .filters__bar .filter__item .filter__dropdown .dropdown__item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+.buy__screen .buy__container .filters__bar .filter__item .filter__dropdown .dropdown__item:hover {
+  background-color: #2a2a2b;
+}
+.buy__screen .buy__container .filters__bar .filter__item .filter__dropdown .dropdown__item .checkmark {
+  margin-right: 12px;
+  color: white;
+  font-weight: bold;
+  display: none;
+}
+.buy__screen .buy__container .filters__bar .filter__item .filter__dropdown .dropdown__item--selected .checkmark {
+  display: inline-block;
+}
+.buy__screen .buy__container .filters__bar .filter__item.filter__crypto.filter__open .filter__dropdown {
+  display: block;
+}
+.buy__screen .buy__container .amount__input {
+  margin-bottom: 20px;
+}
+.buy__screen .buy__container .amount__input label {
+  display: block;
+  color: grey;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+.buy__screen .buy__container .amount__input .amount__field {
+  padding: 10px 10px;
+  background-color: #38404B;
+  border-radius: 8px;
+  color: white;
+  font-size: 16px;
+  border: 1px solid rgb(27, 27, 29);
+}
+.buy__screen .buy__container .amount__input .amount__field::-moz-placeholder {
+  font-size: 12px;
+}
+.buy__screen .buy__container .amount__input .amount__field::placeholder {
+  font-size: 12px;
+}
+.buy__screen .buy__container .listings__container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.buy__screen .buy__container .listings__container .listing__card {
+  background: linear-gradient(135deg, rgb(27, 27, 29), rgb(42, 42, 43));
+  border-radius: 12px;
+  padding: 20px;
+}
+.buy__screen .buy__container .listings__container .listing__card .listing__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+.buy__screen .buy__container .listings__container .listing__card .listing__header .listing__price .price__main {
+  font-size: 24px;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 4px;
+}
+.buy__screen .buy__container .listings__container .listing__card .listing__header .listing__price .price__subtitle {
+  font-size: 14px;
+  color: grey;
+}
+.buy__screen .buy__container .listings__container .listing__card .listing__header .listing__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.buy__screen .buy__container .listings__container .listing__card .listing__header .listing__actions .buy__btn {
+  padding: 12px 24px;
+  background-color: #0080ff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.buy__screen .buy__container .listings__container .listing__card .listing__seller {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.buy__screen .buy__container .listings__container .listing__card .listing__seller .seller__avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.buy__screen .buy__container .listings__container .listing__card .listing__seller .seller__info .seller__name {
+  font-size: 16px;
+  font-weight: 500;
+  color: white;
+  margin-bottom: 4px;
+}
+.buy__screen .buy__container .listings__container .listing__card .listing__seller .seller__info .seller__stats {
+  font-size: 14px;
+  color: grey;
+}
+.buy__screen .buy__container .listings__container .listing__card .listing__details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.buy__screen .buy__container .listings__container .listing__card .listing__details .detail__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+}
+.buy__screen .buy__container .listings__container .listing__card .listing__details .detail__row .detail__label {
+  color: grey;
+}
+.buy__screen .buy__container .listings__container .listing__card .listing__details .detail__row .detail__value {
+  color: white;
+  font-weight: 500;
+}/*# sourceMappingURL=style.css.map */

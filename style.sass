@@ -1,0 +1,273 @@
+*
+    padding: 0
+    margin: 0
+    box-sizing: border-box
+    text-decoration: none
+    color: white
+    font-family: "Inter", sans-serif
+    font-optical-sizing: auto
+    font-weight: 400
+    font-style: normal
+    // background-color: #232E3C
+
+body
+    background-color: rgb(20, 20, 21)
+.main__screen
+    width: 100%
+    height: 100%
+    .container__main
+        .header__main
+            display: flex
+            flex-direction: column
+            align-items: center
+            justify-content: center
+            // background-color: #232E3C
+            padding-top: 20px
+            .content__main
+                display: flex
+                flex-direction: column
+                align-items: center
+                justify-content: center
+                margin-bottom: 40px
+                p
+                    font-size: 14px
+                    color: grey
+                .logo__header
+                    width: 100px
+                    height: 100px
+                    object-fit: cover
+
+            .btn__main
+                display: flex
+                padding-bottom: 20px
+                button
+                    margin-left: 20px
+                    padding: 15px 45px
+                    display: flex
+                    align-content: center
+                    justify-content: center
+                    background-color: #38404B
+                    border: none
+                    border-radius: 10px
+                    cursor: pointer
+                    img
+                        display: flex
+                        align-content: center
+                        justify-content: cente
+                        width: 20px
+                        height: 20px
+                        object-fit: cover
+                        margin-right: 10px
+
+    .btn_market_main
+        display: flex
+        // justify-content: center
+        align-items: center
+        flex-direction: column
+        padding: 20px
+        // background: #38404B
+        .item__main
+            display: flex
+            align-items: center
+            align-content: center
+            justify-content: left
+            flex-direction: row
+            
+            width: 100%
+            height: 55px
+            background: linear-gradient(135deg, rgb(27, 27, 29), rgb(42, 42, 43))
+            
+            margin-bottom: 20px
+            margin-left: 20px
+            margin-right: 20px
+
+            border-radius: 15px
+
+            cursor: pointer
+            img
+                margin-left: 20px
+                margin-right: 20px
+                width: 50px
+            h3 
+                font-size: 16px
+            p
+                margin-top: 5px
+                font-size: 14px
+                color: grey
+
+            .content__item
+                .new_ask
+                    color:rgb(0, 102, 255)
+        
+        .item__main:hover
+            background: linear-gradient(135deg, rgb(27, 27, 29), rgb(56, 56, 56))
+        
+
+.buy__screen
+    width: 100%
+    min-height: 100vh
+    // background-color: #232E3C
+    padding: 20px
+    .buy__container
+        max-width: 100%
+        margin: 0 auto
+        // Фильтры
+        .filters__bar
+            display: flex
+            gap: 10px
+            margin-bottom: 20px
+            flex-wrap: wrap
+            .filter__item
+                position: relative
+                display: inline-block
+                min-width: 100px
+                .filter__header
+                    display: flex
+                    align-items: center
+                    justify-content: space-between
+                    padding: 12px 15px
+                    background-color: #38404B
+                    border-radius: 8px
+                    cursor: pointer
+                    font-size: 14px
+                    .filter__header-content
+                        display: flex
+                        flex-direction: column
+                        gap: 4px
+                        .filter__label
+                            color: grey
+                            font-size: 12px
+                        .filter__value
+                            color: white
+                            font-weight: 500
+                            font-size: 16px
+                    .filter__arrow-icon
+                        color: white
+                        font-size: 14px
+                        margin-left: 12px
+                .filter__dropdown
+                    display: none
+                    position: absolute
+                    top: 100%
+                    left: 0
+                    right: 0
+                    margin-top: 4px
+                    background-color: rgb(20, 20, 21)
+                    border-radius: 8px
+                    overflow: hidden
+                    z-index: 1000
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3)
+                    .dropdown__item
+                        display: flex
+                        align-items: center
+                        padding: 12px 16px
+                        color: white
+                        cursor: pointer
+                        font-size: 14px
+                        transition: background-color 0.2s
+                        &:hover
+                            background-color: #2a2a2b
+                        .checkmark
+                            margin-right: 12px
+                            color: white
+                            font-weight: bold
+                            display: none
+                    .dropdown__item--selected
+                        .checkmark
+                            display: inline-block
+                &.filter__crypto.filter__open
+                    .filter__dropdown
+                        display: block
+        // Поле суммы
+        .amount__input
+            margin-bottom: 20px
+            label
+                display: block
+                color: grey
+                font-size: 14px
+                margin-bottom: 8px
+            .amount__field
+                padding: 10px 10px
+                background-color: #38404B
+                border-radius: 8px
+                color: white
+                font-size: 16px
+                border: 1px solid rgb(27, 27, 29)
+            .amount__field::placeholder
+                font-size: 12px
+        // Контейнер карточек
+        .listings__container
+            display: flex
+            flex-direction: column
+            gap: 12px
+            .listing__card
+                // background-color: #38404B
+                background: linear-gradient(135deg, rgb(27, 27, 29), rgb(42, 42, 43))
+                border-radius: 12px
+                padding: 20px
+
+
+
+
+                .listing__header
+                    display: flex
+                    justify-content: space-between
+                    align-items: flex-start
+                    margin-bottom: 16px
+                    .listing__price
+                        .price__main
+                            font-size: 24px
+                            font-weight: 700
+                            color: white
+                            margin-bottom: 4px
+                        .price__subtitle
+                            font-size: 14px
+                            color: grey
+                    .listing__actions
+                        display: flex
+                        align-items: center
+                        gap: 12px
+                        
+                        .buy__btn
+                            padding: 12px 24px
+                            background-color: #0080ff
+                            color: white
+                            border: none
+                            border-radius: 8px
+                            font-weight: 600
+                            font-size: 14px
+                            cursor: pointer
+                            white-space: nowrap
+                .listing__seller
+                    display: flex
+                    align-items: center
+                    gap: 12px
+                    margin-bottom: 16px
+                    .seller__avatar
+                        width: 40px
+                        height: 40px
+                        border-radius: 50%
+                        flex-shrink: 0
+                    .seller__info
+                        .seller__name
+                            font-size: 16px
+                            font-weight: 500
+                            color: white
+                            margin-bottom: 4px
+                        .seller__stats
+                            font-size: 14px
+                            color: grey
+                .listing__details
+                    display: flex
+                    flex-direction: column
+                    gap: 8px
+                    .detail__row
+                        display: flex
+                        justify-content: space-between
+                        align-items: center
+                        font-size: 14px
+                        .detail__label
+                            color: grey
+                        .detail__value
+                            color: white
+                            font-weight: 500

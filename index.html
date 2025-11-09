@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>peer-to-peer</title>
+</head>
+<body>
+    <div class="main__screen" id="main__screen" >
+        <div class="container__main">
+            <div class="header__main">
+                <div class="content__main">
+                    <img src="./image/marketimg.svg" alt="logo" class="logo__header">
+                    <h3>P2P Маркет</h3>
+                    <p>Покупайте и продавайте криптовалюты без верефицикаций</p>
+                </div>
+                <div class="btn__main">
+                    <button id="btn-for-buycrpyto">Купить</button>
+                    <button id="btn-for-sellcrpyto">Продать</button>
+                </div>
+            </div>
+            <div class="btn_market_main">
+                <div class="item__main">
+                    <img src="./image/account_icon.svg" alt="">  
+
+                    <div class="content__item">
+                        <h3>Мои обьявления</h3>
+                        <p>Настройки обьявлений и платежей</p>
+                    </div>
+                </div>
+                <div class="item__main">
+                    <img src="./image/add+.svg" alt="">  
+
+                    <div class="content__item">
+                        <h3 class="new_ask">Мои обьявления</h3>
+                    </div>
+                </div>
+            </div>
+
+
+
+
+
+        </div>
+    </div>
+    <div class="buy__screen" style="display: none;">
+        <div class="buy__container">
+            <!-- Фильтры -->
+            <div class="filters__bar">
+                <div class="filter__item filter__crypto" id="crypto-filter">
+                    <div class="filter__header">
+                        <div class="filter__header-content">
+                            <span class="filter__label">Крипта</span>
+                            <span class="filter__value">TON</span>
+                        </div>
+                        <span class="filter__arrow-icon">⇅</span>
+                    </div>
+                    <div class="filter__dropdown" id="crypto-dropdown">
+                        <div class="dropdown__item" data-value="USDT">
+                            <span>USDT</span>
+                        </div>
+                        <div class="dropdown__item dropdown__item--selected" data-value="TON">
+                            <span class="checkmark">✓</span>
+                            <span>TON</span>
+                        </div>
+                        <div class="dropdown__item" data-value="BTC">
+                            <span>BTC</span>
+                        </div>
+                        <div class="dropdown__item" data-value="ETH">
+                            <span>ETH</span>
+                        </div>
+                        <div class="dropdown__item" data-value="NOT">
+                            <span>NOT</span>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+
+            <!-- Поле суммы -->
+            <div class="amount__input">
+                <label>Сумма</label>
+                <input class="amount__field" placeholder="10.00 RUB"></input>
+            </div>
+
+            <!-- Карточки объявлений -->
+            <div class="listings__container">
+                <!-- Карточка 1 -->
+                <div class="listing__card">
+                    <div class="listing__header">
+                        <div class="listing__price">
+                            <div class="price__main">177 RUB</div>
+                            <div class="price__subtitle">Цена за 1 TON</div>
+                        </div>
+                        <div class="listing__actions">
+                            
+                            <button class="buy__btn">КУПИТЬ</button>
+                        </div>
+                    </div>
+                    <div class="listing__seller">
+                        <div class="seller__avatar" style="background-color: #5BA3D0;"></div>
+                        <div class="seller__info">
+                            <div class="seller__name">Posh Dragon</div>
+                            <div class="seller__stats">сделок: 14 • 86%</div>
+                        </div>
+                    </div>
+                    <div class="listing__details">
+                        <div class="detail__row">
+                            <span class="detail__label">Доступно</span>
+                            <span class="detail__value">281,644 TON</span>
+                        </div>
+                        <div class="detail__row">
+                            <span class="detail__label">Лимиты</span>
+                            <span class="detail__value">49 851 – 49 851,15 RUB</span>
+                        </div>
+                        <div class="detail__row">
+                            <span class="detail__label">Методы оплаты</span>
+                            <span class="detail__value">Т-Банк (Тинькофф)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+    <script src="index.js"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</body>
+</html>
