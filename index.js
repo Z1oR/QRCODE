@@ -5,12 +5,34 @@ const API_BASE_URL = 'http://82.97.240.215:8000';
 let tg = null;
 
 // Функция инициализации Telegram Web App
-function initTelegramWebApp() {
+async function initTelegramWebApp() {
     if (window.Telegram && window.Telegram.WebApp) {
         tg = window.Telegram.WebApp;
         tg.ready();
         tg.expand();
         console.log('Telegram Web App инициализирован');
+        
+        // Проверяем доступность сервера перед аутентификацией
+        try {
+            const healthCheck = await fetch(`${API_BASE_URL}/health`, {
+                method: 'GET',
+                credentials: 'include',
+                mode: 'cors'
+            });
+            
+            if (healthCheck.ok) {
+                console.log('Сервер доступен');
+            } else {
+                console.warn('Сервер отвечает с ошибкой:', healthCheck.status);
+            }
+        } catch (error) {
+            console.error('Сервер недоступен! Проверьте:', error);
+            console.error('1. Запущен ли сервер на', API_BASE_URL);
+            console.error('2. Открыт ли порт 8000 в firewall');
+            console.error('3. Возможно, Telegram блокирует запросы к IP адресам');
+            console.error('   В этом случае используйте домен вместо IP');
+            return false;
+        }
         
         // После инициализации пытаемся аутентифицироваться
         if (tg.initData) {
@@ -34,29 +56,45 @@ function initTelegramWebApp() {
 }
 
 // Пытаемся инициализировать сразу
-if (!initTelegramWebApp()) {
-    // Если не получилось, ждем загрузки DOM
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => {
-            if (!initTelegramWebApp()) {
-                // Пробуем еще раз через небольшую задержку
-                setTimeout(() => {
-                    if (!initTelegramWebApp()) {
-                        console.warn('Telegram Web App не доступен');
-                    }
-                }, 200);
-            }
+(async () => {
+    if (!(await initTelegramWebApp())) {
+        // Если не получилось, ждем загрузки DOM
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', async () => {
+                if (!(await initTelegramWebApp())) {
+                    // Пробуем еще раз через небольшую задержку
+                    setTimeout(async () => {
+                        if (!(await initTelegramWebApp())) {
+                            console.warn('Telegram Web App не доступен');
+                        }
+                    }, 200);
+                }
+            });
+        } else {
+            // DOM уже загружен, но скрипт может еще загружаться
+            setTimeout(async () => {
+                if (!(await initTelegramWebApp())) {
+                    console.warn('Telegram Web App не доступен');
+                }
+            }, 200);
+        }
+    }
+})();
+
+
+// Функция для проверки доступности сервера
+async function checkServerAvailability() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/docs`, {
+            method: 'GET',
+            mode: 'no-cors' // Для проверки доступности
         });
-    } else {
-        // DOM уже загружен, но скрипт может еще загружаться
-        setTimeout(() => {
-            if (!initTelegramWebApp()) {
-                console.warn('Telegram Web App не доступен');
-            }
-        }, 200);
+        return true;
+    } catch (error) {
+        console.warn('Сервер может быть недоступен:', error);
+        return false;
     }
 }
-
 
 // Функция для аутентификации через Telegram
 async function authenticateWithTelegram() {
@@ -74,6 +112,9 @@ async function authenticateWithTelegram() {
             return;
         }
 
+        console.log('Начинаем аутентификацию...');
+        console.log('API URL:', `${API_BASE_URL}/api/auth/telegram`);
+
         // Отправляем initData на сервер для аутентификации
         const response = await fetch(`${API_BASE_URL}/api/auth/telegram`, {
             method: 'POST',
@@ -81,13 +122,18 @@ async function authenticateWithTelegram() {
                 'Content-Type': 'application/json',
             },
             credentials: 'include', // Важно для работы с cookies
+            mode: 'cors', // Явно указываем CORS режим
             body: JSON.stringify({
                 init_data: initData
             })
         });
 
+        console.log('Ответ сервера:', response.status, response.statusText);
+
         if (!response.ok) {
-            throw new Error('Ошибка аутентификации');
+            const errorText = await response.text();
+            console.error('Ошибка ответа сервера:', errorText);
+            throw new Error(`Ошибка аутентификации: ${response.status} ${response.statusText}`);
         }
 
         const data = await response.json();
@@ -99,6 +145,19 @@ async function authenticateWithTelegram() {
         
     } catch (error) {
         console.error('Ошибка при аутентификации:', error);
+        console.error('Детали ошибки:', {
+            message: error.message,
+            name: error.name,
+            stack: error.stack
+        });
+        
+        // Показываем пользователю понятное сообщение
+        if (error.message.includes('Failed to fetch')) {
+            console.error('Проблема с подключением к серверу. Проверьте:');
+            console.error('1. Запущен ли сервер на', API_BASE_URL);
+            console.error('2. Открыт ли порт 8000 в firewall');
+            console.error('3. Правильно ли настроен CORS на сервере');
+        }
     }
 }
 
