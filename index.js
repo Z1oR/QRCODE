@@ -1,5 +1,5 @@
 // API базовый URL (измените на ваш сервер)
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = 'http://82.97.240.215:8000';
 
 // Инициализация Telegram Web App
 let tg = null;
@@ -196,4 +196,5 @@ if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initCryptoFilter)
 } else {
     initCryptoFilter()
+
 }
