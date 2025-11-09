@@ -2,10 +2,60 @@
 const API_BASE_URL = 'http://82.97.240.215:8000';
 
 // Инициализация Telegram Web App
+let tg = null;
 
-let tg = window.Telegram.WebApp;
-tg.ready();
-tg.expand();
+// Функция инициализации Telegram Web App
+function initTelegramWebApp() {
+    if (window.Telegram && window.Telegram.WebApp) {
+        tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+        console.log('Telegram Web App инициализирован');
+        
+        // После инициализации пытаемся аутентифицироваться
+        if (tg.initData) {
+            authenticateWithTelegram();
+        } else {
+            // Ждем появления initData
+            const checkInitData = setInterval(() => {
+                if (tg && tg.initData) {
+                    clearInterval(checkInitData);
+                    authenticateWithTelegram();
+                }
+            }, 100);
+            
+            // Останавливаем проверку через 5 секунд
+            setTimeout(() => clearInterval(checkInitData), 5000);
+        }
+        
+        return true;
+    }
+    return false;
+}
+
+// Пытаемся инициализировать сразу
+if (!initTelegramWebApp()) {
+    // Если не получилось, ждем загрузки DOM
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!initTelegramWebApp()) {
+                // Пробуем еще раз через небольшую задержку
+                setTimeout(() => {
+                    if (!initTelegramWebApp()) {
+                        console.warn('Telegram Web App не доступен');
+                    }
+                }, 200);
+            }
+        });
+    } else {
+        // DOM уже загружен, но скрипт может еще загружаться
+        setTimeout(() => {
+            if (!initTelegramWebApp()) {
+                console.warn('Telegram Web App не доступен');
+            }
+        }, 200);
+    }
+}
 
 
 // Функция для аутентификации через Telegram
@@ -112,16 +162,7 @@ async function makeAuthenticatedRequest(url, options = {}) {
     return response;
 }
 
-// Инициализация при загрузке страницы
-if (tg && tg.initData) {
-    authenticateWithTelegram();
-} else if (tg) {
-    // Ждем инициализации Telegram Web App
-    tg.ready();
-    if (tg.initData) {
-        authenticateWithTelegram();
-    }
-}
+// Аутентификация теперь запускается автоматически в initTelegramWebApp()
 
 let main__screen = document.querySelector("#main__screen")
 let buy_screen = document.querySelector(".buy__screen")
