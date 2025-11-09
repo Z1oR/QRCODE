@@ -1,15 +1,13 @@
-// API базовый URL (измените на ваш сервер)
+// API базовый URL
 const API_BASE_URL = 'http://82.97.240.215:8000';
 
 // Инициализация Telegram Web App
 let tg = null;
-if (window.Telegram && window.Telegram.WebApp) {
-    tg = window.Telegram.WebApp;
-    tg.ready();
-    tg.expand();
-} else {
-    console.warn('Telegram Web App не доступен. Работаем в режиме разработки.');
-}
+
+tg = window.Telegram.WebApp;
+tg.ready();
+tg.expand();
+
 
 // Функция для аутентификации через Telegram
 async function authenticateWithTelegram() {
@@ -196,5 +194,4 @@ if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initCryptoFilter)
 } else {
     initCryptoFilter()
-
 }
