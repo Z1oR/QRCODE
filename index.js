@@ -2,9 +2,8 @@
 const API_BASE_URL = 'http://82.97.240.215:8000';
 
 // Инициализация Telegram Web App
-let tg = null;
 
-tg = window.Telegram.WebApp;
+let tg = window.Telegram.WebApp;
 tg.ready();
 tg.expand();
 
