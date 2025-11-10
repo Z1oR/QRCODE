@@ -235,6 +235,7 @@ async function authenticateWithTelegram() {
                     userData.id = meData.id;
                     userData.username = userData.username || meData.username;
                     userData.balance = userData.balance !== undefined ? userData.balance : meData.balance;
+                    userData.is_admin = meData.is_admin || false;
                 }
             } catch (error) {
                 console.error('Ошибка при получении ID пользователя:', error);
@@ -613,10 +614,16 @@ async function refreshUserBalance() {
             if (userInfo && userInfo.balance !== undefined) {
                 if (userData) {
                     userData.balance = userInfo.balance;
+                    userData.is_admin = userInfo.is_admin || false;
                 } else {
                     userData = userInfo;
                 }
                 updateUserInfo(userData || userInfo);
+                
+                // Проверяем права администратора и показываем кнопку
+                if (userInfo.is_admin) {
+                    checkAdminAccess();
+                }
                 
                 // Обновляем баланс на экране создания объявления, если он открыт
                 const createAdsScreen = document.querySelector('.create_ads_screen');
@@ -3565,4 +3572,353 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+    
+    // ========== АДМИН ПАНЕЛЬ ==========
+    
+    // Проверяем, является ли пользователь администратором и показываем кнопку
+    checkAdminAccess();
+    
+    // Обработчик кнопки "Назад" на админ панели
+    const backFromAdminPanelBtn = document.getElementById('back-from-admin-panel');
+    if (backFromAdminPanelBtn) {
+        backFromAdminPanelBtn.addEventListener('click', () => {
+            const adminPanelScreen = document.getElementById('admin-panel-screen');
+            const mainScreen = document.getElementById('main__screen');
+            
+            if (adminPanelScreen && mainScreen) {
+                adminPanelScreen.style.display = 'none';
+                mainScreen.style.display = 'block';
+            }
+        });
+    }
+    
+    // Обработчики вкладок админ панели
+    const adminTabs = document.querySelectorAll('.admin_tab');
+    adminTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const tabName = tab.getAttribute('data-tab');
+            
+            // Убираем active со всех вкладок
+            adminTabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            
+            // Скрываем все контенты
+            document.querySelectorAll('.admin_tab_content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Показываем нужный контент
+            const targetContent = document.getElementById(`admin-tab-${tabName}`);
+            if (targetContent) {
+                targetContent.classList.add('active');
+                
+                if (tabName === 'statistics') {
+                    loadAdminStatistics();
+                } else if (tabName === 'appeals') {
+                    loadAdminAppeals();
+                }
+            }
+        });
+    });
+    
+    // Обработчики фильтров апелляций
+    const adminFilterBtns = document.querySelectorAll('.admin_filter_btn');
+    adminFilterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            adminFilterBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            const filter = btn.getAttribute('data-filter');
+            loadAdminAppeals(filter === 'all' ? null : filter);
+        });
+    });
 });
+
+// Функция проверки прав администратора
+async function checkAdminAccess() {
+    try {
+        if (!userData || !userData.id) {
+            const meResponse = await makeAuthenticatedRequest(`${API_BASE_URL}/api/auth/me`, {
+                method: 'GET'
+            });
+            if (meResponse.ok) {
+                userData = await meResponse.json();
+            }
+        }
+        
+        if (userData && userData.is_admin) {
+            // Добавляем кнопку "Админ панель" в главное меню
+            const mainScreen = document.getElementById('main__screen');
+            if (mainScreen) {
+                // Ищем место для вставки кнопки (например, после кнопки "О нас")
+                const aboutBtn = document.getElementById('about-btn');
+                if (aboutBtn && !document.getElementById('admin-panel-btn')) {
+                    const adminBtn = document.createElement('button');
+                    adminBtn.id = 'admin-panel-btn';
+                    adminBtn.className = 'nav__item';
+                    adminBtn.innerHTML = `
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span>Админ панель</span>
+                    `;
+                    adminBtn.addEventListener('click', () => {
+                        openAdminPanel();
+                    });
+                    aboutBtn.parentNode.insertBefore(adminBtn, aboutBtn.nextSibling);
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Ошибка при проверке прав администратора:', error);
+    }
+}
+
+// Функция открытия админ панели
+function openAdminPanel() {
+    const adminPanelScreen = document.getElementById('admin-panel-screen');
+    const mainScreen = document.getElementById('main__screen');
+    
+    if (adminPanelScreen && mainScreen) {
+        mainScreen.style.display = 'none';
+        adminPanelScreen.style.display = 'block';
+        window.scrollTo(0, 0);
+        
+        // Загружаем статистику
+        loadAdminStatistics();
+    }
+}
+
+// Функция загрузки статистики
+async function loadAdminStatistics() {
+    try {
+        const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/admin/statistics`, {
+            method: 'GET'
+        });
+        
+        if (!response.ok) {
+            throw new Error('Ошибка загрузки статистики');
+        }
+        
+        const stats = await response.json();
+        
+        // Обновляем значения
+        document.getElementById('stat-total-users').textContent = stats.total_users || 0;
+        document.getElementById('stat-total-ads').textContent = stats.total_ads || 0;
+        document.getElementById('stat-active-ads').textContent = `Активных: ${stats.active_ads || 0}`;
+        document.getElementById('stat-total-transactions').textContent = stats.total_transactions || 0;
+        document.getElementById('stat-completed-transactions').textContent = `Завершено: ${stats.completed_transactions || 0}`;
+        document.getElementById('stat-total-volume').textContent = `${(stats.total_volume || 0).toFixed(2)} RUB`;
+        document.getElementById('stat-crypto-volume').textContent = `Крипта: ${(stats.total_crypto_volume || 0).toFixed(2)}`;
+        document.getElementById('stat-total-appeals').textContent = stats.total_appeals || 0;
+        document.getElementById('stat-pending-appeals').textContent = `Ожидают: ${stats.pending_appeals || 0}`;
+    } catch (error) {
+        console.error('Ошибка при загрузке статистики:', error);
+        alert('Ошибка при загрузке статистики');
+    }
+}
+
+// Функция загрузки апелляций для админа
+async function loadAdminAppeals(status = null) {
+    try {
+        let url = `${API_BASE_URL}/api/admin/appeals?limit=100`;
+        if (status) {
+            url += `&status=${status}`;
+        }
+        
+        const response = await makeAuthenticatedRequest(url, {
+            method: 'GET'
+        });
+        
+        if (!response.ok) {
+            throw new Error('Ошибка загрузки апелляций');
+        }
+        
+        const appeals = await response.json();
+        const appealsList = document.getElementById('admin-appeals-list');
+        
+        if (!appealsList) return;
+        
+        appealsList.innerHTML = '';
+        
+        if (appeals && appeals.length > 0) {
+            appeals.forEach(appeal => {
+                const appealCard = document.createElement('div');
+                appealCard.className = 'admin_appeal_card';
+                
+                const statusText = {
+                    'pending': 'Ожидает рассмотрения',
+                    'reviewing': 'На рассмотрении',
+                    'resolved': 'Решена',
+                    'rejected': 'Отклонена',
+                    'cancelled': 'Отменена'
+                }[appeal.status] || appeal.status;
+                
+                appealCard.innerHTML = `
+                    <div class="admin_appeal_card_header">
+                        <div class="admin_appeal_card_info">
+                            <div class="admin_appeal_card_id">Апелляция #${appeal.id}</div>
+                            <div class="admin_appeal_card_date">${new Date(appeal.created_at).toLocaleString('ru-RU')}</div>
+                        </div>
+                        <div class="admin_appeal_card_status status_${appeal.status}">${statusText}</div>
+                    </div>
+                    <div class="admin_appeal_card_content">
+                        <div class="admin_appeal_card_row">
+                            <strong>Сделка:</strong> #${appeal.transaction_id}
+                        </div>
+                        <div class="admin_appeal_card_row">
+                            <strong>Тип:</strong> ${appeal.appeal_type === 'buyer' ? 'Покупатель' : 'Продавец'}
+                        </div>
+                        <div class="admin_appeal_card_row">
+                            <strong>Причина:</strong> ${escapeHtml(appeal.reason)}
+                        </div>
+                        <div class="admin_appeal_card_row">
+                            <strong>Описание:</strong> ${escapeHtml(appeal.description)}
+                        </div>
+                        ${appeal.evidence ? `
+                            <div class="admin_appeal_card_row">
+                                <strong>Доказательства:</strong> ${escapeHtml(appeal.evidence)}
+                            </div>
+                        ` : ''}
+                        ${appeal.admin_comment ? `
+                            <div class="admin_appeal_card_row admin_appeal_admin_comment">
+                                <strong>Комментарий:</strong> ${escapeHtml(appeal.admin_comment)}
+                            </div>
+                        ` : ''}
+                    </div>
+                    ${appeal.status === 'pending' || appeal.status === 'reviewing' ? `
+                        <div class="admin_appeal_card_actions">
+                            ${appeal.status === 'pending' ? `
+                                <button class="admin_appeal_action_btn btn_review" data-appeal-id="${appeal.id}">
+                                    Начать рассмотрение
+                                </button>
+                            ` : ''}
+                            <button class="admin_appeal_action_btn btn_resolve" data-appeal-id="${appeal.id}">
+                                Разрешить
+                            </button>
+                            <button class="admin_appeal_action_btn btn_reject" data-appeal-id="${appeal.id}">
+                                Отклонить
+                            </button>
+                        </div>
+                    ` : ''}
+                `;
+                
+                appealsList.appendChild(appealCard);
+            });
+            
+            // Добавляем обработчики кнопок
+            document.querySelectorAll('.btn_review').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const appealId = parseInt(btn.getAttribute('data-appeal-id'));
+                    await reviewAppeal(appealId);
+                });
+            });
+            
+            document.querySelectorAll('.btn_resolve').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const appealId = parseInt(btn.getAttribute('data-appeal-id'));
+                    await showResolveAppealModal(appealId);
+                });
+            });
+            
+            document.querySelectorAll('.btn_reject').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const appealId = parseInt(btn.getAttribute('data-appeal-id'));
+                    await showRejectAppealModal(appealId);
+                });
+            });
+        } else {
+            appealsList.innerHTML = '<div class="admin_empty_state">Апелляций не найдено</div>';
+        }
+    } catch (error) {
+        console.error('Ошибка при загрузке апелляций:', error);
+        alert('Ошибка при загрузке апелляций');
+    }
+}
+
+// Функция начала рассмотрения апелляции
+async function reviewAppeal(appealId) {
+    try {
+        const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/admin/appeals/${appealId}/review`, {
+            method: 'POST'
+        });
+        
+        if (!response.ok) {
+            throw new Error('Ошибка при начале рассмотрения');
+        }
+        
+        alert('Рассмотрение апелляции начато');
+        loadAdminAppeals();
+    } catch (error) {
+        console.error('Ошибка:', error);
+        alert('Ошибка при начале рассмотрения апелляции');
+    }
+}
+
+// Функция показа модального окна для разрешения апелляции
+async function showResolveAppealModal(appealId) {
+    const resolution = prompt('Выберите решение:\n1. refund_buyer - Возврат покупателю\n2. confirm_seller - Подтвердить в пользу продавца\n3. cancel - Отменить сделку\n\nВведите номер (1, 2 или 3):');
+    
+    if (!resolution) return;
+    
+    let resolutionType = null;
+    if (resolution === '1') resolutionType = 'refund_buyer';
+    else if (resolution === '2') resolutionType = 'confirm_seller';
+    else if (resolution === '3') resolutionType = 'cancel';
+    else {
+        alert('Неверный выбор');
+        return;
+    }
+    
+    const comment = prompt('Комментарий (необязательно):') || null;
+    
+    try {
+        const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/admin/appeals/${appealId}/resolve`, {
+            method: 'POST',
+            body: JSON.stringify({
+                resolution: resolutionType,
+                admin_comment: comment
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error('Ошибка при разрешении апелляции');
+        }
+        
+        alert('Апелляция успешно разрешена');
+        loadAdminAppeals();
+    } catch (error) {
+        console.error('Ошибка:', error);
+        alert('Ошибка при разрешении апелляции');
+    }
+}
+
+// Функция показа модального окна для отклонения апелляции
+async function showRejectAppealModal(appealId) {
+    const comment = prompt('Причина отклонения (необязательно):') || null;
+    
+    if (comment === null && !confirm('Вы уверены, что хотите отклонить апелляцию без комментария?')) {
+        return;
+    }
+    
+    try {
+        const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/admin/appeals/${appealId}/reject`, {
+            method: 'POST',
+            body: JSON.stringify({
+                admin_comment: comment
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error('Ошибка при отклонении апелляции');
+        }
+        
+        alert('Апелляция отклонена');
+        loadAdminAppeals();
+    } catch (error) {
+        console.error('Ошибка:', error);
+        alert('Ошибка при отклонении апелляции');
+    }
+}
