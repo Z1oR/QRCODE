@@ -1009,6 +1009,83 @@
         })();
     </script> -->
 
+    <!-- Админ панель -->
+    <div class="admin_panel_screen" id="admin-panel-screen" style="display: none;">
+        <div class="admin_panel_container">
+            <div class="admin_panel_header">
+                <button class="back_btn" id="back-from-admin-panel">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+                <h2 class="admin_panel_title">Админ панель</h2>
+            </div>
+
+            <div class="admin_panel_tabs">
+                <button class="admin_tab active" data-tab="statistics">Статистика</button>
+                <button class="admin_tab" data-tab="appeals">Апелляции</button>
+            </div>
+
+            <!-- Вкладка статистики -->
+            <div class="admin_tab_content active" id="admin-tab-statistics">
+                <div class="admin_statistics_grid">
+                    <div class="admin_stat_card">
+                        <div class="admin_stat_icon">👥</div>
+                        <div class="admin_stat_info">
+                            <div class="admin_stat_label">Пользователей</div>
+                            <div class="admin_stat_value" id="stat-total-users">-</div>
+                        </div>
+                    </div>
+                    <div class="admin_stat_card">
+                        <div class="admin_stat_icon">📋</div>
+                        <div class="admin_stat_info">
+                            <div class="admin_stat_label">Объявлений</div>
+                            <div class="admin_stat_value" id="stat-total-ads">-</div>
+                            <div class="admin_stat_subvalue" id="stat-active-ads">Активных: -</div>
+                        </div>
+                    </div>
+                    <div class="admin_stat_card">
+                        <div class="admin_stat_icon">💼</div>
+                        <div class="admin_stat_info">
+                            <div class="admin_stat_label">Сделок</div>
+                            <div class="admin_stat_value" id="stat-total-transactions">-</div>
+                            <div class="admin_stat_subvalue" id="stat-completed-transactions">Завершено: -</div>
+                        </div>
+                    </div>
+                    <div class="admin_stat_card">
+                        <div class="admin_stat_icon">💰</div>
+                        <div class="admin_stat_info">
+                            <div class="admin_stat_label">Оборот</div>
+                            <div class="admin_stat_value" id="stat-total-volume">- RUB</div>
+                            <div class="admin_stat_subvalue" id="stat-crypto-volume">Крипта: -</div>
+                        </div>
+                    </div>
+                    <div class="admin_stat_card">
+                        <div class="admin_stat_icon">⚠️</div>
+                        <div class="admin_stat_info">
+                            <div class="admin_stat_label">Апелляций</div>
+                            <div class="admin_stat_value" id="stat-total-appeals">-</div>
+                            <div class="admin_stat_subvalue" id="stat-pending-appeals">Ожидают: -</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Вкладка апелляций -->
+            <div class="admin_tab_content" id="admin-tab-appeals">
+                <div class="admin_appeals_filters">
+                    <button class="admin_filter_btn active" data-filter="all">Все</button>
+                    <button class="admin_filter_btn" data-filter="pending">Ожидают</button>
+                    <button class="admin_filter_btn" data-filter="reviewing">На рассмотрении</button>
+                    <button class="admin_filter_btn" data-filter="resolved">Решены</button>
+                </div>
+                <div class="admin_appeals_list" id="admin-appeals-list">
+                    <!-- Апелляции будут добавлены через JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="index.js"></script>
 </body>
