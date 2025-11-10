@@ -142,7 +142,19 @@ async function authenticateWithTelegram() {
         }
 
         const data = await response.json();
-        console.log('Аутентификация успешна', data);
+        console.log('Аутентификация успешна, полученные данные:', {
+            hasAccessToken: !!data.access_token,
+            hasRefreshToken: !!data.refresh_token,
+            accessTokenLength: data.access_token ? data.access_token.length : 0,
+            refreshTokenLength: data.refresh_token ? data.refresh_token.length : 0,
+            allFields: Object.keys(data)
+        });
+        
+        // Проверяем, что токены есть в ответе
+        if (!data.access_token || !data.refresh_token) {
+            console.error('ОШИБКА: Токены не получены от сервера!', data);
+            throw new Error('Токены не получены от сервера');
+        }
         
         // Сохраняем данные пользователя в глобальную переменную
         userData = data;
@@ -150,6 +162,31 @@ async function authenticateWithTelegram() {
         // Сохраняем токены
         accessToken = data.access_token;
         refreshToken = data.refresh_token;
+        
+        console.log('Токены сохранены в память:', {
+            hasAccessToken: !!accessToken,
+            hasRefreshToken: !!refreshToken,
+            accessTokenLength: accessToken ? accessToken.length : 0,
+            refreshTokenLength: refreshToken ? refreshToken.length : 0
+        });
+        
+        // Проверяем, что токены есть в cookie (сервер должен установить их)
+        setTimeout(() => {
+            const cookieAccessToken = getCookie('ACCESS_TOKEN');
+            const cookieRefreshToken = getCookie('REFRESH_TOKEN');
+            console.log('Токены в cookie после сохранения (через 500ms):', {
+                hasCookieAccessToken: !!cookieAccessToken,
+                hasCookieRefreshToken: !!cookieRefreshToken,
+                cookieAccessTokenLength: cookieAccessToken ? cookieAccessToken.length : 0,
+                cookieRefreshTokenLength: cookieRefreshToken ? cookieRefreshToken.length : 0,
+                allCookies: document.cookie
+            });
+            
+            // Если токенов нет в cookie, но есть в памяти - это нормально для некоторых случаев
+            if (!cookieAccessToken && accessToken) {
+                console.warn('ВНИМАНИЕ: Токен есть в памяти, но не в cookie. Это может быть нормально, если cookie не устанавливаются из-за настроек безопасности.');
+            }
+        }, 500);
         
         
     } catch (error) {
@@ -173,10 +210,23 @@ function getCookie(name) {
 
 // Инициализация токенов из cookie при загрузке страницы
 function initTokensFromCookies() {
-    accessToken = getCookie('ACCESS_TOKEN');
-    refreshToken = getCookie('REFRESH_TOKEN');
-    if (accessToken || refreshToken) {
-        console.log('Токены загружены из cookie');
+    const cookieAccessToken = getCookie('ACCESS_TOKEN');
+    const cookieRefreshToken = getCookie('REFRESH_TOKEN');
+    
+    if (cookieAccessToken) {
+        accessToken = cookieAccessToken;
+        console.log('Access token загружен из cookie, длина:', accessToken.length);
+    }
+    
+    if (cookieRefreshToken) {
+        refreshToken = cookieRefreshToken;
+        console.log('Refresh token загружен из cookie, длина:', refreshToken.length);
+    }
+    
+    if (!accessToken && !refreshToken) {
+        console.warn('Токены не найдены в cookie при инициализации');
+    } else {
+        console.log('Токены успешно инициализированы из cookie');
     }
 }
 
@@ -192,11 +242,17 @@ async function makeAuthenticatedRequest(url, options = {}) {
     // Получаем токен из глобальной переменной или cookie
     let token = accessToken || getCookie('ACCESS_TOKEN');
     
-    console.log('makeAuthenticatedRequest:', {
+    // Логируем все возможные источники токена
+    const cookieToken = getCookie('ACCESS_TOKEN');
+    console.log('makeAuthenticatedRequest - проверка токенов:', {
         url,
         hasAccessToken: !!accessToken,
-        hasCookieToken: !!getCookie('ACCESS_TOKEN'),
-        hasToken: !!token
+        accessTokenLength: accessToken ? accessToken.length : 0,
+        hasCookieToken: !!cookieToken,
+        cookieTokenLength: cookieToken ? cookieToken.length : 0,
+        hasToken: !!token,
+        tokenLength: token ? token.length : 0,
+        allCookies: document.cookie
     });
     
     const defaultOptions = {
@@ -210,9 +266,12 @@ async function makeAuthenticatedRequest(url, options = {}) {
     // Добавляем токен в заголовок Authorization, если он есть
     if (token) {
         defaultOptions.headers['Authorization'] = `Bearer ${token}`;
-        console.log('Токен добавлен в заголовок Authorization');
+        console.log('Токен добавлен в заголовок Authorization, первые 20 символов:', token.substring(0, 20) + '...');
     } else {
-        console.warn('Токен не найден!');
+        console.error('ТОКЕН НЕ НАЙДЕН! Проверьте:');
+        console.error('- accessToken в памяти:', accessToken);
+        console.error('- ACCESS_TOKEN в cookie:', cookieToken);
+        console.error('- Все cookies:', document.cookie);
     }
 
     const response = await fetch(url, { ...defaultOptions, ...options });
@@ -600,6 +659,32 @@ function initPreviewScreen() {
     // Обработка кнопки "Создать объявление"
     createListingBtn.addEventListener('click', async () => {
         try {
+            // Проверяем токены перед запросом
+            console.log('=== ПРОВЕРКА ТОКЕНОВ ПЕРЕД СОЗДАНИЕМ ОБЪЯВЛЕНИЯ ===');
+            console.log('Токены в памяти:', {
+                accessToken: !!accessToken,
+                refreshToken: !!refreshToken
+            });
+            console.log('Токены в cookie:', {
+                accessToken: !!getCookie('ACCESS_TOKEN'),
+                refreshToken: !!getCookie('REFRESH_TOKEN')
+            });
+            
+            // Если токенов нет, пытаемся загрузить из cookie
+            if (!accessToken) {
+                accessToken = getCookie('ACCESS_TOKEN');
+                console.log('Access token загружен из cookie:', !!accessToken);
+            }
+            if (!refreshToken) {
+                refreshToken = getCookie('REFRESH_TOKEN');
+                console.log('Refresh token загружен из cookie:', !!refreshToken);
+            }
+            
+            if (!accessToken) {
+                alert('Ошибка: вы не авторизованы. Пожалуйста, перезагрузите страницу.');
+                return;
+            }
+            
             // Собираем данные из формы
             const action = document.querySelector('.segmented_btn--active')?.getAttribute('data-action') || 'sell'
             const crypto = document.querySelector('#selected-crypto')?.textContent || 'USDT'
