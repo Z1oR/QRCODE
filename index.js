@@ -713,6 +713,50 @@ if (btn_my_ads) {
     });
 }
 
+// Обработчик кнопки "Мои сделки"
+const btn_my_transactions = document.getElementById('my_transactions');
+if (btn_my_transactions) {
+    btn_my_transactions.addEventListener("click", async () => {
+        showScreen(null);
+        
+        const myTransactionsScreen = document.getElementById('my-transactions-screen');
+        if (myTransactionsScreen) {
+            myTransactionsScreen.style.display = 'block';
+            await loadMyTransactions();
+        }
+    });
+}
+
+// Обработчик кнопки "Назад" на экране сделок
+const backFromTransactionsBtn = document.getElementById('back-from-transactions');
+if (backFromTransactionsBtn) {
+    backFromTransactionsBtn.addEventListener('click', () => {
+        const myTransactionsScreen = document.getElementById('my-transactions-screen');
+        if (myTransactionsScreen) {
+            myTransactionsScreen.style.display = 'none';
+        }
+        const mainScreen = document.getElementById('main__screen');
+        if (mainScreen) {
+            mainScreen.style.display = 'block';
+        }
+    });
+}
+
+// Обработчик кнопки "Назад" на экране деталей сделки
+const backFromTransactionDetailsBtn = document.getElementById('back-from-transaction-details');
+if (backFromTransactionDetailsBtn) {
+    backFromTransactionDetailsBtn.addEventListener('click', () => {
+        const transactionDetailsScreen = document.getElementById('transaction-details-screen');
+        if (transactionDetailsScreen) {
+            transactionDetailsScreen.style.display = 'none';
+        }
+        const myTransactionsScreen = document.getElementById('my-transactions-screen');
+        if (myTransactionsScreen) {
+            myTransactionsScreen.style.display = 'block';
+        }
+    });
+}
+
 // Обработчик кнопки "Создать объявление"
 if (btn_create_ads) {
     btn_create_ads.addEventListener("click", async () => {
@@ -1796,21 +1840,9 @@ function openAdDetailsScreen(ad, userAction = 'buy') {
         });
     }
     
+    // Форма реквизитов больше не нужна - реквизиты берутся из объявления
     if (buyerPaymentDetailsSection) {
-        // Показываем форму реквизитов всегда:
-        // - При покупке (userAction='buy', ad.type='sell'): покупатель вводит свои реквизиты (куда продавец переведет деньги)
-        // - При продаже (userAction='sell', ad.type='buy'): продавец вводит свои реквизиты (куда покупатель переведет деньги)
-        buyerPaymentDetailsSection.style.display = 'block';
-        
-        // Обновляем текст подсказки в зависимости от действия
-        const paymentLabel = buyerPaymentDetailsSection.querySelector('.purchase_label');
-        if (paymentLabel) {
-            if (userAction === 'buy') {
-                paymentLabel.textContent = 'Реквизиты для получения денег (куда продавец переведет деньги)';
-            } else {
-                paymentLabel.textContent = 'Реквизиты для получения денег (куда покупатель переведет деньги)';
-            }
-        }
+        buyerPaymentDetailsSection.style.display = 'none';
     }
     
     // Заполняем данные объявления
@@ -2074,97 +2106,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     cryptoAmount = purchaseAmount;
                 }
                 
-                // Собираем реквизиты покупателя (всегда требуются)
-                // При покупке (userAction='buy', ad.type='sell'): покупатель вводит свои реквизиты
-                // При продаже (userAction='sell', ad.type='buy'): продавец вводит свои реквизиты
-                let buyerBankName = null;
-                let buyerPaymentDetails = null;
-                
-                // Получаем элементы полей ввода - используем querySelector для надежности
-                const bankInput = document.querySelector('#buyer-bank-name');
-                const detailsInput = document.querySelector('#buyer-payment-details');
-                
-                console.log('Проверка реквизитов:', {
-                    userAction,
-                    adType: selectedAd.type,
-                    bankInput: !!bankInput,
-                    detailsInput: !!detailsInput,
-                    bankInputId: bankInput?.id,
-                    detailsInputId: detailsInput?.id,
-                    bankValue: bankInput?.value,
-                    detailsValue: detailsInput?.value,
-                    bankInputType: bankInput?.tagName,
-                    detailsInputType: detailsInput?.tagName,
-                    bankInputDisplay: bankInput ? window.getComputedStyle(bankInput).display : 'none',
-                    detailsInputDisplay: detailsInput ? window.getComputedStyle(detailsInput).display : 'none'
-                });
-                
-                // Получаем значения напрямую из элементов
-                if (!bankInput || !detailsInput) {
-                    console.error('Поля ввода реквизитов не найдены!', {
-                        bankInput: !!bankInput,
-                        detailsInput: !!detailsInput,
-                        allInputs: document.querySelectorAll('input').length
-                    });
-                    alert('Ошибка: поля ввода реквизитов не найдены. Пожалуйста, обновите страницу.');
-                    return;
-                }
-                
-                // Получаем значения напрямую, проверяя все возможные способы
-                buyerBankName = (bankInput.value || bankInput.textContent || '').trim();
-                buyerPaymentDetails = (detailsInput.value || detailsInput.textContent || '').trim();
-                
-                // Дополнительная проверка через getAttribute
-                if (!buyerBankName && bankInput.getAttribute('value')) {
-                    buyerBankName = bankInput.getAttribute('value').trim();
-                }
-                if (!buyerPaymentDetails && detailsInput.getAttribute('value')) {
-                    buyerPaymentDetails = detailsInput.getAttribute('value').trim();
-                }
-                
-                console.log('Значения после получения:', {
-                    buyerBankName,
-                    buyerPaymentDetails,
-                    bankLength: buyerBankName.length,
-                    detailsLength: buyerPaymentDetails.length,
-                    bankIsEmpty: !buyerBankName,
-                    detailsIsEmpty: !buyerPaymentDetails
-                });
-                
-                // Убираем классы ошибок
-                bankInput.classList.remove('error');
-                detailsInput.classList.remove('error');
-                
-                // Проверяем, что реквизиты указаны
-                let hasError = false;
-                if (!buyerBankName || buyerBankName.length === 0) {
-                    console.log('Ошибка: банк не указан или пустой');
-                    bankInput.classList.add('error');
-                    hasError = true;
-                }
-                if (!buyerPaymentDetails || buyerPaymentDetails.length === 0) {
-                    console.log('Ошибка: реквизиты не указаны или пустые');
-                    detailsInput.classList.add('error');
-                    hasError = true;
-                }
-                
-                if (hasError) {
-                    alert('Пожалуйста, укажите банк и реквизиты для получения денег');
-                    // Прокручиваем к форме реквизитов
-                    const paymentDetailsSection = document.getElementById('buyer-payment-details-section');
-                    if (paymentDetailsSection) {
-                        paymentDetailsSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }
-                    return;
-                }
-                
-                console.log('Реквизиты валидны и будут отправлены:', { 
-                    buyerBankName, 
-                    buyerPaymentDetails,
-                    bankLength: buyerBankName.length,
-                    detailsLength: buyerPaymentDetails.length
-                });
-                
+                // Реквизиты больше не требуются при создании транзакции
+                // Они берутся из объявления (bank_name, payment_details)
                 const transactionData = {
                     ad_id: selectedAd.Id,
                     crypto_currency: selectedAd.crypto_currency,
@@ -2172,26 +2115,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     fiat_amount: fiatAmount
                 };
                 
-                // Добавляем реквизиты всегда (они уже проверены выше)
-                if (buyerBankName && buyerPaymentDetails) {
-                    transactionData.buyer_bank_name = buyerBankName;
-                    transactionData.buyer_payment_details = buyerPaymentDetails;
-                    console.log('Реквизиты добавлены в transactionData:', {
-                        userAction,
-                        adType: selectedAd.type,
-                        buyer_bank_name: transactionData.buyer_bank_name,
-                        buyer_payment_details: transactionData.buyer_payment_details
-                    });
-                } else {
-                    console.error('Реквизиты не добавлены, хотя должны быть:', {
-                        userAction,
-                        adType: selectedAd.type,
-                        buyerBankName: !!buyerBankName,
-                        buyerPaymentDetails: !!buyerPaymentDetails
-                    });
-                    alert('Ошибка: реквизиты не были получены. Пожалуйста, попробуйте снова.');
-                    return;
-                }
+                console.log('Создание транзакции:', {
+                    userAction,
+                    adType: selectedAd.type,
+                    transactionData
+                });
                 
                 console.log('Отправка transactionData:', transactionData);
                 
@@ -2344,7 +2272,7 @@ function openPaymentScreen(ad, usdtAmount, userAction = 'buy') {
         }
     }
     
-    // Заполняем реквизиты
+    // Заполняем реквизиты из объявления
     const paymentDetailsEl = document.getElementById('payment-details');
     
     if (!paymentDetailsEl) {
@@ -2352,15 +2280,18 @@ function openPaymentScreen(ad, usdtAmount, userAction = 'buy') {
         return;
     }
     
-    console.log('Заполнение реквизитов:', {
+    console.log('Заполнение реквизитов из объявления:', {
         element: !!paymentDetailsEl,
         userAction,
+        adType: ad.type,
         bank_name: ad.bank_name,
         payment_details: ad.payment_details,
         ad: ad
     });
     
-    // Для покупки показываем реквизиты продавца
+    // Реквизиты всегда берутся из объявления
+    // При покупке (userAction='buy', ad.type='sell'): показываем реквизиты продавца
+    // При продаже (userAction='sell', ad.type='buy'): показываем реквизиты покупателя (из объявления)
     const bankName = ad.bank_name || 'Не указан';
     const paymentDetails = ad.payment_details || 'Не указаны';
     
@@ -2769,8 +2700,312 @@ async function confirmTransaction(transactionId, bankName, paymentDetails) {
         if (userData) {
             await refreshUserBalance();
         }
+        
+        // Если открыт экран деталей сделки, закрываем его и возвращаемся к списку
+        const transactionDetailsScreen = document.getElementById('transaction-details-screen');
+        if (transactionDetailsScreen && transactionDetailsScreen.style.display !== 'none') {
+            transactionDetailsScreen.style.display = 'none';
+            const myTransactionsScreen = document.getElementById('my-transactions-screen');
+            if (myTransactionsScreen) {
+                myTransactionsScreen.style.display = 'block';
+                await loadMyTransactions();
+            }
+        }
     } catch (error) {
         console.error('Ошибка при подтверждении сделки:', error);
         alert('Ошибка подтверждения сделки: ' + error.message);
+    }
+}
+
+// ========== ЭКРАН "МОИ СДЕЛКИ" ==========
+
+// Функция загрузки моих сделок
+async function loadMyTransactions() {
+    try {
+        const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/transactions/my`, {
+            method: 'GET'
+        });
+        
+        if (!response.ok) {
+            throw new Error('Ошибка загрузки сделок');
+        }
+        
+        const transactions = await response.json();
+        displayMyTransactions(transactions);
+    } catch (error) {
+        console.error('Ошибка при загрузке сделок:', error);
+        const transactionsList = document.getElementById('transactions-list');
+        if (transactionsList) {
+            transactionsList.innerHTML = '<p style="text-align: center; color: rgba(255,255,255,0.6); padding: 40px;">Ошибка загрузки сделок</p>';
+        }
+    }
+}
+
+// Функция отображения моих сделок
+function displayMyTransactions(transactions) {
+    const transactionsList = document.getElementById('transactions-list');
+    if (!transactionsList) return;
+    
+    transactionsList.innerHTML = '';
+    
+    if (!transactions || transactions.length === 0) {
+        transactionsList.innerHTML = '<p style="text-align: center; color: rgba(255,255,255,0.6); padding: 40px;">У вас пока нет сделок</p>';
+        return;
+    }
+    
+    transactions.forEach(transaction => {
+        const transactionCard = document.createElement('div');
+        transactionCard.className = 'transaction_card';
+        transactionCard.setAttribute('data-transaction-id', transaction.id);
+        
+        // Определяем роль пользователя в сделке
+        const isBuyer = transaction.buyer_id === (userData?.id || 0);
+        const isSeller = transaction.seller_id === (userData?.id || 0);
+        const role = isBuyer ? 'Покупатель' : 'Продавец';
+        
+        // Определяем статус
+        const statusText = {
+            'pending': 'Ожидание оплаты',
+            'paid': 'Оплачено',
+            'confirmed': 'Подтверждено',
+            'completed': 'Завершено',
+            'cancelled': 'Отменено'
+        }[transaction.status] || transaction.status;
+        
+        transactionCard.innerHTML = `
+            <div class="transaction_card_header">
+                <div class="transaction_role_badge ${isBuyer ? 'badge_buyer' : 'badge_seller'}">
+                    ${role}
+                </div>
+                <div class="transaction_status_badge status_${transaction.status}">
+                    ${statusText}
+                </div>
+            </div>
+            <div class="transaction_card_content">
+                <div class="transaction_card_row">
+                    <span class="transaction_card_label">Криптовалюта:</span>
+                    <span class="transaction_card_value">${transaction.crypto_amount.toFixed(1)} ${transaction.crypto_currency}</span>
+                </div>
+                <div class="transaction_card_row">
+                    <span class="transaction_card_label">Сумма:</span>
+                    <span class="transaction_card_value">${transaction.fiat_amount.toFixed(2)} RUB</span>
+                </div>
+                <div class="transaction_card_row">
+                    <span class="transaction_card_label">Цена:</span>
+                    <span class="transaction_card_value">${transaction.price.toFixed(2)} RUB</span>
+                </div>
+                <div class="transaction_card_row">
+                    <span class="transaction_card_label">Дата:</span>
+                    <span class="transaction_card_value">${new Date(transaction.created_at).toLocaleString('ru-RU')}</span>
+                </div>
+            </div>
+            <div class="transaction_card_actions">
+                <button class="transaction_view_btn" data-transaction-id="${transaction.id}">
+                    Открыть
+                </button>
+            </div>
+        `;
+        
+        transactionsList.appendChild(transactionCard);
+    });
+    
+    // Добавляем обработчики кнопок открытия сделки
+    document.querySelectorAll('.transaction_view_btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const transactionId = parseInt(btn.getAttribute('data-transaction-id'));
+            await openTransactionDetails(transactionId);
+        });
+    });
+}
+
+// Функция открытия деталей сделки
+async function openTransactionDetails(transactionId) {
+    try {
+        const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/transactions/${transactionId}`, {
+            method: 'GET'
+        });
+        
+        if (!response.ok) {
+            throw new Error('Ошибка загрузки сделки');
+        }
+        
+        const transaction = await response.json();
+        
+        // Получаем объявление для реквизитов (используем существующий эндпоинт)
+        let ad = null;
+        try {
+            const adsResponse = await makeAuthenticatedRequest(`${API_BASE_URL}/api/ads`, {
+                method: 'GET'
+            });
+            if (adsResponse.ok) {
+                const allAds = await adsResponse.json();
+                ad = allAds.find(a => a.Id === transaction.ad_id) || null;
+            }
+        } catch (error) {
+            console.error('Ошибка при получении объявления:', error);
+        }
+        
+        displayTransactionDetails(transaction, ad);
+        
+        // Показываем экран деталей
+        const myTransactionsScreen = document.getElementById('my-transactions-screen');
+        if (myTransactionsScreen) {
+            myTransactionsScreen.style.display = 'none';
+        }
+        const transactionDetailsScreen = document.getElementById('transaction-details-screen');
+        if (transactionDetailsScreen) {
+            transactionDetailsScreen.style.display = 'block';
+        }
+    } catch (error) {
+        console.error('Ошибка при открытии деталей сделки:', error);
+        alert('Ошибка загрузки сделки: ' + error.message);
+    }
+}
+
+// Функция отображения деталей сделки
+function displayTransactionDetails(transaction, ad) {
+    const detailsCard = document.getElementById('transaction-details-card');
+    const actionsDiv = document.getElementById('transaction-actions');
+    
+    if (!detailsCard || !actionsDiv) return;
+    
+    // Определяем роль пользователя
+    const isBuyer = transaction.buyer_id === (userData?.id || 0);
+    const isSeller = transaction.seller_id === (userData?.id || 0);
+    
+    // Формируем информацию о сделке
+    let detailsHTML = `
+        <div class="transaction_details_info">
+            <div class="transaction_details_row">
+                <span class="transaction_details_label">Статус:</span>
+                <span class="transaction_details_value status_${transaction.status}">
+                    ${{
+                        'pending': 'Ожидание оплаты',
+                        'paid': 'Оплачено',
+                        'confirmed': 'Подтверждено',
+                        'completed': 'Завершено',
+                        'cancelled': 'Отменено'
+                    }[transaction.status] || transaction.status}
+                </span>
+            </div>
+            <div class="transaction_details_row">
+                <span class="transaction_details_label">Ваша роль:</span>
+                <span class="transaction_details_value">${isBuyer ? 'Покупатель' : 'Продавец'}</span>
+            </div>
+            <div class="transaction_details_row">
+                <span class="transaction_details_label">Криптовалюта:</span>
+                <span class="transaction_details_value">${transaction.crypto_amount.toFixed(1)} ${transaction.crypto_currency}</span>
+            </div>
+            <div class="transaction_details_row">
+                <span class="transaction_details_label">Сумма:</span>
+                <span class="transaction_details_value">${transaction.fiat_amount.toFixed(2)} RUB</span>
+            </div>
+            <div class="transaction_details_row">
+                <span class="transaction_details_label">Цена за 1 ${transaction.crypto_currency}:</span>
+                <span class="transaction_details_value">${transaction.price.toFixed(2)} RUB</span>
+            </div>
+            <div class="transaction_details_row">
+                <span class="transaction_details_label">Дата создания:</span>
+                <span class="transaction_details_value">${new Date(transaction.created_at).toLocaleString('ru-RU')}</span>
+            </div>
+    `;
+    
+    // Добавляем реквизиты из объявления
+    if (ad && ad.bank_name && ad.payment_details) {
+        detailsHTML += `
+            <div class="transaction_details_section">
+                <div class="transaction_details_section_title">Реквизиты для перевода:</div>
+                <div class="transaction_details_row">
+                    <span class="transaction_details_label">Банк:</span>
+                    <span class="transaction_details_value">${escapeHtml(ad.bank_name)}</span>
+                </div>
+                <div class="transaction_details_row">
+                    <span class="transaction_details_label">Реквизиты:</span>
+                    <span class="transaction_details_value">${escapeHtml(ad.payment_details)}</span>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Если покупатель перевел деньги, показываем дату
+    if (transaction.buyer_paid_at) {
+        detailsHTML += `
+            <div class="transaction_details_row">
+                <span class="transaction_details_label">Оплачено:</span>
+                <span class="transaction_details_value">${new Date(transaction.buyer_paid_at).toLocaleString('ru-RU')}</span>
+            </div>
+        `;
+    }
+    
+    detailsHTML += `</div>`;
+    
+    detailsCard.innerHTML = detailsHTML;
+    
+    // Формируем кнопки действий
+    let actionsHTML = '';
+    
+    if (isBuyer && transaction.status === 'pending') {
+        // Покупатель может подтвердить перевод
+        actionsHTML = `
+            <button class="transaction_action_btn" id="confirm-payment-btn" data-transaction-id="${transaction.id}">
+                Я перевел средства
+            </button>
+        `;
+    } else if (isSeller && transaction.status === 'paid') {
+        // Продавец может подтвердить получение
+        actionsHTML = `
+            <button class="transaction_action_btn" id="confirm-transaction-btn" data-transaction-id="${transaction.id}">
+                Подтвердить получение
+            </button>
+        `;
+    }
+    
+    actionsDiv.innerHTML = actionsHTML;
+    
+    // Добавляем обработчики кнопок
+    const confirmPaymentBtn = document.getElementById('confirm-payment-btn');
+    if (confirmPaymentBtn) {
+        confirmPaymentBtn.addEventListener('click', async () => {
+            const transactionId = parseInt(confirmPaymentBtn.getAttribute('data-transaction-id'));
+            await markTransactionPaid(transactionId);
+        });
+    }
+    
+    const confirmTransactionBtn = document.getElementById('confirm-transaction-btn');
+    if (confirmTransactionBtn) {
+        confirmTransactionBtn.addEventListener('click', async () => {
+            const transactionId = parseInt(confirmTransactionBtn.getAttribute('data-transaction-id'));
+            await confirmTransaction(transactionId, null, null);
+        });
+    }
+}
+
+// Функция подтверждения перевода покупателем
+async function markTransactionPaid(transactionId) {
+    if (!confirm('Вы подтверждаете, что перевели средства?')) {
+        return;
+    }
+    
+    try {
+        const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/transactions/${transactionId}/pay`, {
+            method: 'POST'
+        });
+        
+        if (!response.ok) {
+            throw new Error('Ошибка подтверждения перевода');
+        }
+        
+        alert('Перевод подтвержден! Продавец получит уведомление.');
+        
+        // Обновляем детали сделки
+        await openTransactionDetails(transactionId);
+        
+        // Обновляем баланс
+        if (userData) {
+            await refreshUserBalance();
+        }
+    } catch (error) {
+        console.error('Ошибка при подтверждении перевода:', error);
+        alert('Ошибка подтверждения перевода: ' + error.message);
     }
 }
