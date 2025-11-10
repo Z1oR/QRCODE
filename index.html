@@ -203,7 +203,7 @@
             <div class="limits_section">
                 <label class="section_header">МИН. И МАКС. СУММА СДЕЛКИ</label>
                 <div class="input_field">
-                    <input type="text" class="single_input" id="min-limit" placeholder="Мин. 500" />
+                    <input type="text" class="single_input" id="min-limit" placeholder="Мин. 100" />
                     <span class="input_suffix">RUB</span>
                 </div>
                 <div class="input_field">
@@ -249,7 +249,7 @@
                             <span class="checkmark">✓</span>
                         </div>
                     </div>
-                    <div class="payment_method_item" data-method="raiffeisen">
+                    <div class="payment_method_item" data-method="alfabank">
                         <div class="payment_method_icon">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                                 <rect x="2" y="4" width="20" height="16" rx="3" stroke="currentColor" stroke-width="2"/>
@@ -257,8 +257,38 @@
                             </svg>
                         </div>
                         <div class="payment_method_info">
-                            <div class="payment_method_name">Райффайзен</div>
+                            <div class="payment_method_name">Альфа-Банк</div>
                             <div class="payment_method_desc">Карта или номер телефона</div>
+                        </div>
+                        <div class="payment_method_check">
+                            <span class="checkmark">✓</span>
+                        </div>
+                    </div>
+                    <div class="payment_method_item" data-method="ozonbank">
+                        <div class="payment_method_icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <rect x="2" y="4" width="20" height="16" rx="3" stroke="currentColor" stroke-width="2"/>
+                                <path d="M2 10H22" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                        </div>
+                        <div class="payment_method_info">
+                            <div class="payment_method_name">Озон - Банк</div>
+                            <div class="payment_method_desc">Карта или номер телефона</div>
+                        </div>
+                        <div class="payment_method_check">
+                            <span class="checkmark">✓</span>
+                        </div>
+                    </div>
+                    <div class="payment_method_item" data-method="custom">
+                        <div class="payment_method_icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                                <path d="M12 8V16M8 12H16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <div class="payment_method_info">
+                            <div class="payment_method_name">Другой банк</div>
+                            <div class="payment_method_desc">Укажите свой банк</div>
                         </div>
                         <div class="payment_method_check">
                             <span class="checkmark">✓</span>
@@ -266,8 +296,17 @@
                     </div>
                 </div>
 
+                <!-- Custom Bank Name Input (shown when "custom" is selected) -->
+                <div class="custom_bank_wrapper" id="custom-bank-wrapper" style="display: none;">
+                    <label class="section_subheader">Название банка</label>
+                    <div class="input_field">
+                        <input type="text" class="single_input" id="custom-bank-name" placeholder="Введите название банка" />
+                    </div>
+                </div>
+
                 <!-- Payment Details Input -->
                 <div class="payment_input_wrapper">
+                    <label class="section_subheader">Реквизиты</label>
                     <div class="input_field">
                         <input type="text" class="single_input" id="payment-details" placeholder="Введите номер карты или телефона" />
                     </div>
@@ -294,7 +333,7 @@
                     <span class="back_arrow">‹</span>
                 </button>
                 <h1 class="preview_title">Предпросмотр</h1>
-                <span class="preview_progress">2/4</span>
+                <span class="preview_progress">2/2</span>
             </div>
 
             <!-- Preview Card -->
@@ -338,7 +377,7 @@
                                 </svg>
                                 Лимиты
                             </span>
-                            <span class="preview_detail_value" id="preview-limits">500 – 50,000 RUB</span>
+                            <span class="preview_detail_value" id="preview-limits">100 – 1,000,000 RUB</span>
                         </div>
                         <div class="preview_detail_row">
                             <span class="preview_detail_label">
