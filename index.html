@@ -332,6 +332,60 @@
         </div>
     </div>
 
+    <!-- Экран продажи криптовалюты -->
+    <div class="sell__screen" style="display: none;">
+        <div class="sell__container">
+            <div class="sell__header">
+                <button class="back_btn" id="back-from-sell">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+                <h2 class="sell__title">Продать криптовалюту</h2>
+            </div>
+            <!-- Фильтры -->
+            <div class="filters__bar">
+                <div class="filter__item filter__crypto" id="crypto-filter-sell">
+                    <div class="filter__header">
+                        <div class="filter__header-content">
+                            <span class="filter__label">Крипта</span>
+                            <span class="filter__value">TON</span>
+                        </div>
+                        <span class="filter__arrow-icon">⇅</span>
+                    </div>
+                    <div class="filter__dropdown" id="crypto-dropdown-sell">
+                        <div class="dropdown__item" data-value="USDT">
+                            <span>USDT</span>
+                        </div>
+                        <div class="dropdown__item dropdown__item--selected" data-value="TON">
+                            <span class="checkmark">✓</span>
+                            <span>TON</span>
+                        </div>
+                        <div class="dropdown__item" data-value="BTC">
+                            <span>BTC</span>
+                        </div>
+                        <div class="dropdown__item" data-value="ETH">
+                            <span>ETH</span>
+                        </div>
+                        <div class="dropdown__item" data-value="NOT">
+                            <span>NOT</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Поле суммы -->
+            <div class="amount__input">
+                <label>Сумма</label>
+                <input class="amount__field" placeholder="10.00 RUB"></input>
+            </div>
+
+            <!-- Карточки объявлений -->
+            <div class="listings__container">
+                <!-- Объявления будут добавлены через JS -->
+            </div>
+        </div>
+    </div>
 
     <div class="create_ads_screen" style="display: none;">
         <div class="create_ads_container">
