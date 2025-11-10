@@ -200,10 +200,14 @@ let btn_sell_crypto = document.querySelector("#btn-for-sellcrpyto")
 let btn_my_ads = document.querySelector("#create_ads")
 // ------------
 
-btn_buy_crypto.addEventListener("click", () => {
+btn_buy_crypto.addEventListener("click", async () => {
     main__screen.style.display = "none"
-
     buy_screen.style.display = "block"
+    
+    // Загружаем объявления при открытии экрана покупки
+    const selectedCrypto = document.querySelector('.filter__value')?.textContent || 'TON'
+    const ads = await loadAds('sell', selectedCrypto)
+    displayAds(ads)
 })
 
 btn_my_ads.addEventListener("click", () => {
@@ -418,6 +422,7 @@ if (document.readyState === 'loading') {
 // Payment Method Selection
 function initPaymentMethodSelection() {
     const paymentMethodItems = document.querySelectorAll('.payment_method_item')
+    const customBankWrapper = document.querySelector('#custom-bank-wrapper')
     
     if (!paymentMethodItems.length) return
     
@@ -431,6 +436,23 @@ function initPaymentMethodSelection() {
             
             // Добавляем выделение на выбранный метод
             item.classList.add('selected')
+            
+            // Показываем/скрываем поле для ввода названия банка
+            const method = item.getAttribute('data-method')
+            if (customBankWrapper) {
+                if (method === 'custom') {
+                    customBankWrapper.style.display = 'block'
+                    // Добавляем плавную анимацию появления
+                    setTimeout(() => {
+                        customBankWrapper.style.opacity = '1'
+                        customBankWrapper.style.transform = 'translateY(0)'
+                    }, 10)
+                } else {
+                    customBankWrapper.style.display = 'none'
+                    customBankWrapper.style.opacity = '0'
+                    customBankWrapper.style.transform = 'translateY(-10px)'
+                }
+            }
         })
     })
 }
@@ -462,8 +484,8 @@ function initPreviewScreen() {
         const crypto = document.querySelector('#selected-crypto')?.textContent || 'USDT'
         const price = document.querySelector('#price-range')?.value || '0.00'
         const amount = document.querySelector('#amount-range')?.value || '0'
-        const minLimit = document.querySelector('#min-limit')?.value || '500'
-        const maxLimit = document.querySelector('#max-limit')?.value || '50000'
+        const minLimit = document.querySelector('#min-limit')?.value || '100'
+        const maxLimit = document.querySelector('#max-limit')?.value || '1,000,000'
         
         // Собираем данные о реквизитах (только для продажи)
         let paymentMethod = ''
@@ -472,8 +494,16 @@ function initPreviewScreen() {
         if (action === 'sell') {
             const selectedMethod = document.querySelector('.payment_method_item.selected')
             if (selectedMethod) {
-                const methodName = selectedMethod.querySelector('.payment_method_name')?.textContent || ''
-                paymentMethod = methodName
+                const methodType = selectedMethod.getAttribute('data-method')
+                
+                // Если выбран пользовательский банк, берем название из поля ввода
+                if (methodType === 'custom') {
+                    const customBankName = document.querySelector('#custom-bank-name')?.value
+                    paymentMethod = customBankName || 'Другой банк'
+                } else {
+                    const methodName = selectedMethod.querySelector('.payment_method_name')?.textContent || ''
+                    paymentMethod = methodName
+                }
             }
             paymentDetails = document.querySelector('#payment-details')?.value || ''
         }
@@ -499,25 +529,98 @@ function initPreviewScreen() {
     })
     
     // Обработка кнопки "Создать объявление"
-    createListingBtn.addEventListener('click', () => {
-        // Здесь будет логика создания объявления через API
-        console.log('Создание объявления...')
-        
-        // Анимация успеха
-        createListingBtn.textContent = 'Создано! ✓'
-        createListingBtn.style.background = 'linear-gradient(135deg, #00c864 0%, #00a854 100%)'
-        
-        // Возвращаем на главный экран через 1.5 секунды
-        setTimeout(() => {
-            previewScreen.style.display = 'none'
-            main__screen.style.display = 'block'
+    createListingBtn.addEventListener('click', async () => {
+        try {
+            // Собираем данные из формы
+            const action = document.querySelector('.segmented_btn--active')?.getAttribute('data-action') || 'sell'
+            const crypto = document.querySelector('#selected-crypto')?.textContent || 'USDT'
+            const price = parseFloat(document.querySelector('#price-range')?.value) || 0
+            const amount = parseFloat(document.querySelector('#amount-range')?.value) || 0
+            const minLimit = parseFloat(document.querySelector('#min-limit')?.value) || 0
+            const maxLimit = parseFloat(document.querySelector('#max-limit')?.value) || null
             
-            // Сбрасываем кнопку
-            createListingBtn.textContent = 'Создать объявление'
+            let bankName = ''
+            let paymentDetails = ''
+            
+            if (action === 'sell') {
+                const selectedMethod = document.querySelector('.payment_method_item.selected')
+                if (selectedMethod) {
+                    const methodType = selectedMethod.getAttribute('data-method')
+                    
+                    if (methodType === 'custom') {
+                        bankName = document.querySelector('#custom-bank-name')?.value || 'Другой банк'
+                    } else {
+                        bankName = selectedMethod.querySelector('.payment_method_name')?.textContent || ''
+                    }
+                }
+                paymentDetails = document.querySelector('#payment-details')?.value || ''
+            }
+            
+            // Валидация данных
+            if (!crypto || price <= 0 || amount <= 0 || minLimit <= 0) {
+                alert('Пожалуйста, заполните все обязательные поля')
+                return
+            }
+            
+            // Отправляем данные на сервер
+            createListingBtn.textContent = 'Создание...'
+            createListingBtn.disabled = true
+            
+            const adData = {
+                action: action,
+                crypto_currency: crypto,
+                price: price,
+                crypto_amount: amount,
+                min_limit: minLimit,
+                max_limit: maxLimit,
+                bank_name: bankName,
+                payment_details: paymentDetails
+            }
+            
+            const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/ads`, {
+                method: 'POST',
+                body: JSON.stringify(adData)
+            })
+            
+            if (!response.ok) {
+                const errorData = await response.json()
+                throw new Error(errorData.detail || 'Ошибка создания объявления')
+            }
+            
+            const createdAd = await response.json()
+            console.log('Объявление создано:', createdAd)
+            
+            // Анимация успеха
+            createListingBtn.textContent = 'Создано! ✓'
             createListingBtn.style.background = 'linear-gradient(135deg, #00c864 0%, #00a854 100%)'
             
-            window.scrollTo(0, 0)
-        }, 1500)
+            // Возвращаем на главный экран через 1.5 секунды
+            setTimeout(() => {
+                previewScreen.style.display = 'none'
+                main__screen.style.display = 'block'
+                
+                // Сбрасываем кнопку
+                createListingBtn.textContent = 'Создать объявление'
+                createListingBtn.style.background = 'linear-gradient(135deg, #00c864 0%, #00a854 100%)'
+                createListingBtn.disabled = false
+                
+                // Очищаем форму
+                document.querySelector('#price-range').value = ''
+                document.querySelector('#amount-range').value = ''
+                document.querySelector('#min-limit').value = ''
+                document.querySelector('#max-limit').value = ''
+                document.querySelector('#payment-details').value = ''
+                
+                window.scrollTo(0, 0)
+            }, 1500)
+        } catch (error) {
+            console.error('Ошибка при создании объявления:', error)
+            alert('Ошибка создания объявления: ' + error.message)
+            
+            // Возвращаем кнопку в исходное состояние
+            createListingBtn.textContent = 'Создать объявление'
+            createListingBtn.disabled = false
+        }
     })
 }
 
@@ -567,8 +670,8 @@ function updatePreview(action, crypto, price, amount, minLimit, maxLimit, paymen
     // Обновляем лимиты
     const previewLimits = document.querySelector('#preview-limits')
     if (previewLimits) {
-        const minValue = minLimit || '500'
-        const maxValue = maxLimit || '50,000'
+        const minValue = minLimit || '100'
+        const maxValue = maxLimit || '1,000,000'
         
         // Форматируем числа с разделителями
         const formatNumber = (num) => {
@@ -592,4 +695,134 @@ if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initPreviewScreen)
 } else {
     initPreviewScreen()
+}
+
+// ========== Функции для загрузки и отображения объявлений ==========
+
+async function loadAds(adType = 'sell', cryptoCurrency = null) {
+    try {
+        let url = `${API_BASE_URL}/api/ads?ad_type=${adType}&status=active`
+        
+        if (cryptoCurrency) {
+            url += `&crypto_currency=${cryptoCurrency}`
+        }
+        
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        })
+        
+        if (!response.ok) {
+            throw new Error('Ошибка загрузки объявлений')
+        }
+        
+        const ads = await response.json()
+        return ads
+    } catch (error) {
+        console.error('Ошибка загрузки объявлений:', error)
+        return []
+    }
+}
+
+function displayAds(ads) {
+    const listingsContainer = document.querySelector('.listings__container')
+    
+    if (!listingsContainer) {
+        console.warn('Контейнер для объявлений не найден')
+        return
+    }
+    
+    // Очищаем контейнер
+    listingsContainer.innerHTML = ''
+    
+    if (ads.length === 0) {
+        listingsContainer.innerHTML = '<p style="text-align: center; color: grey; margin-top: 20px;">Объявлений пока нет</p>'
+        return
+    }
+    
+    // Создаем карточки для каждого объявления
+    ads.forEach(ad => {
+        const cardHTML = `
+            <div class="listing__card">
+                <div class="listing__header">
+                    <div class="listing__price">
+                        <div class="price__main">${ad.price.toFixed(2)} RUB</div>
+                        <div class="price__subtitle">Цена за 1 ${ad.crypto_currency}</div>
+                    </div>
+                    <div class="listing__actions">
+                        <button class="buy__btn" data-ad-id="${ad.Id}">КУПИТЬ</button>
+                    </div>
+                </div>
+                <div class="listing__seller">
+                    <div class="seller__avatar" style="background-color: ${getRandomColor()};"></div>
+                    <div class="seller__info">
+                        <div class="seller__name">${ad.seller_name || 'Анонимный пользователь'}</div>
+                        <div class="seller__stats">сделок: ${ad.seller_transactions || 0} • ${calculateSuccessRate(ad.seller_good_transactions, ad.seller_transactions)}%</div>
+                    </div>
+                </div>
+                <div class="listing__details">
+                    <div class="detail__row">
+                        <span class="detail__label">Доступно</span>
+                        <span class="detail__value">${ad.crypto_amount.toFixed(2)} ${ad.crypto_currency}</span>
+                    </div>
+                    <div class="detail__row">
+                        <span class="detail__label">Лимиты</span>
+                        <span class="detail__value">${formatNumber(ad.min_limit)} – ${ad.max_limit ? formatNumber(ad.max_limit) : formatNumber(ad.min_limit * 10)} RUB</span>
+                    </div>
+                    <div class="detail__row">
+                        <span class="detail__label">Методы оплаты</span>
+                        <span class="detail__value">${ad.bank_name || 'Не указано'}</span>
+                    </div>
+                </div>
+            </div>
+        `
+        
+        listingsContainer.innerHTML += cardHTML
+    })
+}
+
+function getRandomColor() {
+    const colors = ['#5BA3D0', '#D05B5B', '#5BD08D', '#D0A65B', '#8D5BD0', '#5BD0C4']
+    return colors[Math.floor(Math.random() * colors.length)]
+}
+
+function calculateSuccessRate(good, total) {
+    if (!total || total === 0) return 0
+    return Math.round((good / total) * 100)
+}
+
+function formatNumber(num) {
+    if (!num) return '0'
+    return new Intl.NumberFormat('ru-RU').format(num)
+}
+
+// Инициализация buy screen с загрузкой объявлений
+function initBuyScreen() {
+    // Обработчик смены криптовалюты в фильтре
+    const cryptoDropdownItems = document.querySelectorAll('.buy__screen .filter__dropdown .dropdown__item')
+    cryptoDropdownItems.forEach(item => {
+        const originalClickHandler = item.onclick
+        
+        item.addEventListener('click', async () => {
+            // Даем время на обновление UI
+            setTimeout(async () => {
+                const crypto = item.getAttribute('data-value')
+                if (crypto) {
+                    // Загружаем объявления для выбранной криптовалюты
+                    const ads = await loadAds('sell', crypto)
+                    displayAds(ads)
+                }
+            }, 100)
+        })
+    })
+}
+
+// Инициализация buy screen
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initBuyScreen)
+} else {
+    initBuyScreen()
 }
