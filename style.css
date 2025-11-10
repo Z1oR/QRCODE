@@ -295,4 +295,405 @@ body {
 .buy__screen .buy__container .listings__container .listing__card .listing__details .detail__row .detail__value {
   color: white;
   font-weight: 500;
+}
+
+.create_ads_screen {
+  width: 100%;
+  min-height: 100vh;
+  padding: 20px;
+  padding-bottom: 100px;
+  background: linear-gradient(180deg, rgb(15, 15, 16) 0%, rgb(20, 20, 21) 100%);
+}
+.create_ads_screen .create_ads_container {
+  max-width: 100%;
+  margin: 0 auto;
+}
+.create_ads_screen .create_ads_container .create_ads_header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+.create_ads_screen .create_ads_container .create_ads_header .create_ads_title {
+  font-size: 28px;
+  font-weight: 700;
+  color: white;
+  margin: 0;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, #ffffff 0%, rgba(255, 255, 255, 0.9) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+@supports not (-webkit-background-clip: text) {
+  .create_ads_screen .create_ads_container .create_ads_header .create_ads_title {
+    color: white;
+  }
+}
+.create_ads_screen .create_ads_container .create_ads_header .create_ads_progress {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-weight: 500;
+}
+.create_ads_screen .create_ads_container .create_ads_section {
+  margin-bottom: 32px;
+}
+.create_ads_screen .create_ads_container .create_ads_section .section_label_row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px;
+  background: linear-gradient(135deg, rgba(27, 27, 29, 0.8) 0%, rgba(42, 42, 43, 0.6) 100%);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+.create_ads_screen .create_ads_container .create_ads_section .section_label_row .section_label {
+  font-size: 17px;
+  color: white;
+  font-weight: 600;
+}
+.create_ads_screen .create_ads_container .create_ads_section .section_label_row .segmented_control {
+  display: flex;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+  padding: 5px;
+  gap: 4px;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+.create_ads_screen .create_ads_container .create_ads_section .section_label_row .segmented_control .segmented_btn {
+  padding: 10px 24px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+.create_ads_screen .create_ads_container .create_ads_section .section_label_row .segmented_control .segmented_btn:hover {
+  color: rgba(255, 255, 255, 0.9);
+}
+.create_ads_screen .create_ads_container .create_ads_section .section_label_row .segmented_control .segmented_btn.segmented_btn--active {
+  background: linear-gradient(135deg, #0080ff 0%, #0066cc 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 128, 255, 0.4);
+  transform: translateY(-1px);
+}
+.create_ads_screen .create_ads_container .ad_details_section {
+  margin-bottom: 32px;
+  background: linear-gradient(135deg, rgba(27, 27, 29, 0.8) 0%, rgba(42, 42, 43, 0.6) 100%);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  position: relative;
+  z-index: 1;
+}
+.create_ads_screen .create_ads_container .ad_details_section .detail_row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  transition: background-color 0.2s;
+}
+.create_ads_screen .create_ads_container .ad_details_section .detail_row:last-child {
+  border-bottom: none;
+}
+.create_ads_screen .create_ads_container .ad_details_section .detail_row:hover {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+.create_ads_screen .create_ads_container .ad_details_section .detail_row.detail_row--selectable {
+  cursor: pointer;
+}
+.create_ads_screen .create_ads_container .ad_details_section .detail_row .detail_label {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+}
+.create_ads_screen .create_ads_container .ad_details_section .detail_row .detail_value_wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+}
+.create_ads_screen .create_ads_container .ad_details_section .detail_row .detail_value_wrapper.crypto_select_wrapper .detail_value {
+  font-size: 16px;
+  color: #0080ff;
+  font-weight: 600;
+  background: linear-gradient(135deg, #0080ff 0%, #0066cc 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+@supports not (-webkit-background-clip: text) {
+  .create_ads_screen .create_ads_container .ad_details_section .detail_row .detail_value_wrapper.crypto_select_wrapper .detail_value {
+    color: #0080ff;
+  }
+}
+.create_ads_screen .create_ads_container .ad_details_section .detail_row .detail_value_wrapper.crypto_select_wrapper .chevron {
+  font-size: 22px;
+  color: #0080ff;
+  font-weight: 300;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.create_ads_screen .create_ads_container .ad_details_section .detail_row .detail_value_wrapper.crypto_select_wrapper:hover .chevron {
+  transform: translateX(3px);
+}
+.create_ads_screen .create_ads_container .ad_details_section .detail_row .detail_value_wrapper.crypto_select_wrapper .crypto_dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  background: linear-gradient(135deg, rgba(20, 20, 21, 0.98) 0%, rgba(27, 27, 29, 0.98) 100%);
+  -webkit-backdrop-filter: blur(20px);
+          backdrop-filter: blur(20px);
+  border-radius: 12px;
+  overflow: hidden;
+  z-index: 10000;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1);
+  min-width: 140px;
+  animation: dropdownFadeIn 0.2s ease-out;
+}
+.create_ads_screen .create_ads_container .ad_details_section .detail_row .detail_value_wrapper.crypto_select_wrapper .crypto_dropdown.dropdown_open {
+  display: block;
+  pointer-events: auto;
+}
+.create_ads_screen .create_ads_container .ad_details_section .detail_row .detail_value_wrapper.crypto_select_wrapper .crypto_dropdown .crypto_option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.create_ads_screen .create_ads_container .ad_details_section .detail_row .detail_value_wrapper.crypto_select_wrapper .crypto_dropdown .crypto_option:hover {
+  background: linear-gradient(135deg, rgba(0, 128, 255, 0.1) 0%, rgba(0, 102, 204, 0.1) 100%);
+}
+.create_ads_screen .create_ads_container .ad_details_section .detail_row .detail_value_wrapper.crypto_select_wrapper .crypto_dropdown .crypto_option span:first-child {
+  font-size: 16px;
+  color: white;
+  font-weight: 600;
+}
+.create_ads_screen .create_ads_container .ad_details_section .detail_row .detail_value_wrapper.crypto_select_wrapper .crypto_dropdown .crypto_option .checkmark {
+  color: #0080ff;
+  font-weight: bold;
+  font-size: 18px;
+}
+.create_ads_screen .create_ads_container .ad_details_section .detail_row .detail_value_wrapper .detail_value {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 500;
+}
+.create_ads_screen .create_ads_container .ad_details_section .detail_row .detail_value_wrapper .chevron {
+  font-size: 20px;
+  color: #0080ff;
+  font-weight: 300;
+}
+.create_ads_screen .create_ads_container .price_section,
+.create_ads_screen .create_ads_container .amount_section,
+.create_ads_screen .create_ads_container .limits_section {
+  margin-bottom: 32px;
+}
+.create_ads_screen .create_ads_container .price_section .section_header,
+.create_ads_screen .create_ads_container .amount_section .section_header,
+.create_ads_screen .create_ads_container .limits_section .section_header {
+  display: block;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 14px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+}
+.create_ads_screen .create_ads_container .price_section .input_field,
+.create_ads_screen .create_ads_container .amount_section .input_field,
+.create_ads_screen .create_ads_container .limits_section .input_field {
+  display: flex;
+  align-items: center;
+  padding: 18px 20px;
+  background: linear-gradient(135deg, rgba(27, 27, 29, 0.8) 0%, rgba(42, 42, 43, 0.6) 100%);
+  border-radius: 14px;
+  margin-bottom: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+}
+.create_ads_screen .create_ads_container .price_section .input_field:focus-within,
+.create_ads_screen .create_ads_container .amount_section .input_field:focus-within,
+.create_ads_screen .create_ads_container .limits_section .input_field:focus-within {
+  border-color: rgba(0, 128, 255, 0.5);
+  background: linear-gradient(135deg, rgba(27, 27, 29, 0.95) 0%, rgba(42, 42, 43, 0.8) 100%);
+  box-shadow: 0 4px 20px rgba(0, 128, 255, 0.2), 0 0 0 3px rgba(0, 128, 255, 0.1);
+  transform: translateY(-1px);
+}
+.create_ads_screen .create_ads_container .price_section .input_field.input_field--range,
+.create_ads_screen .create_ads_container .amount_section .input_field.input_field--range,
+.create_ads_screen .create_ads_container .limits_section .input_field.input_field--range {
+  gap: 10px;
+}
+.create_ads_screen .create_ads_container .price_section .input_field.input_field--range .range_input,
+.create_ads_screen .create_ads_container .amount_section .input_field.input_field--range .range_input,
+.create_ads_screen .create_ads_container .limits_section .input_field.input_field--range .range_input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: white;
+  font-size: 17px;
+  font-family: "Inter", sans-serif;
+  font-weight: 500;
+}
+.create_ads_screen .create_ads_container .price_section .input_field.input_field--range .range_input::-moz-placeholder, .create_ads_screen .create_ads_container .amount_section .input_field.input_field--range .range_input::-moz-placeholder, .create_ads_screen .create_ads_container .limits_section .input_field.input_field--range .range_input::-moz-placeholder {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 17px;
+}
+.create_ads_screen .create_ads_container .price_section .input_field.input_field--range .range_input::placeholder,
+.create_ads_screen .create_ads_container .amount_section .input_field.input_field--range .range_input::placeholder,
+.create_ads_screen .create_ads_container .limits_section .input_field.input_field--range .range_input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 17px;
+}
+.create_ads_screen .create_ads_container .price_section .input_field.input_field--range .range_separator,
+.create_ads_screen .create_ads_container .amount_section .input_field.input_field--range .range_separator,
+.create_ads_screen .create_ads_container .limits_section .input_field.input_field--range .range_separator {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 17px;
+  font-weight: 300;
+}
+.create_ads_screen .create_ads_container .price_section .input_field .single_input,
+.create_ads_screen .create_ads_container .amount_section .input_field .single_input,
+.create_ads_screen .create_ads_container .limits_section .input_field .single_input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: white;
+  font-size: 17px;
+  font-family: "Inter", sans-serif;
+  font-weight: 500;
+}
+.create_ads_screen .create_ads_container .price_section .input_field .single_input::-moz-placeholder, .create_ads_screen .create_ads_container .amount_section .input_field .single_input::-moz-placeholder, .create_ads_screen .create_ads_container .limits_section .input_field .single_input::-moz-placeholder {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 17px;
+}
+.create_ads_screen .create_ads_container .price_section .input_field .single_input::placeholder,
+.create_ads_screen .create_ads_container .amount_section .input_field .single_input::placeholder,
+.create_ads_screen .create_ads_container .limits_section .input_field .single_input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 17px;
+}
+.create_ads_screen .create_ads_container .price_section .input_field .input_suffix,
+.create_ads_screen .create_ads_container .amount_section .input_field .input_suffix,
+.create_ads_screen .create_ads_container .limits_section .input_field .input_suffix {
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 600;
+  margin-left: auto;
+  flex-shrink: 0;
+  padding-left: 12px;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+}
+.create_ads_screen .create_ads_container .price_section .info_text,
+.create_ads_screen .create_ads_container .amount_section .info_text,
+.create_ads_screen .create_ads_container .limits_section .info_text {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-left: 4px;
+}
+.create_ads_screen .create_ads_container .price_section .info_text div,
+.create_ads_screen .create_ads_container .amount_section .info_text div,
+.create_ads_screen .create_ads_container .limits_section .info_text div {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 500;
+}
+.create_ads_screen .create_ads_container .price_section .info_text div span,
+.create_ads_screen .create_ads_container .amount_section .info_text div span,
+.create_ads_screen .create_ads_container .limits_section .info_text div span {
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 600;
+}
+.create_ads_screen .create_ads_container .price_section .info_text div .max_link,
+.create_ads_screen .create_ads_container .amount_section .info_text div .max_link,
+.create_ads_screen .create_ads_container .limits_section .info_text div .max_link {
+  color: #0080ff;
+  margin-left: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: rgba(0, 128, 255, 0.1);
+}
+.create_ads_screen .create_ads_container .price_section .info_text div .max_link:hover,
+.create_ads_screen .create_ads_container .amount_section .info_text div .max_link:hover,
+.create_ads_screen .create_ads_container .limits_section .info_text div .max_link:hover {
+  background: rgba(0, 128, 255, 0.2);
+  transform: scale(1.05);
+}
+.create_ads_screen .create_ads_container .price_section .hint_text,
+.create_ads_screen .create_ads_container .amount_section .hint_text,
+.create_ads_screen .create_ads_container .limits_section .hint_text {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 8px;
+  padding-left: 4px;
+  font-style: italic;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.footer_create_ads {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20px;
+  background: linear-gradient(180deg, rgba(15, 15, 16, 0) 0%, rgba(20, 20, 21, 0.95) 50%, rgb(20, 20, 21) 100%);
+  -webkit-backdrop-filter: blur(10px);
+          backdrop-filter: blur(10px);
+  z-index: 1000;
+}
+.footer_create_ads .footer_btn {
+  max-width: 100%;
+}
+.footer_create_ads .footer_btn button {
+  width: 100%;
+  padding: 15px 15px;
+  background: linear-gradient(135deg, #0080ff 0%, #0066cc 100%);
+  border: none;
+  border-radius: 16px;
+  color: white;
+  font-size: 17px;
+  font-weight: 700;
+  font-family: "Inter", sans-serif;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 8px 24px rgba(0, 128, 255, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3);
+  letter-spacing: 0.3px;
+}
+.footer_create_ads .footer_btn button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(0, 128, 255, 0.5), 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+.footer_create_ads .footer_btn button:active {
+  transform: translateY(0);
+  box-shadow: 0 6px 20px rgba(0, 128, 255, 0.4), 0 3px 10px rgba(0, 0, 0, 0.3);
 }/*# sourceMappingURL=style.css.map */
