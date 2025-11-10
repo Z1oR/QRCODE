@@ -332,9 +332,14 @@ btn_buy_crypto.addEventListener("click", async () => {
     main__screen.style.display = "none"
     buy_screen.style.display = "block"
     
+    console.log('Экран покупки открыт, загружаем объявления...')
+    
     // Загружаем объявления при открытии экрана покупки
     const selectedCrypto = document.querySelector('.filter__value')?.textContent || 'TON'
+    console.log('Выбранная криптовалюта:', selectedCrypto)
+    
     const ads = await loadAds('sell', selectedCrypto)
+    console.log('Объявления загружены, отображаем:', ads.length)
     displayAds(ads)
 })
 
@@ -742,7 +747,7 @@ function initPreviewScreen() {
             }
             
             const createdAd = await response.json()
-            console.log('Объявление создано:', createdAd)
+            console.log('Объявление создано успешно:', createdAd)
             
             // Анимация успеха
             createListingBtn.textContent = 'Создано! ✓'
@@ -766,6 +771,16 @@ function initPreviewScreen() {
                 document.querySelector('#payment-details').value = ''
                 
                 window.scrollTo(0, 0)
+                
+                // Если пользователь на экране покупки, обновляем объявления
+                if (buy_screen.style.display === 'block' || buy_screen.style.display === '') {
+                    console.log('Обновляем список объявлений после создания')
+                    const selectedCrypto = document.querySelector('.filter__value')?.textContent || 'TON'
+                    loadAds('sell', selectedCrypto).then(ads => {
+                        console.log('Объявления обновлены:', ads.length)
+                        displayAds(ads)
+                    })
+                }
             }, 1500)
         } catch (error) {
             console.error('Ошибка при создании объявления:', error)
@@ -861,6 +876,8 @@ async function loadAds(adType = 'sell', cryptoCurrency = null) {
             url += `&crypto_currency=${cryptoCurrency}`
         }
         
+        console.log('Загрузка объявлений:', { url, adType, cryptoCurrency })
+        
         const response = await fetch(url, {
             method: 'GET',
             headers: {
@@ -869,11 +886,16 @@ async function loadAds(adType = 'sell', cryptoCurrency = null) {
             credentials: 'include'
         })
         
+        console.log('Ответ сервера:', { status: response.status, ok: response.ok })
+        
         if (!response.ok) {
-            throw new Error('Ошибка загрузки объявлений')
+            const errorText = await response.text()
+            console.error('Ошибка загрузки объявлений:', response.status, errorText)
+            throw new Error(`Ошибка загрузки объявлений: ${response.status}`)
         }
         
         const ads = await response.json()
+        console.log('Получено объявлений:', ads.length, ads)
         return ads
     } catch (error) {
         console.error('Ошибка загрузки объявлений:', error)
@@ -882,20 +904,26 @@ async function loadAds(adType = 'sell', cryptoCurrency = null) {
 }
 
 function displayAds(ads) {
+    console.log('displayAds вызвана с объявлениями:', ads)
     const listingsContainer = document.querySelector('.listings__container')
     
     if (!listingsContainer) {
-        console.warn('Контейнер для объявлений не найден')
+        console.error('Контейнер для объявлений не найден! Ищем .listings__container')
         return
     }
+    
+    console.log('Контейнер найден, очищаем и добавляем объявления')
     
     // Очищаем контейнер
     listingsContainer.innerHTML = ''
     
-    if (ads.length === 0) {
+    if (!ads || ads.length === 0) {
+        console.log('Нет объявлений для отображения')
         listingsContainer.innerHTML = '<p style="text-align: center; color: grey; margin-top: 20px;">Объявлений пока нет</p>'
         return
     }
+    
+    console.log(`Отображаем ${ads.length} объявлений`)
     
     // Создаем карточки для каждого объявления
     ads.forEach(ad => {
