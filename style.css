@@ -3183,48 +3183,68 @@ body {
   padding: 15px 20px;
   border-radius: 12px;
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border: none;
   font-family: "Inter", sans-serif;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  background: linear-gradient(135deg, #0080ff 0%, #0066cc 100%);
+  color: white;
+  box-shadow: 0 4px 16px rgba(0, 128, 255, 0.3);
+}
+.transaction_details_screen .transaction_details_container .transaction_actions .transaction_action_btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 128, 255, 0.4);
+  background: linear-gradient(135deg, #0099ff 0%, #0077dd 100%);
+}
+.transaction_details_screen .transaction_details_container .transaction_actions .transaction_action_btn:active {
+  transform: translateY(0);
 }
 .transaction_details_screen .transaction_details_container .transaction_actions .transaction_action_btn.btn_primary {
   background: linear-gradient(135deg, #00c864 0%, #00a854 100%);
   color: white;
   box-shadow: 0 4px 16px rgba(0, 200, 100, 0.3);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 .transaction_details_screen .transaction_details_container .transaction_actions .transaction_action_btn.btn_primary:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(0, 200, 100, 0.4);
+  background: linear-gradient(135deg, #00d870 0%, #00b860 100%);
 }
 .transaction_details_screen .transaction_details_container .transaction_actions .transaction_action_btn.btn_primary:active {
   transform: translateY(0);
 }
 .transaction_details_screen .transaction_details_container .transaction_actions .transaction_action_btn.btn_secondary {
-  background: linear-gradient(135deg, rgba(0, 128, 255, 0.2) 0%, rgba(0, 102, 204, 0.15) 100%);
-  border: 1px solid rgba(0, 128, 255, 0.3);
-  color: #0080ff;
+  background: linear-gradient(135deg, rgba(0, 128, 255, 0.25) 0%, rgba(0, 102, 204, 0.2) 100%);
+  border: 2px solid rgba(0, 128, 255, 0.4);
+  color: #4da6ff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 128, 255, 0.2);
 }
 .transaction_details_screen .transaction_details_container .transaction_actions .transaction_action_btn.btn_secondary:hover {
-  background: linear-gradient(135deg, rgba(0, 128, 255, 0.3) 0%, rgba(0, 102, 204, 0.25) 100%);
-  border-color: rgba(0, 128, 255, 0.5);
+  background: linear-gradient(135deg, rgba(0, 128, 255, 0.35) 0%, rgba(0, 102, 204, 0.3) 100%);
+  border-color: rgba(0, 128, 255, 0.6);
+  color: #66b3ff;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 128, 255, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 128, 255, 0.3);
 }
 .transaction_details_screen .transaction_details_container .transaction_actions .transaction_action_btn.btn_secondary:active {
   transform: translateY(0);
 }
 .transaction_details_screen .transaction_details_container .transaction_actions .transaction_action_btn.btn_danger {
-  background: linear-gradient(135deg, rgba(220, 53, 69, 0.2) 0%, rgba(200, 35, 51, 0.15) 100%);
-  border: 1px solid rgba(220, 53, 69, 0.3);
-  color: #dc3545;
+  background: linear-gradient(135deg, rgba(220, 53, 69, 0.25) 0%, rgba(200, 35, 51, 0.2) 100%);
+  border: 2px solid rgba(220, 53, 69, 0.4);
+  color: #ff6b7a;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.2);
 }
 .transaction_details_screen .transaction_details_container .transaction_actions .transaction_action_btn.btn_danger:hover {
-  background: linear-gradient(135deg, rgba(220, 53, 69, 0.3) 0%, rgba(200, 35, 51, 0.25) 100%);
-  border-color: rgba(220, 53, 69, 0.5);
+  background: linear-gradient(135deg, rgba(220, 53, 69, 0.35) 0%, rgba(200, 35, 51, 0.3) 100%);
+  border-color: rgba(220, 53, 69, 0.6);
+  color: #ff8a95;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.2);
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
 }
 .transaction_details_screen .transaction_details_container .transaction_actions .transaction_action_btn.btn_danger:active {
   transform: translateY(0);
@@ -3233,4 +3253,5 @@ body {
   opacity: 0.5;
   cursor: not-allowed;
   transform: none !important;
+  text-shadow: none;
 }/*# sourceMappingURL=style.css.map */
