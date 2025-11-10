@@ -1933,40 +1933,53 @@ document.addEventListener('DOMContentLoaded', () => {
                 let buyerPaymentDetails = null;
                 
                 if (userAction === 'sell') {
+                    // Получаем элементы полей ввода
                     const bankInput = document.getElementById('buyer-bank-name');
                     const detailsInput = document.getElementById('buyer-payment-details');
                     
                     console.log('Проверка реквизитов:', {
+                        userAction,
                         bankInput: !!bankInput,
                         detailsInput: !!detailsInput,
                         bankValue: bankInput?.value,
-                        detailsValue: detailsInput?.value
+                        detailsValue: detailsInput?.value,
+                        bankInputType: bankInput?.tagName,
+                        detailsInputType: detailsInput?.tagName
                     });
                     
-                    buyerBankName = bankInput?.value?.trim() || '';
-                    buyerPaymentDetails = detailsInput?.value?.trim() || '';
+                    // Получаем значения напрямую из элементов
+                    if (!bankInput || !detailsInput) {
+                        console.error('Поля ввода реквизитов не найдены!');
+                        alert('Ошибка: поля ввода реквизитов не найдены. Пожалуйста, обновите страницу.');
+                        return;
+                    }
                     
-                    console.log('После trim:', {
+                    buyerBankName = bankInput.value ? bankInput.value.trim() : '';
+                    buyerPaymentDetails = detailsInput.value ? detailsInput.value.trim() : '';
+                    
+                    console.log('Значения после получения:', {
                         buyerBankName,
                         buyerPaymentDetails,
                         bankLength: buyerBankName.length,
-                        detailsLength: buyerPaymentDetails.length
+                        detailsLength: buyerPaymentDetails.length,
+                        bankIsEmpty: !buyerBankName,
+                        detailsIsEmpty: !buyerPaymentDetails
                     });
                     
                     // Убираем классы ошибок
-                    if (bankInput) bankInput.classList.remove('error');
-                    if (detailsInput) detailsInput.classList.remove('error');
+                    bankInput.classList.remove('error');
+                    detailsInput.classList.remove('error');
                     
                     // Проверяем, что реквизиты указаны
                     let hasError = false;
-                    if (!buyerBankName) {
-                        console.log('Ошибка: банк не указан');
-                        if (bankInput) bankInput.classList.add('error');
+                    if (!buyerBankName || buyerBankName.length === 0) {
+                        console.log('Ошибка: банк не указан или пустой');
+                        bankInput.classList.add('error');
                         hasError = true;
                     }
-                    if (!buyerPaymentDetails) {
-                        console.log('Ошибка: реквизиты не указаны');
-                        if (detailsInput) detailsInput.classList.add('error');
+                    if (!buyerPaymentDetails || buyerPaymentDetails.length === 0) {
+                        console.log('Ошибка: реквизиты не указаны или пустые');
+                        detailsInput.classList.add('error');
                         hasError = true;
                     }
                     
@@ -1980,17 +1993,38 @@ document.addEventListener('DOMContentLoaded', () => {
                         return;
                     }
                     
-                    console.log('Реквизиты валидны:', { buyerBankName, buyerPaymentDetails });
+                    console.log('Реквизиты валидны и будут отправлены:', { 
+                        buyerBankName, 
+                        buyerPaymentDetails,
+                        bankLength: buyerBankName.length,
+                        detailsLength: buyerPaymentDetails.length
+                    });
                 }
                 
                 const transactionData = {
                     ad_id: selectedAd.Id,
                     crypto_currency: selectedAd.crypto_currency,
                     crypto_amount: cryptoAmount,
-                    fiat_amount: fiatAmount,
-                    buyer_bank_name: buyerBankName,
-                    buyer_payment_details: buyerPaymentDetails
+                    fiat_amount: fiatAmount
                 };
+                
+                // Добавляем реквизиты только если они есть
+                if (userAction === 'sell' && buyerBankName && buyerPaymentDetails) {
+                    transactionData.buyer_bank_name = buyerBankName;
+                    transactionData.buyer_payment_details = buyerPaymentDetails;
+                    console.log('Реквизиты добавлены в transactionData:', {
+                        buyer_bank_name: transactionData.buyer_bank_name,
+                        buyer_payment_details: transactionData.buyer_payment_details
+                    });
+                } else {
+                    console.log('Реквизиты не добавлены:', {
+                        userAction,
+                        buyerBankName: !!buyerBankName,
+                        buyerPaymentDetails: !!buyerPaymentDetails
+                    });
+                }
+                
+                console.log('Отправка transactionData:', transactionData);
                 
                 const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/transactions`, {
                     method: 'POST',
