@@ -1787,6 +1787,35 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
+.ad_details_screen .ad_details_container .purchase_section .currency_toggle {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+  padding: 4px;
+}
+.ad_details_screen .ad_details_container .purchase_section .currency_toggle .currency_toggle_btn {
+  flex: 1;
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.ad_details_screen .ad_details_container .purchase_section .currency_toggle .currency_toggle_btn.active {
+  background: linear-gradient(135deg, #00c864 0%, #00a854 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 200, 100, 0.3);
+}
+.ad_details_screen .ad_details_container .purchase_section .currency_toggle .currency_toggle_btn:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.8);
+}
 .ad_details_screen .ad_details_container .purchase_section .purchase_input_wrapper {
   display: flex;
   align-items: center;
