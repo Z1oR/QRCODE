@@ -728,6 +728,64 @@ body {
   font-size: 20px;
   font-weight: bold;
 }
+.create_ads_screen .create_ads_container .payment_details_section .custom_bank_wrapper {
+  margin-bottom: 20px;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.create_ads_screen .create_ads_container .payment_details_section .custom_bank_wrapper .section_subheader {
+  display: block;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 14px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+}
+.create_ads_screen .create_ads_container .payment_details_section .custom_bank_wrapper .input_field {
+  display: flex;
+  align-items: center;
+  padding: 18px 20px;
+  background: linear-gradient(135deg, rgba(27, 27, 29, 0.8) 0%, rgba(42, 42, 43, 0.6) 100%);
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+}
+.create_ads_screen .create_ads_container .payment_details_section .custom_bank_wrapper .input_field:focus-within {
+  border-color: rgba(0, 128, 255, 0.5);
+  background: linear-gradient(135deg, rgba(27, 27, 29, 0.95) 0%, rgba(42, 42, 43, 0.8) 100%);
+  box-shadow: 0 4px 20px rgba(0, 128, 255, 0.2), 0 0 0 3px rgba(0, 128, 255, 0.1);
+  transform: translateY(-1px);
+}
+.create_ads_screen .create_ads_container .payment_details_section .custom_bank_wrapper .input_field .single_input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: white;
+  font-size: 17px;
+  font-family: "Inter", sans-serif;
+  font-weight: 500;
+}
+.create_ads_screen .create_ads_container .payment_details_section .custom_bank_wrapper .input_field .single_input::-moz-placeholder {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 17px;
+}
+.create_ads_screen .create_ads_container .payment_details_section .custom_bank_wrapper .input_field .single_input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 17px;
+}
+.create_ads_screen .create_ads_container .payment_details_section .payment_input_wrapper .section_subheader {
+  display: block;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 14px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+}
 .create_ads_screen .create_ads_container .payment_details_section .payment_input_wrapper .input_field {
   display: flex;
   align-items: center;
