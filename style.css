@@ -354,6 +354,10 @@ body {
   color: #0080ff;
   border: 1px solid rgba(0, 128, 255, 0.3);
 }
+.main__screen .container__main .menu_section .menu_item .menu_item_icon.about_icon {
+  background: linear-gradient(135deg, rgba(0, 200, 100, 0.2) 0%, rgba(0, 168, 84, 0.15) 100%);
+  color: #00c864;
+}
 .main__screen .container__main .menu_section .menu_item .menu_item_icon.ads_icon {
   background: linear-gradient(135deg, rgba(138, 43, 226, 0.2) 0%, rgba(106, 13, 173, 0.15) 100%);
   color: #8a2be2;
@@ -3254,4 +3258,248 @@ body {
   cursor: not-allowed;
   transform: none !important;
   text-shadow: none;
+}
+
+.terms_screen {
+  width: 100%;
+  min-height: 100vh;
+  background: linear-gradient(180deg, #0a0a0b 0%, #141416 50%, #1a1a1c 100%);
+  padding: 20px;
+  padding-bottom: 100px;
+  animation: fadeIn 0.3s ease-out;
+}
+.terms_screen .terms_container {
+  max-width: 100%;
+  margin: 0 auto;
+}
+.terms_screen .terms_container .terms_header {
+  margin-bottom: 24px;
+}
+.terms_screen .terms_container .terms_header .terms_title {
+  font-size: 24px;
+  font-weight: 700;
+  color: white;
+  text-align: center;
+  margin: 0;
+}
+.terms_screen .terms_container .terms_content {
+  background: linear-gradient(135deg, rgba(27, 27, 29, 0.95) 0%, rgba(42, 42, 43, 0.9) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+.terms_screen .terms_container .terms_content::-webkit-scrollbar {
+  width: 6px;
+}
+.terms_screen .terms_container .terms_content::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+.terms_screen .terms_container .terms_content::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+.terms_screen .terms_container .terms_content::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+.terms_screen .terms_container .terms_content .terms_section {
+  margin-bottom: 24px;
+}
+.terms_screen .terms_container .terms_content .terms_section:last-child {
+  margin-bottom: 0;
+}
+.terms_screen .terms_container .terms_content .terms_section .terms_section_title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0080ff;
+  margin-bottom: 12px;
+}
+.terms_screen .terms_container .terms_content .terms_section .terms_text {
+  font-size: 14px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 12px;
+}
+.terms_screen .terms_container .terms_content .terms_section .terms_list {
+  margin-left: 20px;
+  margin-top: 8px;
+}
+.terms_screen .terms_container .terms_content .terms_section .terms_list li {
+  font-size: 14px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 8px;
+}
+.terms_screen .terms_container .terms_footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20px;
+  background: linear-gradient(180deg, rgba(15, 15, 16, 0) 0%, rgba(20, 20, 21, 0.95) 50%, rgb(20, 20, 21) 100%);
+  -webkit-backdrop-filter: blur(10px);
+          backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+.terms_screen .terms_container .terms_footer .terms_checkbox_label {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+  cursor: pointer;
+}
+.terms_screen .terms_container .terms_footer .terms_checkbox_label .terms_checkbox {
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  cursor: pointer;
+  accent-color: #0080ff;
+}
+.terms_screen .terms_container .terms_footer .terms_checkbox_label .terms_checkbox_text {
+  font-size: 14px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.8);
+  flex: 1;
+}
+.terms_screen .terms_container .terms_footer .terms_accept_btn {
+  width: 100%;
+  padding: 18px 24px;
+  background: linear-gradient(135deg, #0080ff 0%, #0066cc 100%);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 18px;
+  color: white;
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 8px 24px rgba(0, 128, 255, 0.4);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+.terms_screen .terms_container .terms_footer .terms_accept_btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(0, 128, 255, 0.5);
+  background: linear-gradient(135deg, #0099ff 0%, #0077dd 100%);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+.terms_screen .terms_container .terms_footer .terms_accept_btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 4px 16px rgba(0, 128, 255, 0.4);
+}
+.terms_screen .terms_container .terms_footer .terms_accept_btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.about_screen {
+  width: 100%;
+  min-height: 100vh;
+  background: linear-gradient(180deg, #0a0a0b 0%, #141416 50%, #1a1a1c 100%);
+  padding: 20px;
+  padding-bottom: 40px;
+  animation: fadeIn 0.3s ease-out;
+}
+.about_screen .about_container {
+  max-width: 100%;
+  margin: 0 auto;
+}
+.about_screen .about_container .about_header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.about_screen .about_container .about_header .about_title {
+  font-size: 24px;
+  font-weight: 700;
+  color: white;
+  margin: 0;
+}
+.about_screen .about_container .about_content .about_section {
+  background: linear-gradient(135deg, rgba(27, 27, 29, 0.95) 0%, rgba(42, 42, 43, 0.9) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+.about_screen .about_container .about_content .about_section .about_section_icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 16px;
+  background: linear-gradient(135deg, rgba(0, 128, 255, 0.2) 0%, rgba(0, 102, 204, 0.15) 100%);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0080ff;
+}
+.about_screen .about_container .about_content .about_section .about_section_title {
+  font-size: 20px;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 12px;
+}
+.about_screen .about_container .about_content .about_section .about_section_text {
+  font-size: 14px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.7);
+}
+.about_screen .about_container .about_content .about_links {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.about_screen .about_container .about_content .about_links .about_link_item {
+  background: linear-gradient(135deg, rgba(27, 27, 29, 0.95) 0%, rgba(42, 42, 43, 0.9) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+  color: inherit;
+}
+.about_screen .about_container .about_content .about_links .about_link_item:hover {
+  background: linear-gradient(135deg, rgb(27, 27, 29) 0%, rgba(42, 42, 43, 0.95) 100%);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+.about_screen .about_container .about_content .about_links .about_link_item:active {
+  transform: translateY(0);
+}
+.about_screen .about_container .about_content .about_links .about_link_item .about_link_icon {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, rgba(0, 128, 255, 0.2) 0%, rgba(0, 102, 204, 0.15) 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0080ff;
+  flex-shrink: 0;
+}
+.about_screen .about_container .about_content .about_links .about_link_item .about_link_content {
+  flex: 1;
+}
+.about_screen .about_container .about_content .about_links .about_link_item .about_link_content .about_link_title {
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 4px;
+}
+.about_screen .about_container .about_content .about_links .about_link_item .about_link_content .about_link_desc {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+}
+.about_screen .about_container .about_content .about_links .about_link_item .about_link_arrow {
+  color: rgba(255, 255, 255, 0.4);
+  flex-shrink: 0;
 }/*# sourceMappingURL=style.css.map */
