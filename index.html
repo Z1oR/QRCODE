@@ -117,6 +117,19 @@
                     </div>
                     <div class="menu_item_arrow">›</div>
                 </div>
+
+                <div class="menu_item" id="my_transactions">
+                    <div class="menu_item_icon transactions_icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                            <path d="M8 6H21M8 12H21M8 18H21M3 6H3.01M3 12H3.01M3 18H3.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <div class="menu_item_content">
+                        <div class="menu_item_title">Мои сделки</div>
+                        <div class="menu_item_desc">Все ваши транзакции</div>
+                    </div>
+                    <div class="menu_item_arrow">›</div>
+                </div>
             </div>
 
 
@@ -152,19 +165,6 @@
                     <button class="currency_toggle_btn" data-currency="CRYPTO" id="toggle-crypto">
                         <span id="toggle-crypto-text">USDT</span>
                     </button>
-                </div>
-                
-                <!-- Реквизиты для получения денег (только для продажи) -->
-                <div class="payment_details_section" id="buyer-payment-details-section" style="display: none;">
-                    <label class="purchase_label">Реквизиты для получения денег</label>
-                    <div class="payment_details_form">
-                        <div class="payment_details_field">
-                            <input type="text" class="payment_details_input" id="buyer-bank-name" placeholder="Банк (например: Т-Банк)" />
-                        </div>
-                        <div class="payment_details_field">
-                            <input type="text" class="payment_details_input" id="buyer-payment-details" placeholder="Номер карты или телефона" />
-                        </div>
-                    </div>
                 </div>
                 
                 <div class="purchase_input_wrapper">
@@ -245,6 +245,46 @@
     </div>
 
     <!-- Экран "Мои объявления" -->
+    <!-- Экран Мои сделки -->
+    <div class="my_transactions_screen" id="my-transactions-screen" style="display: none;">
+        <div class="my_transactions_container">
+            <div class="my_transactions_header">
+                <button class="back_btn" id="back-from-transactions">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+                <h2 class="my_transactions_title">Мои сделки</h2>
+            </div>
+
+            <div class="transactions_list" id="transactions-list">
+                <!-- Сделки будут добавлены через JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Экран деталей сделки -->
+    <div class="transaction_details_screen" id="transaction-details-screen" style="display: none;">
+        <div class="transaction_details_container">
+            <div class="transaction_details_header">
+                <button class="back_btn" id="back-from-transaction-details">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+                <h2 class="transaction_details_title">Детали сделки</h2>
+            </div>
+
+            <div class="transaction_details_card" id="transaction-details-card">
+                <!-- Данные будут заполнены через JS -->
+            </div>
+
+            <div class="transaction_actions" id="transaction-actions">
+                <!-- Кнопки действий будут добавлены через JS -->
+            </div>
+        </div>
+    </div>
+
     <div class="my_ads_screen" id="my-ads-screen" style="display: none;">
         <div class="my_ads_container">
             <div class="my_ads_header">
