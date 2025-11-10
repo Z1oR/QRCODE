@@ -1637,6 +1637,27 @@ function openAdDetailsScreen(ad, userAction = 'buy') {
     
     // Показываем/скрываем форму реквизитов в зависимости от действия
     const buyerPaymentDetails = document.getElementById('buyer-payment-details');
+    const buyerBankNameInput = document.getElementById('buyer-bank-name');
+    const buyerPaymentDetailsInput = document.getElementById('buyer-payment-details');
+    
+    // Очищаем поля реквизитов
+    if (buyerBankNameInput) {
+        buyerBankNameInput.value = '';
+        buyerBankNameInput.classList.remove('error');
+        // Убираем класс ошибки при вводе
+        buyerBankNameInput.addEventListener('input', () => {
+            buyerBankNameInput.classList.remove('error');
+        });
+    }
+    if (buyerPaymentDetailsInput) {
+        buyerPaymentDetailsInput.value = '';
+        buyerPaymentDetailsInput.classList.remove('error');
+        // Убираем класс ошибки при вводе
+        buyerPaymentDetailsInput.addEventListener('input', () => {
+            buyerPaymentDetailsInput.classList.remove('error');
+        });
+    }
+    
     if (buyerPaymentDetails) {
         if (userAction === 'sell') {
             // Для продажи показываем форму реквизитов для получения денег
@@ -1912,14 +1933,54 @@ document.addEventListener('DOMContentLoaded', () => {
                 let buyerPaymentDetails = null;
                 
                 if (userAction === 'sell') {
-                    buyerBankName = document.getElementById('buyer-bank-name')?.value?.trim();
-                    buyerPaymentDetails = document.getElementById('buyer-payment-details')?.value?.trim();
+                    const bankInput = document.getElementById('buyer-bank-name');
+                    const detailsInput = document.getElementById('buyer-payment-details');
+                    
+                    console.log('Проверка реквизитов:', {
+                        bankInput: !!bankInput,
+                        detailsInput: !!detailsInput,
+                        bankValue: bankInput?.value,
+                        detailsValue: detailsInput?.value
+                    });
+                    
+                    buyerBankName = bankInput?.value?.trim() || '';
+                    buyerPaymentDetails = detailsInput?.value?.trim() || '';
+                    
+                    console.log('После trim:', {
+                        buyerBankName,
+                        buyerPaymentDetails,
+                        bankLength: buyerBankName.length,
+                        detailsLength: buyerPaymentDetails.length
+                    });
+                    
+                    // Убираем классы ошибок
+                    if (bankInput) bankInput.classList.remove('error');
+                    if (detailsInput) detailsInput.classList.remove('error');
                     
                     // Проверяем, что реквизиты указаны
-                    if (!buyerBankName || !buyerPaymentDetails) {
+                    let hasError = false;
+                    if (!buyerBankName) {
+                        console.log('Ошибка: банк не указан');
+                        if (bankInput) bankInput.classList.add('error');
+                        hasError = true;
+                    }
+                    if (!buyerPaymentDetails) {
+                        console.log('Ошибка: реквизиты не указаны');
+                        if (detailsInput) detailsInput.classList.add('error');
+                        hasError = true;
+                    }
+                    
+                    if (hasError) {
                         alert('Пожалуйста, укажите банк и реквизиты для получения денег');
+                        // Прокручиваем к форме реквизитов
+                        const paymentDetailsSection = document.getElementById('buyer-payment-details');
+                        if (paymentDetailsSection) {
+                            paymentDetailsSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
                         return;
                     }
+                    
+                    console.log('Реквизиты валидны:', { buyerBankName, buyerPaymentDetails });
                 }
                 
                 const transactionData = {
