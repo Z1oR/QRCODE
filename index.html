@@ -1,505 +1,1178 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <link rel="stylesheet" href="style.css">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>peer-to-peer</title>
-</head>
-<body>
-    <div class="main__screen" id="main__screen">
-        <div class="container__main">
-            <div class="header__main">
-                <div class="content__main">
-                    <img src="./image/marketimg.svg" alt="logo" class="logo__header">
-                    <h3>P2P Маркет</h3>
-                    <p>Покупайте и продавайте криптовалюты без верефицикаций</p>
-                </div>
-                <div class="btn__main">
-                    <button id="btn-for-buycrpyto">Купить</button>
-                    <button id="btn-for-sellcrpyto">Продать</button>
-                </div>
-            </div>
-            <div class="btn_market_main">
-                <div class="item__main" id="my_ads">
-                    <img src="./image/account_icon.svg" alt="">  
+// API базовый URL
+// ВАЖНО: Для Telegram Mini App нужен HTTPS!
+// Настройте HTTPS на сервере (см. backend/HTTPS_SETUP.md)
+// Временно можно использовать самоподписанный сертификат или ngrok для тестирования
+// API базовый URL
+// ВАЖНО: Telegram приложение может блокировать запросы к IP адресам!
+// Рекомендуется использовать домен вместо IP
+const API_BASE_URL = 'https://82.97.240.215:8000';  // HTTPS с портом 8000
 
-                    <div class="content__item">
-                        <h3>Мои обьявления</h3>
-                        <p>Настройки обьявлений и платежей</p>
-                    </div>
-                </div>
-                <div class="item__main" id="create_ads">
-                    <img src="./image/add+.svg" alt="">  
+// Альтернативный вариант с доменом (если настроен):
+// const API_BASE_URL = 'https://yourdomain.com';
 
-                    <div class="content__item">
-                        <h3 class="new_ask">Создать обьявление</h3>
-                    </div>
-                </div>
-            </div>
+// Инициализация Telegram Web App
+let tg = null;
 
+// Глобальная переменная для данных пользователя
+let userData = null;
+// Глобальные переменные для токенов
+let accessToken = null;
+let refreshToken = null;
 
-
-
-
-        </div>
-    </div>
-    <div class="buy__screen" style="display: none;">
-        <div class="buy__container">
-            <!-- Фильтры -->
-            <div class="filters__bar">
-                <div class="filter__item filter__crypto" id="crypto-filter">
-                    <div class="filter__header">
-                        <div class="filter__header-content">
-                            <span class="filter__label">Крипта</span>
-                            <span class="filter__value">TON</span>
-                        </div>
-                        <span class="filter__arrow-icon">⇅</span>
-                    </div>
-                    <div class="filter__dropdown" id="crypto-dropdown">
-                        <div class="dropdown__item" data-value="USDT">
-                            <span>USDT</span>
-                        </div>
-                        <div class="dropdown__item dropdown__item--selected" data-value="TON">
-                            <span class="checkmark">✓</span>
-                            <span>TON</span>
-                        </div>
-                        <div class="dropdown__item" data-value="BTC">
-                            <span>BTC</span>
-                        </div>
-                        <div class="dropdown__item" data-value="ETH">
-                            <span>ETH</span>
-                        </div>
-                        <div class="dropdown__item" data-value="NOT">
-                            <span>NOT</span>
-                        </div>
-                    </div>
-                </div>
-                
-            </div>
-
-            <!-- Поле суммы -->
-            <div class="amount__input">
-                <label>Сумма</label>
-                <input class="amount__field" placeholder="10.00 RUB"></input>
-            </div>
-
-            <!-- Карточки объявлений -->
-            <div class="listings__container">
-                <!-- Карточка 1 -->
-                <div class="listing__card">
-                    <div class="listing__header">
-                        <div class="listing__price">
-                            <div class="price__main">177 RUB</div>
-                            <div class="price__subtitle">Цена за 1 TON</div>
-                        </div>
-                        <div class="listing__actions">
-                            
-                            <button class="buy__btn">КУПИТЬ</button>
-                        </div>
-                    </div>
-                    <div class="listing__seller">
-                        <div class="seller__avatar" style="background-color: #5BA3D0;"></div>
-                        <div class="seller__info">
-                            <div class="seller__name">Posh Dragon</div>
-                            <div class="seller__stats">сделок: 14 • 86%</div>
-                        </div>
-                    </div>
-                    <div class="listing__details">
-                        <div class="detail__row">
-                            <span class="detail__label">Доступно</span>
-                            <span class="detail__value">281,644 TON</span>
-                        </div>
-                        <div class="detail__row">
-                            <span class="detail__label">Лимиты</span>
-                            <span class="detail__value">49 851 – 49 851,15 RUB</span>
-                        </div>
-                        <div class="detail__row">
-                            <span class="detail__label">Методы оплаты</span>
-                            <span class="detail__value">Т-Банк (Тинькофф)</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-    <div class="create_ads_screen" style="display: none;">
-        <div class="create_ads_container">
-            <!-- Header -->
-            <div class="create_ads_header">
-                <h1 class="create_ads_title">Создайте объявление</h1>
-                <span class="create_ads_progress">1/2</span>
-            </div>
-
-            <!-- Я хочу section -->
-            <div class="create_ads_section">
-                <div class="section_label_row">
-                    <span class="section_label">Я хочу</span>
-                    <div class="segmented_control">
-                        <button class="segmented_btn" data-action="buy">Купить</button>
-                        <button class="segmented_btn segmented_btn--active" data-action="sell">Продать</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Advertisement Details -->
-            <div class="ad_details_section">
-                <div class="detail_row detail_row--selectable" id="crypto-select-row">
-                    <span class="detail_label">Продать криптовалюту</span>
-                    <div class="detail_value_wrapper crypto_select_wrapper">
-                        <span class="detail_value" id="selected-crypto">USDT</span>
-                        <span class="chevron">›</span>
-                        <div class="crypto_dropdown" id="crypto-dropdown">
-                            <div class="crypto_option" data-crypto="USDT">
-                                <span>USDT</span>
-                                <span class="checkmark" id="check-usdt">✓</span>
-                            </div>
-                            <div class="crypto_option" data-crypto="TON">
-                                <span>TON</span>
-                                <span class="checkmark" id="check-ton" style="display: none;">✓</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="detail_row">
-                    <span class="detail_label">Национальная валюта</span>
-                    <div class="detail_value_wrapper">
-                        <span class="detail_value">RUB</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Percentage of Market Price -->
-            <div class="price_section">
-                <label class="section_header">Фикс цена за (<span id="price-crypto-name">1 USDT</span>)</label>
-                <div class="input_field">
-                    <input type="text" class="single_input" id="price-range" placeholder="81,13" />
-                    <span class="input_suffix" id="price-crypto-suffix">RUB</span>
-                </div>
-                <div class="info_text">
-                    <div>Рыночная цена: <span id="market-price">81,13</span> ₽</div>
-                    <div>Ваша цена: <span id="your-price">0,00</span> ₽</div>
-                </div>
-            </div>
-
-            <!-- Amount Section -->
-            <div class="amount_section">
-                <label class="section_header">СУММА</label>
-                <div class="input_field">
-                    <input type="text" class="single_input" id="amount-range" placeholder="10 ~ 1000000" />
-                    <span class="input_suffix" id="amount-crypto-suffix">USDT</span>
-                </div>
-                <div class="info_text">
-                    <div>
-                        Ваш баланс: <span id="balance-amount">0</span> <span id="balance-crypto">USDT</span>
-                        <span class="max_link" id="max-amount-btn">Макс.</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Min and Max Transaction Amount -->
-            <div class="limits_section">
-                <label class="section_header">МИН. И МАКС. СУММА СДЕЛКИ</label>
-                <div class="input_field">
-                    <input type="text" class="single_input" id="min-limit" placeholder="Мин. 100" />
-                    <span class="input_suffix">RUB</span>
-                </div>
-                <div class="input_field">
-                    <input type="text" class="single_input" id="max-limit" placeholder="Макс." />
-                    <span class="input_suffix">RUB</span>
-                </div>
-                <div class="hint_text">Макс. можно не указывать.</div>
-            </div>
-
-            <!-- Payment Details Section (only for selling) -->
-            <div class="payment_details_section" id="payment-details-section" style="display: block;">
-                <label class="section_header">РЕКВИЗИТЫ ДЛЯ ОПЛАТЫ</label>
-                
-                <!-- Payment Method Selection -->
-                <div class="payment_method_selector">
-                    <div class="payment_method_item" data-method="tinkoff">
-                        <div class="payment_method_icon">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                                <rect x="2" y="4" width="20" height="16" rx="3" stroke="currentColor" stroke-width="2"/>
-                                <path d="M2 10H22" stroke="currentColor" stroke-width="2"/>
-                            </svg>
-                        </div>
-                        <div class="payment_method_info">
-                            <div class="payment_method_name">Т-Банк (Тинькофф)</div>
-                            <div class="payment_method_desc">Карта или номер телефона</div>
-                        </div>
-                        <div class="payment_method_check">
-                            <span class="checkmark">✓</span>
-                        </div>
-                    </div>
-                    <div class="payment_method_item" data-method="sber">
-                        <div class="payment_method_icon">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                                <rect x="2" y="4" width="20" height="16" rx="3" stroke="currentColor" stroke-width="2"/>
-                                <path d="M2 10H22" stroke="currentColor" stroke-width="2"/>
-                            </svg>
-                        </div>
-                        <div class="payment_method_info">
-                            <div class="payment_method_name">Сбербанк</div>
-                            <div class="payment_method_desc">Карта или номер телефона</div>
-                        </div>
-                        <div class="payment_method_check">
-                            <span class="checkmark">✓</span>
-                        </div>
-                    </div>
-                    <div class="payment_method_item" data-method="alfabank">
-                        <div class="payment_method_icon">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                                <rect x="2" y="4" width="20" height="16" rx="3" stroke="currentColor" stroke-width="2"/>
-                                <path d="M2 10H22" stroke="currentColor" stroke-width="2"/>
-                            </svg>
-                        </div>
-                        <div class="payment_method_info">
-                            <div class="payment_method_name">Альфа-Банк</div>
-                            <div class="payment_method_desc">Карта или номер телефона</div>
-                        </div>
-                        <div class="payment_method_check">
-                            <span class="checkmark">✓</span>
-                        </div>
-                    </div>
-                    <div class="payment_method_item" data-method="ozonbank">
-                        <div class="payment_method_icon">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                                <rect x="2" y="4" width="20" height="16" rx="3" stroke="currentColor" stroke-width="2"/>
-                                <path d="M2 10H22" stroke="currentColor" stroke-width="2"/>
-                            </svg>
-                        </div>
-                        <div class="payment_method_info">
-                            <div class="payment_method_name">Озон - Банк</div>
-                            <div class="payment_method_desc">Карта или номер телефона</div>
-                        </div>
-                        <div class="payment_method_check">
-                            <span class="checkmark">✓</span>
-                        </div>
-                    </div>
-                    <div class="payment_method_item" data-method="custom">
-                        <div class="payment_method_icon">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
-                                <path d="M12 8V16M8 12H16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                            </svg>
-                        </div>
-                        <div class="payment_method_info">
-                            <div class="payment_method_name">Другой банк</div>
-                            <div class="payment_method_desc">Укажите свой банк</div>
-                        </div>
-                        <div class="payment_method_check">
-                            <span class="checkmark">✓</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Custom Bank Name Input (shown when "custom" is selected) -->
-                <div class="custom_bank_wrapper" id="custom-bank-wrapper" style="display: none;">
-                    <label class="section_subheader">Название банка</label>
-                    <div class="input_field">
-                        <input type="text" class="single_input" id="custom-bank-name" placeholder="Введите название банка" />
-                    </div>
-                </div>
-
-                <!-- Payment Details Input -->
-                <div class="payment_input_wrapper">
-                    <label class="section_subheader">Реквизиты</label>
-                    <div class="input_field">
-                        <input type="text" class="single_input" id="payment-details" placeholder="Введите номер карты или телефона" />
-                    </div>
-                    <div class="hint_text">Укажите реквизиты для получения платежей. Эти данные увидит покупатель.</div>
-                </div>
-            </div>
-
-            <div class="footer_create_ads">
-                <div class="footer_btn">
-                    <button id="next-btn">
-                        Далее
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Preview Screen -->
-    <div class="preview_screen" style="display: none;">
-        <div class="preview_container">
-            <!-- Header -->
-            <div class="preview_header">
-                <button class="back_btn" id="back-from-preview">
-                    <span class="back_arrow">‹</span>
-                </button>
-                <h1 class="preview_title">Предпросмотр</h1>
-                <span class="preview_progress">2/2</span>
-            </div>
-
-            <!-- Preview Card -->
-            <div class="preview_card_wrapper">
-                <div class="preview_label">Так будет выглядеть ваше объявление:</div>
-                
-                <div class="preview_listing_card">
-                    <div class="preview_card_header">
-                        <div class="preview_badge" id="preview-action-badge">ПРОДАЖА</div>
-                        <div class="preview_crypto_pair">
-                            <span class="preview_crypto" id="preview-crypto">USDT</span>
-                            <span class="preview_arrow">→</span>
-                            <span class="preview_currency">RUB</span>
-                        </div>
-                    </div>
-
-                    <div class="preview_price_section">
-                        <div class="preview_price_label">Цена за 1 <span id="preview-price-crypto">USDT</span></div>
-                        <div class="preview_price_value">
-                            <span id="preview-price-amount">0.00</span> ₽
-                        </div>
-                    </div>
-
-                    <div class="preview_details">
-                        <div class="preview_detail_row">
-                            <span class="preview_detail_label">
-                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                                    <path d="M8 14.5C4.41 14.5 1.5 11.59 1.5 8C1.5 4.41 4.41 1.5 8 1.5C11.59 1.5 14.5 4.41 14.5 8C14.5 11.59 11.59 14.5 8 14.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M8 5.5V8.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M6 8.5H10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                                Доступно
-                            </span>
-                            <span class="preview_detail_value" id="preview-available-amount">0 USDT</span>
-                        </div>
-                        <div class="preview_detail_row">
-                            <span class="preview_detail_label">
-                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                                    <path d="M5.5 6.5V3.5C5.5 2.67 6.17 2 7 2H13C13.83 2 14.5 2.67 14.5 3.5V9.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M10.5 9.5H3C2.17 9.5 1.5 10.17 1.5 11V12.5C1.5 13.33 2.17 14 3 14H10.5C11.33 14 12 13.33 12 12.5V11C12 10.17 11.33 9.5 10.5 9.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                                Лимиты
-                            </span>
-                            <span class="preview_detail_value" id="preview-limits">100 – 1,000,000 RUB</span>
-                        </div>
-                        <div class="preview_detail_row">
-                            <span class="preview_detail_label">
-                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                                    <path d="M14.5 5.5H1.5C1.22 5.5 1 5.72 1 6V13C1 13.83 1.67 14.5 2.5 14.5H13.5C14.33 14.5 15 13.83 15 13V6C15 5.72 14.78 5.5 14.5 5.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M4 5.5V3.5C4 2.67 4.67 2 5.5 2H10.5C11.33 2 12 2.67 12 3.5V5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                                Метод оплаты
-                            </span>
-                            <span class="preview_detail_value">Т-Банк (Тинькофф)</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Info Section -->
-            <div class="preview_info_box">
-                <div class="preview_info_icon">ℹ️</div>
-                <div class="preview_info_text">
-                    <div class="preview_info_title">Перед публикацией</div>
-                    <div class="preview_info_desc">Убедитесь, что все данные указаны верно. После создания объявления оно станет доступно всем пользователям.</div>
-                </div>
-            </div>
-
-            <!-- Footer -->
-            <div class="footer_preview">
-                <div class="footer_btn">
-                    <button id="create-listing-btn">
-                        Создать объявление
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Визуальный логгер для отладки на мобильных устройствах -->
-    <div id="debug-logger" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.9); color: white; padding: 10px; max-height: 200px; overflow-y: auto; z-index: 10000; font-size: 10px; font-family: monospace;">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-            <strong>Debug Log</strong>
-            <button onclick="document.getElementById('debug-logger').style.display='none'" style="background: red; color: white; border: none; padding: 2px 10px; cursor: pointer;">✕</button>
-        </div>
-        <div id="debug-log-content"></div>
-    </div>
+// Функция инициализации Telegram Web App
+async function initTelegramWebApp() {
+    console.log('Инициализация Telegram Web App...');
+    console.log('window.Telegram:', !!window.Telegram);
+    console.log('window.Telegram.WebApp:', !!(window.Telegram && window.Telegram.WebApp));
+    console.log('User Agent:', navigator.userAgent);
+    console.log('API Base URL:', API_BASE_URL);
     
-    <script>
-        // Визуальный логгер для мобильных устройств
-        (function() {
-            const loggerDiv = document.getElementById('debug-logger');
-            const logContent = document.getElementById('debug-log-content');
-            let logCount = 0;
-            const maxLogs = 50;
+    if (window.Telegram && window.Telegram.WebApp) {
+        tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+        console.log('Telegram Web App инициализирован');
+        console.log('Telegram WebApp version:', tg.version);
+        console.log('Telegram WebApp platform:', tg.platform);
+        
+            // Проверяем доступность сервера перед аутентификацией
+        try {
+            console.log('Проверка доступности сервера:', `${API_BASE_URL}/health`);
+            // Пробуем сначала HTTPS, если не работает - пробуем HTTP
+            let healthCheck;
+            let apiUrl = API_BASE_URL;
             
-            // Перехватываем console.log, console.error, console.warn
-            const originalLog = console.log;
-            const originalError = console.error;
-            const originalWarn = console.warn;
-            
-            function addLog(type, ...args) {
-                // Вызываем оригинальный метод
-                if (type === 'log') originalLog.apply(console, args);
-                if (type === 'error') originalError.apply(console, args);
-                if (type === 'warn') originalWarn.apply(console, args);
-                
-                // Добавляем в визуальный логгер
-                const logEntry = document.createElement('div');
-                logEntry.style.marginBottom = '3px';
-                logEntry.style.padding = '2px';
-                logEntry.style.borderLeft = '2px solid ' + (type === 'error' ? 'red' : type === 'warn' ? 'yellow' : 'green');
-                logEntry.style.paddingLeft = '5px';
-                
-                const timestamp = new Date().toLocaleTimeString();
-                const message = args.map(arg => {
-                    if (typeof arg === 'object') return JSON.stringify(arg, null, 2);
-                    return String(arg);
-                }).join(' ');
-                
-                logEntry.innerHTML = `<span style="color: #888;">[${timestamp}]</span> <span style="color: ${type === 'error' ? 'red' : type === 'warn' ? 'yellow' : 'white'};">${message}</span>`;
-                
-                logContent.appendChild(logEntry);
-                logCount++;
-                
-                // Удаляем старые логи
-                if (logCount > maxLogs) {
-                    logContent.removeChild(logContent.firstChild);
-                    logCount--;
-                }
-                
-                // Прокручиваем вниз
-                logContent.scrollTop = logContent.scrollHeight;
-                
-                // Показываем логгер при ошибках
-                if (type === 'error') {
-                    loggerDiv.style.display = 'block';
+            try {
+                healthCheck = await fetch(`${apiUrl}/health`, {
+                    method: 'GET',
+                    credentials: 'include',
+                    mode: 'cors'
+                });
+            } catch (httpsError) {
+                console.warn('HTTPS запрос не прошел, пробуем HTTP...', httpsError);
+                // Пробуем HTTP как fallback
+                apiUrl = API_BASE_URL.replace('https://', 'http://');
+                try {
+                    healthCheck = await fetch(`${apiUrl}/health`, {
+                        method: 'GET',
+                        credentials: 'include',
+                        mode: 'cors'
+                    });
+                    console.warn('ВНИМАНИЕ: Используется HTTP вместо HTTPS! Это небезопасно и может не работать в Telegram приложении.');
+                } catch (httpError) {
+                    console.error('Ошибка при проверке сервера (и HTTPS, и HTTP не работают):', {
+                        httpsError: httpsError.message,
+                        httpError: httpError.message
+                    });
+                    throw httpsError; // Бросаем оригинальную ошибку
                 }
             }
             
-            console.log = function(...args) {
-                addLog('log', ...args);
-            };
+            if (healthCheck.ok) {
+                console.log('Сервер доступен, статус:', healthCheck.status);
+            } else {
+                console.warn('Сервер отвечает с ошибкой:', healthCheck.status);
+            }
+        } catch (error) {
+            console.error('Сервер недоступен! Проверьте:', error);
+            console.error('1. Запущен ли сервер на', API_BASE_URL);
+            console.error('2. Открыт ли порт 8000 в firewall');
+            console.error('3. Возможно, Telegram блокирует запросы к IP адресам');
+            console.error('   В этом случае используйте домен вместо IP');
+            console.error('4. Проверьте, что используется HTTPS (Telegram требует HTTPS)');
             
-            console.error = function(...args) {
-                addLog('error', ...args);
-            };
+            // Показываем пользователю понятное сообщение
+            if (tg && tg.showAlert) {
+                tg.showAlert('Ошибка подключения к серверу. Проверьте интернет-соединение.');
+            }
             
-            console.warn = function(...args) {
-                addLog('warn', ...args);
-            };
+            return false;
+        }
+        
+        // После инициализации пытаемся аутентифицироваться
+        if (tg.initData) {
+            authenticateWithTelegram();
+        } else {
+            // Ждем появления initData
+            const checkInitData = setInterval(() => {
+                if (tg && tg.initData) {
+                    clearInterval(checkInitData);
+                    authenticateWithTelegram();
+                }
+            }, 100);
             
-            // Добавляем кнопку для показа/скрытия логгера
-            const toggleBtn = document.createElement('button');
-            toggleBtn.innerHTML = '📋';
-            toggleBtn.style.cssText = 'position: fixed; top: 10px; right: 10px; z-index: 10001; background: rgba(0,0,0,0.7); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 20px; cursor: pointer;';
-            toggleBtn.onclick = function() {
-                loggerDiv.style.display = loggerDiv.style.display === 'none' ? 'block' : 'none';
+            // Останавливаем проверку через 5 секунд
+            setTimeout(() => clearInterval(checkInitData), 5000);
+        }
+        
+        // Показываем информацию из Telegram, если доступна (до аутентификации)
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            const tgUser = tg.initDataUnsafe.user;
+            const tempUserData = {
+                username: tgUser.username,
+                name: tgUser.first_name,
+                balance: 0
             };
-            document.body.appendChild(toggleBtn);
-            
-            console.log('Визуальный логгер инициализирован');
-        })();
-    </script>
+            updateUserInfo(tempUserData);
+        }
+        
+        return true;
+    }
+    return false;
+}
 
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="index.js"></script>
-</body>
-</html>
+// Пытаемся инициализировать сразу
+(async () => {
+    if (!(await initTelegramWebApp())) {
+        // Если не получилось, ждем загрузки DOM
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', async () => {
+                if (!(await initTelegramWebApp())) {
+                    // Пробуем еще раз через небольшую задержку
+                    setTimeout(async () => {
+                        if (!(await initTelegramWebApp())) {
+                            console.warn('Telegram Web App не доступен');
+                        }
+                    }, 200);
+                }
+            });
+        } else {
+            // DOM уже загружен, но скрипт может еще загружаться
+            setTimeout(async () => {
+                if (!(await initTelegramWebApp())) {
+                    console.warn('Telegram Web App не доступен');
+                }
+            }, 200);
+        }
+    }
+})();
+
+
+// Функция для проверки доступности сервера
+async function checkServerAvailability() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/docs`, {
+            method: 'GET',
+            mode: 'no-cors' // Для проверки доступности
+        });
+        return true;
+    } catch (error) {
+        console.warn('Сервер может быть недоступен:', error);
+        return false;
+    }
+}
+
+// Функция для аутентификации через Telegram
+async function authenticateWithTelegram() {
+    try {
+        if (!tg) {
+            console.warn('Telegram Web App не инициализирован');
+            return;
+        }
+        
+        // Получаем initData от Telegram
+        const initData = tg.initData;
+        
+        if (!initData) {
+            console.error('initData не получен от Telegram');
+            return;
+        }
+
+        console.log('Отправка запроса на аутентификацию:', API_BASE_URL);
+        
+        const response = await fetch(`${API_BASE_URL}/api/auth/telegram`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include', 
+            mode: 'cors', 
+            body: JSON.stringify({
+                init_data: initData
+            })
+        }).catch(error => {
+            console.error('Ошибка сети при отправке запроса:', error);
+            console.error('Тип ошибки:', error.name);
+            console.error('Сообщение:', error.message);
+            throw error;
+        });
+        
+        console.log('Ответ получен:', response.status, response.statusText);
+
+        
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Ошибка ответа сервера:', errorText);
+            throw new Error(`Ошибка аутентификации: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log('Аутентификация успешна, полученные данные:', {
+            hasAccessToken: !!data.access_token,
+            hasRefreshToken: !!data.refresh_token,
+            accessTokenLength: data.access_token ? data.access_token.length : 0,
+            refreshTokenLength: data.refresh_token ? data.refresh_token.length : 0,
+            allFields: Object.keys(data)
+        });
+        
+        // Проверяем, что токены есть в ответе
+        if (!data.access_token || !data.refresh_token) {
+            console.error('ОШИБКА: Токены не получены от сервера!', data);
+            throw new Error('Токены не получены от сервера');
+        }
+        
+        // Сохраняем данные пользователя в глобальную переменную
+        userData = data;
+        
+        // Сохраняем токены
+        accessToken = data.access_token;
+        refreshToken = data.refresh_token;
+        
+        // Обновляем информацию о пользователе на главном экране
+        updateUserInfo(data);
+        
+        console.log('Токены сохранены в память:', {
+            hasAccessToken: !!accessToken,
+            hasRefreshToken: !!refreshToken,
+            accessTokenLength: accessToken ? accessToken.length : 0,
+            refreshTokenLength: refreshToken ? refreshToken.length : 0
+        });
+        
+        // Проверяем, что токены есть в cookie (сервер должен установить их)
+        setTimeout(() => {
+            const cookieAccessToken = getCookie('ACCESS_TOKEN');
+            const cookieRefreshToken = getCookie('REFRESH_TOKEN');
+            console.log('Токены в cookie после сохранения (через 500ms):', {
+                hasCookieAccessToken: !!cookieAccessToken,
+                hasCookieRefreshToken: !!cookieRefreshToken,
+                cookieAccessTokenLength: cookieAccessToken ? cookieAccessToken.length : 0,
+                cookieRefreshTokenLength: cookieRefreshToken ? cookieRefreshToken.length : 0,
+                allCookies: document.cookie
+            });
+            
+            // Если токенов нет в cookie, но есть в памяти - это нормально для некоторых случаев
+            if (!cookieAccessToken && accessToken) {
+                console.warn('ВНИМАНИЕ: Токен есть в памяти, но не в cookie. Это может быть нормально, если cookie не устанавливаются из-за настроек безопасности.');
+            }
+        }, 500);
+        
+        
+    } catch (error) {
+        console.error('Ошибка при аутентификации:', error);
+        console.error('Детали ошибки:', {
+            message: error.message,
+            name: error.name,
+            stack: error.stack
+        });
+    
+    }
+}
+
+// Функция для получения токена из cookie
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
+}
+
+// Инициализация токенов из cookie при загрузке страницы
+function initTokensFromCookies() {
+    const cookieAccessToken = getCookie('ACCESS_TOKEN');
+    const cookieRefreshToken = getCookie('REFRESH_TOKEN');
+    
+    if (cookieAccessToken) {
+        accessToken = cookieAccessToken;
+        console.log('Access token загружен из cookie, длина:', accessToken.length);
+    }
+    
+    if (cookieRefreshToken) {
+        refreshToken = cookieRefreshToken;
+        console.log('Refresh token загружен из cookie, длина:', refreshToken.length);
+    }
+    
+    if (!accessToken && !refreshToken) {
+        console.warn('Токены не найдены в cookie при инициализации');
+    } else {
+        console.log('Токены успешно инициализированы из cookie');
+    }
+}
+
+// Вызываем при загрузке
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initTokensFromCookies);
+} else {
+    initTokensFromCookies();
+}
+
+// Функция для выполнения защищенных запросов
+async function makeAuthenticatedRequest(url, options = {}) {
+    // Получаем токен из глобальной переменной или cookie
+    let token = accessToken || getCookie('ACCESS_TOKEN');
+    
+    // Логируем все возможные источники токена
+    const cookieToken = getCookie('ACCESS_TOKEN');
+    console.log('makeAuthenticatedRequest - проверка токенов:', {
+        url,
+        hasAccessToken: !!accessToken,
+        accessTokenLength: accessToken ? accessToken.length : 0,
+        hasCookieToken: !!cookieToken,
+        cookieTokenLength: cookieToken ? cookieToken.length : 0,
+        hasToken: !!token,
+        tokenLength: token ? token.length : 0,
+        allCookies: document.cookie
+    });
+    
+    const defaultOptions = {
+        credentials: 'include', // Всегда отправляем cookies
+        headers: {
+            'Content-Type': 'application/json',
+            ...options.headers
+        }
+    };
+    
+    // Добавляем токен в заголовок Authorization, если он есть
+    if (token) {
+        defaultOptions.headers['Authorization'] = `Bearer ${token}`;
+        console.log('Токен добавлен в заголовок Authorization, первые 20 символов:', token.substring(0, 20) + '...');
+    } else {
+        console.error('ТОКЕН НЕ НАЙДЕН! Проверьте:');
+        console.error('- accessToken в памяти:', accessToken);
+        console.error('- ACCESS_TOKEN в cookie:', cookieToken);
+        console.error('- Все cookies:', document.cookie);
+    }
+
+    const response = await fetch(url, { ...defaultOptions, ...options });
+    
+    // Если получили 401, токены могли истечь - пытаемся обновить
+    if (response.status === 401) {
+        try {
+            // Получаем refresh token
+            const refreshTokenValue = refreshToken || getCookie('REFRESH_TOKEN');
+            
+            if (!refreshTokenValue) {
+                console.error('Refresh token не найден');
+                return response;
+            }
+            
+            const refreshResponse = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${refreshTokenValue}`
+                }
+            });
+            
+            if (refreshResponse.ok) {
+                const tokenData = await refreshResponse.json();
+                // Обновляем токены
+                accessToken = tokenData.access_token;
+                refreshToken = tokenData.refresh_token;
+                
+                // Повторяем оригинальный запрос с новым токеном
+                defaultOptions.headers['Authorization'] = `Bearer ${accessToken}`;
+                return fetch(url, { ...defaultOptions, ...options });
+            } else {
+                console.error('Ошибка обновления токена:', await refreshResponse.text());
+            }
+        } catch (error) {
+            console.error('Ошибка при обновлении токенов:', error);
+        }
+    }
+    
+    return response;
+}
+
+
+
+// ========== Функции для работы с информацией о пользователе ==========
+
+// Функция обновления информации о пользователе на главном экране
+function updateUserInfo(userData) {
+    // Поддержка новых и старых селекторов
+    const userNameEl = document.querySelector('#user-name') || document.querySelector('.user_name');
+    const userBalanceEl = document.querySelector('#user-balance');
+    
+    if (!userNameEl || !userBalanceEl) {
+        console.warn('Элементы для отображения информации о пользователе не найдены');
+        return;
+    }
+    
+    // Обновляем имя (приоритет: username > name > tgData > дефолт)
+    let displayName = 'Пользователь';
+    if (userData.username) {
+        displayName = userData.username;
+    } else if (userData.name) {
+        displayName = userData.name;
+    } else if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+        const tgUser = tg.initDataUnsafe.user;
+        displayName = tgUser.first_name || tgUser.username || displayName;
+    }
+    
+    userNameEl.textContent = displayName;
+    
+    // Обновляем баланс
+    const balance = userData.balance !== undefined && userData.balance !== null ? userData.balance : 0;
+    userBalanceEl.textContent = parseFloat(balance).toFixed(2);
+    
+    // Обновляем аватар (генерируем цвет на основе имени)
+    // Поддержка нового и старого селекторов
+    const avatarSelectors = ['#user-avatar', '.user_avatar_small', '.avatar_circle'];
+    avatarSelectors.forEach(selector => {
+        const avatarEl = document.querySelector(selector);
+        if (avatarEl) {
+            const avatarColor = getAvatarColor(displayName);
+            avatarEl.style.backgroundColor = avatarColor;
+            const firstLetter = displayName.charAt(0).toUpperCase();
+            avatarEl.textContent = firstLetter;
+        }
+    });
+    
+    console.log('Информация о пользователе обновлена:', { displayName, balance, userData });
+}
+
+// Функция для получения цвета аватара на основе имени
+function getAvatarColor(name) {
+    const colors = [
+        '#5BA3D0', '#D05B5B', '#5BD08D', '#D0A65B', 
+        '#8D5BD0', '#5BD0C4', '#D05B8D', '#8DD05B'
+    ];
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+        hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return colors[Math.abs(hash) % colors.length];
+}
+
+// Функция для загрузки и обновления баланса пользователя
+async function refreshUserBalance() {
+    try {
+        if (!userData || !userData.id) {
+            console.warn('Данные пользователя не загружены');
+            return;
+        }
+        
+        // Здесь можно добавить запрос к API для получения актуального баланса
+        // Пока используем данные из userData
+        const balanceEl = document.querySelector('#user-balance');
+        if (balanceEl && userData.balance !== undefined) {
+            balanceEl.textContent = parseFloat(userData.balance || 0).toFixed(2);
+        }
+    } catch (error) {
+        console.error('Ошибка при обновлении баланса:', error);
+    }
+}
+
+// Инициализация кнопки обновления баланса
+function initBalanceRefresh() {
+    const refreshBtn = document.querySelector('#refresh-balance-btn');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', async () => {
+            refreshBtn.style.animation = 'spin 1s linear';
+            await refreshUserBalance();
+            setTimeout(() => {
+                refreshBtn.style.animation = '';
+            }, 1000);
+        });
+    }
+}
+
+// Инициализация при загрузке
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initBalanceRefresh);
+} else {
+    initBalanceRefresh();
+}
+
+let main__screen = document.querySelector("#main__screen")
+let buy_screen = document.querySelector(".buy__screen")
+let create_ads_screen = document.querySelector(".create_ads_screen")
+// ------------
+
+let btn_buy_crypto = document.querySelector("#btn-for-buycrpyto")
+let btn_sell_crypto = document.querySelector("#btn-for-sellcrpyto")
+let btn_my_ads = document.querySelector("#create_ads")
+// ------------
+
+btn_buy_crypto.addEventListener("click", async () => {
+    main__screen.style.display = "none"
+    buy_screen.style.display = "block"
+    
+    console.log('Экран покупки открыт, загружаем объявления...')
+    
+    // Загружаем объявления при открытии экрана покупки
+    const selectedCrypto = document.querySelector('.filter__value')?.textContent || 'TON'
+    console.log('Выбранная криптовалюта:', selectedCrypto)
+    
+    const ads = await loadAds('sell', selectedCrypto)
+    console.log('Объявления загружены, отображаем:', ads.length)
+    displayAds(ads)
+})
+
+btn_my_ads.addEventListener("click", () => {
+    main__screen.style.display = "none"
+    buy_screen.style.display = "none"
+    create_ads_screen.style.display = "block"
+})
+// ------------
+// Выпадающее меню для фильтра "Крипта"
+
+function initCryptoFilter() {
+    let cryptoFilter = document.querySelector("#crypto-filter")
+    if (!cryptoFilter) return
+    
+    let cryptoDropdown = document.querySelector("#crypto-dropdown")
+    let cryptoFilterValue = cryptoFilter.querySelector(".filter__value")
+    let dropdownItems = cryptoDropdown.querySelectorAll(".dropdown__item")
+
+    // Открытие/закрытие меню
+    cryptoFilter.querySelector(".filter__header").addEventListener("click", (e) => {
+        e.stopPropagation()
+        cryptoFilter.classList.toggle("filter__open")
+    })
+
+    // Выбор опции из меню
+    dropdownItems.forEach(item => {
+        item.addEventListener("click", (e) => {
+            e.stopPropagation()
+            let value = item.getAttribute("data-value")
+            
+            // Обновляем выбранное значение
+            cryptoFilterValue.textContent = value
+            
+            // Убираем выделение со всех элементов
+            dropdownItems.forEach(i => i.classList.remove("dropdown__item--selected"))
+            
+            // Добавляем выделение на выбранный элемент
+            item.classList.add("dropdown__item--selected")
+            
+            // Закрываем меню
+            cryptoFilter.classList.remove("filter__open")
+        })
+    })
+
+    // Закрытие меню при клике вне его (добавляем только один раз)
+    if (!window.cryptoFilterClickHandler) {
+        window.cryptoFilterClickHandler = (e) => {
+            let cryptoFilter = document.querySelector("#crypto-filter")
+            if (cryptoFilter && !cryptoFilter.contains(e.target)) {
+                cryptoFilter.classList.remove("filter__open")
+            }
+        }
+        document.addEventListener("click", window.cryptoFilterClickHandler)
+    }
+}
+
+// Инициализация при загрузке страницы
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initCryptoFilter)
+} else {
+    initCryptoFilter()
+}
+
+// Segmented Control для создания объявления
+function initSegmentedControl() {
+    const segmentedBtns = document.querySelectorAll('.segmented_btn')
+    if (!segmentedBtns.length) return
+    
+    const detailLabel = document.querySelector('.detail_row--selectable .detail_label')
+    const paymentDetailsSection = document.querySelector('#payment-details-section')
+    
+    segmentedBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            // Убираем активный класс со всех кнопок
+            segmentedBtns.forEach(b => b.classList.remove('segmented_btn--active'))
+            // Добавляем активный класс на нажатую кнопку
+            btn.classList.add('segmented_btn--active')
+            
+            // Обновляем текст в зависимости от действия
+            const action = btn.getAttribute('data-action')
+            if (detailLabel) {
+                if (action === 'buy') {
+                    detailLabel.textContent = 'Купить криптовалюту'
+                } else {
+                    detailLabel.textContent = 'Продать криптовалюту'
+                }
+            }
+            
+            // Показываем/скрываем секцию реквизитов
+            if (paymentDetailsSection) {
+                if (action === 'sell') {
+                    paymentDetailsSection.style.display = 'block'
+                } else {
+                    paymentDetailsSection.style.display = 'none'
+                }
+            }
+        })
+    })
+}
+
+// Инициализация segmented control
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSegmentedControl)
+} else {
+    initSegmentedControl()
+}
+
+// Crypto Select Dropdown
+function initCryptoSelect() {
+    const cryptoSelectRow = document.querySelector('#crypto-select-row')
+    const cryptoDropdown = document.querySelector('.create_ads_screen #crypto-dropdown')
+    const selectedCrypto = document.querySelector('.create_ads_screen #selected-crypto')
+    const cryptoOptions = document.querySelectorAll('.create_ads_screen .crypto_option')
+    const checkUsdt = document.querySelector('.create_ads_screen #check-usdt')
+    const checkTon = document.querySelector('.create_ads_screen #check-ton')
+    const priceCryptoName = document.querySelector('#price-crypto-name')
+    const priceCryptoSuffix = document.querySelector('#price-crypto-suffix')
+    const amountCryptoSuffix = document.querySelector('#amount-crypto-suffix')
+    const balanceCrypto = document.querySelector('#balance-crypto')
+    const chevron = cryptoSelectRow?.querySelector('.chevron')
+    
+    if (!cryptoSelectRow || !cryptoDropdown) {
+        console.warn('Crypto select elements not found', {
+            cryptoSelectRow: !!cryptoSelectRow,
+            cryptoDropdown: !!cryptoDropdown
+        })
+        return
+    }
+    
+    console.log('Crypto select initialized successfully')
+    
+    // Открытие/закрытие выпадающего списка
+    cryptoSelectRow.addEventListener('click', (e) => {
+        e.stopPropagation()
+        console.log('Crypto select row clicked')
+        const isOpen = cryptoDropdown.classList.contains('dropdown_open')
+        cryptoDropdown.classList.toggle('dropdown_open')
+        console.log('Dropdown toggled, isOpen:', !isOpen)
+        
+        // Анимация chevron
+        if (chevron) {
+            if (!isOpen) {
+                chevron.style.transform = 'rotate(90deg) translateX(3px)'
+            } else {
+                chevron.style.transform = 'translateX(0)'
+            }
+        }
+    })
+    
+    // Выбор криптовалюты
+    cryptoOptions.forEach(option => {
+        option.addEventListener('click', (e) => {
+            e.stopPropagation()
+            const crypto = option.getAttribute('data-crypto')
+            
+            if (!crypto) return
+            
+            // Обновляем выбранную криптовалюту
+            if (selectedCrypto) {
+                selectedCrypto.textContent = crypto
+            }
+            
+            // Обновляем галочки
+            if (crypto === 'USDT') {
+                if (checkUsdt) checkUsdt.style.display = 'inline-block'
+                if (checkTon) checkTon.style.display = 'none'
+            } else if (crypto === 'TON') {
+                if (checkUsdt) checkUsdt.style.display = 'none'
+                if (checkTon) checkTon.style.display = 'inline-block'
+            }
+            
+            // Обновляем текст в интерфейсе
+            if (priceCryptoName) {
+                priceCryptoName.textContent = `1 ${crypto}`
+            }
+            if (priceCryptoSuffix) {
+                priceCryptoSuffix.textContent = crypto
+            }
+            if (amountCryptoSuffix) {
+                amountCryptoSuffix.textContent = crypto
+            }
+            if (balanceCrypto) {
+                balanceCrypto.textContent = crypto
+            }
+            
+            // Закрываем выпадающий список
+            cryptoDropdown.classList.remove('dropdown_open')
+            if (chevron) {
+                chevron.style.transform = 'translateX(0)'
+            }
+        })
+    })
+    
+    // Закрытие при клике вне списка
+    document.addEventListener('click', (e) => {
+        if (cryptoSelectRow && !cryptoSelectRow.contains(e.target)) {
+            cryptoDropdown.classList.remove('dropdown_open')
+            if (chevron) {
+                chevron.style.transform = 'translateX(0)'
+            }
+        }
+    })
+}
+
+// Инициализация crypto select
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initCryptoSelect)
+} else {
+    initCryptoSelect()
+}
+
+// Payment Method Selection
+function initPaymentMethodSelection() {
+    const paymentMethodItems = document.querySelectorAll('.payment_method_item')
+    const customBankWrapper = document.querySelector('#custom-bank-wrapper')
+    
+    if (!paymentMethodItems.length) return
+    
+    // По умолчанию выбираем первый метод
+    paymentMethodItems[0].classList.add('selected')
+    
+    paymentMethodItems.forEach(item => {
+        item.addEventListener('click', () => {
+            // Убираем выделение со всех методов
+            paymentMethodItems.forEach(i => i.classList.remove('selected'))
+            
+            // Добавляем выделение на выбранный метод
+            item.classList.add('selected')
+            
+            // Показываем/скрываем поле для ввода названия банка
+            const method = item.getAttribute('data-method')
+            if (customBankWrapper) {
+                if (method === 'custom') {
+                    customBankWrapper.style.display = 'block'
+                    // Добавляем плавную анимацию появления
+                    setTimeout(() => {
+                        customBankWrapper.style.opacity = '1'
+                        customBankWrapper.style.transform = 'translateY(0)'
+                    }, 10)
+                } else {
+                    customBankWrapper.style.display = 'none'
+                    customBankWrapper.style.opacity = '0'
+                    customBankWrapper.style.transform = 'translateY(-10px)'
+                }
+            }
+        })
+    })
+}
+
+// Инициализация payment method selection
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initPaymentMethodSelection)
+} else {
+    initPaymentMethodSelection()
+}
+
+// Preview Screen Logic
+function initPreviewScreen() {
+    const nextBtn = document.querySelector('#next-btn')
+    const backBtn = document.querySelector('#back-from-preview')
+    const createListingBtn = document.querySelector('#create-listing-btn')
+    const createAdsScreen = document.querySelector('.create_ads_screen')
+    const previewScreen = document.querySelector('.preview_screen')
+    
+    if (!nextBtn || !backBtn || !createListingBtn || !createAdsScreen || !previewScreen) {
+        console.warn('Preview screen elements not found')
+        return
+    }
+    
+    // Обработка кнопки "Далее"
+    nextBtn.addEventListener('click', () => {
+        // Собираем данные из формы
+        const action = document.querySelector('.segmented_btn--active')?.getAttribute('data-action') || 'sell'
+        const crypto = document.querySelector('#selected-crypto')?.textContent || 'USDT'
+        const price = document.querySelector('#price-range')?.value || '0.00'
+        const amount = document.querySelector('#amount-range')?.value || '0'
+        const minLimit = document.querySelector('#min-limit')?.value || '100'
+        const maxLimit = document.querySelector('#max-limit')?.value || '1,000,000'
+        
+        // Собираем данные о реквизитах (только для продажи)
+        let paymentMethod = ''
+        let paymentDetails = ''
+        
+        if (action === 'sell') {
+            const selectedMethod = document.querySelector('.payment_method_item.selected')
+            if (selectedMethod) {
+                const methodType = selectedMethod.getAttribute('data-method')
+                
+                // Если выбран пользовательский банк, берем название из поля ввода
+                if (methodType === 'custom') {
+                    const customBankName = document.querySelector('#custom-bank-name')?.value
+                    paymentMethod = customBankName || 'Другой банк'
+                } else {
+                    const methodName = selectedMethod.querySelector('.payment_method_name')?.textContent || ''
+                    paymentMethod = methodName
+                }
+            }
+            paymentDetails = document.querySelector('#payment-details')?.value || ''
+        }
+        
+        // Обновляем предпросмотр
+        updatePreview(action, crypto, price, amount, minLimit, maxLimit, paymentMethod, paymentDetails)
+        
+        // Переключаем экраны
+        createAdsScreen.style.display = 'none'
+        previewScreen.style.display = 'block'
+        
+        // Прокручиваем вверх
+        window.scrollTo(0, 0)
+    })
+    
+    // Обработка кнопки "Назад"
+    backBtn.addEventListener('click', () => {
+        previewScreen.style.display = 'none'
+        createAdsScreen.style.display = 'block'
+        
+        // Прокручиваем вверх
+        window.scrollTo(0, 0)
+    })
+    
+    // Обработка кнопки "Создать объявление"
+    createListingBtn.addEventListener('click', async () => {
+        try {
+            // Проверяем токены перед запросом
+            console.log('=== ПРОВЕРКА ТОКЕНОВ ПЕРЕД СОЗДАНИЕМ ОБЪЯВЛЕНИЯ ===');
+            console.log('Токены в памяти:', {
+                accessToken: !!accessToken,
+                refreshToken: !!refreshToken
+            });
+            console.log('Токены в cookie:', {
+                accessToken: !!getCookie('ACCESS_TOKEN'),
+                refreshToken: !!getCookie('REFRESH_TOKEN')
+            });
+            
+            // Если токенов нет, пытаемся загрузить из cookie
+            if (!accessToken) {
+                accessToken = getCookie('ACCESS_TOKEN');
+                console.log('Access token загружен из cookie:', !!accessToken);
+            }
+            if (!refreshToken) {
+                refreshToken = getCookie('REFRESH_TOKEN');
+                console.log('Refresh token загружен из cookie:', !!refreshToken);
+            }
+            
+            if (!accessToken) {
+                alert('Ошибка: вы не авторизованы. Пожалуйста, перезагрузите страницу.');
+                return;
+            }
+            
+            // Собираем данные из формы
+            const action = document.querySelector('.segmented_btn--active')?.getAttribute('data-action') || 'sell'
+            const crypto = document.querySelector('#selected-crypto')?.textContent || 'USDT'
+            const price = parseFloat(document.querySelector('#price-range')?.value) || 0
+            const amount = parseFloat(document.querySelector('#amount-range')?.value) || 0
+            const minLimit = parseFloat(document.querySelector('#min-limit')?.value) || 0
+            const maxLimit = parseFloat(document.querySelector('#max-limit')?.value) || null
+            
+            let bankName = ''
+            let paymentDetails = ''
+            
+            if (action === 'sell') {
+                const selectedMethod = document.querySelector('.payment_method_item.selected')
+                if (selectedMethod) {
+                    const methodType = selectedMethod.getAttribute('data-method')
+                    
+                    if (methodType === 'custom') {
+                        bankName = document.querySelector('#custom-bank-name')?.value || 'Другой банк'
+                    } else {
+                        bankName = selectedMethod.querySelector('.payment_method_name')?.textContent || ''
+                    }
+                }
+                paymentDetails = document.querySelector('#payment-details')?.value || ''
+            }
+            
+            // Валидация данных
+            if (!crypto || price <= 0 || amount <= 0 || minLimit <= 0) {
+                alert('Пожалуйста, заполните все обязательные поля')
+                return
+            }
+            
+            // Отправляем данные на сервер
+            createListingBtn.textContent = 'Создание...'
+            createListingBtn.disabled = true
+            
+            const adData = {
+                action: action,
+                crypto_currency: crypto,
+                price: price,
+                crypto_amount: amount,
+                min_limit: minLimit,
+                max_limit: maxLimit,
+                bank_name: bankName,
+                payment_details: paymentDetails
+            }
+            
+            const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/ads`, {
+                method: 'POST',
+                body: JSON.stringify(adData)
+            })
+            
+            if (!response.ok) {
+                const errorData = await response.json()
+                throw new Error(errorData.detail || 'Ошибка создания объявления')
+            }
+            
+            const createdAd = await response.json()
+            console.log('Объявление создано успешно:', createdAd)
+            
+            // Анимация успеха
+            createListingBtn.textContent = 'Создано! ✓'
+            createListingBtn.style.background = 'linear-gradient(135deg, #00c864 0%, #00a854 100%)'
+            
+            // Возвращаем на главный экран через 1.5 секунды
+            setTimeout(() => {
+                previewScreen.style.display = 'none'
+                main__screen.style.display = 'block'
+                
+                // Сбрасываем кнопку
+                createListingBtn.textContent = 'Создать объявление'
+                createListingBtn.style.background = 'linear-gradient(135deg, #00c864 0%, #00a854 100%)'
+                createListingBtn.disabled = false
+                
+                // Очищаем форму
+                document.querySelector('#price-range').value = ''
+                document.querySelector('#amount-range').value = ''
+                document.querySelector('#min-limit').value = ''
+                document.querySelector('#max-limit').value = ''
+                document.querySelector('#payment-details').value = ''
+                
+                window.scrollTo(0, 0)
+                
+                // Если пользователь на экране покупки, обновляем объявления
+                if (buy_screen.style.display === 'block' || buy_screen.style.display === '') {
+                    console.log('Обновляем список объявлений после создания')
+                    const selectedCrypto = document.querySelector('.filter__value')?.textContent || 'TON'
+                    loadAds('sell', selectedCrypto).then(ads => {
+                        console.log('Объявления обновлены:', ads.length)
+                        displayAds(ads)
+                    })
+                }
+            }, 1500)
+        } catch (error) {
+            console.error('Ошибка при создании объявления:', error)
+            alert('Ошибка создания объявления: ' + error.message)
+            
+            // Возвращаем кнопку в исходное состояние
+            createListingBtn.textContent = 'Создать объявление'
+            createListingBtn.disabled = false
+        }
+    })
+}
+
+// Функция обновления предпросмотра
+function updatePreview(action, crypto, price, amount, minLimit, maxLimit, paymentMethod, paymentDetails) {
+    // Обновляем бэдж действия
+    const actionBadge = document.querySelector('#preview-action-badge')
+    if (actionBadge) {
+        if (action === 'buy') {
+            actionBadge.textContent = 'ПОКУПКА'
+            actionBadge.style.background = 'linear-gradient(135deg, rgba(0, 128, 255, 0.15) 0%, rgba(0, 102, 204, 0.15) 100%)'
+            actionBadge.style.color = '#0080ff'
+            actionBadge.style.borderColor = 'rgba(0, 128, 255, 0.3)'
+        } else {
+            actionBadge.textContent = 'ПРОДАЖА'
+            actionBadge.style.background = 'linear-gradient(135deg, rgba(0, 200, 100, 0.15) 0%, rgba(0, 150, 80, 0.15) 100%)'
+            actionBadge.style.color = '#00c864'
+            actionBadge.style.borderColor = 'rgba(0, 200, 100, 0.3)'
+        }
+    }
+    
+    // Обновляем криптовалюту
+    const previewCrypto = document.querySelector('#preview-crypto')
+    if (previewCrypto) {
+        previewCrypto.textContent = crypto
+    }
+    
+    const previewPriceCrypto = document.querySelector('#preview-price-crypto')
+    if (previewPriceCrypto) {
+        previewPriceCrypto.textContent = crypto
+    }
+    
+    // Обновляем цену
+    const previewPriceAmount = document.querySelector('#preview-price-amount')
+    if (previewPriceAmount) {
+        const priceValue = price || '0.00'
+        previewPriceAmount.textContent = priceValue
+    }
+    
+    // Обновляем доступное количество
+    const previewAvailableAmount = document.querySelector('#preview-available-amount')
+    if (previewAvailableAmount) {
+        const amountValue = amount || '0'
+        previewAvailableAmount.textContent = `${amountValue} ${crypto}`
+    }
+    
+    // Обновляем лимиты
+    const previewLimits = document.querySelector('#preview-limits')
+    if (previewLimits) {
+        const minValue = minLimit || '100'
+        const maxValue = maxLimit || '1,000,000'
+        
+        // Форматируем числа с разделителями
+        const formatNumber = (num) => {
+            if (!num) return '0'
+            const number = parseFloat(num.replace(/[^\d.]/g, ''))
+            return new Intl.NumberFormat('ru-RU').format(number)
+        }
+        
+        previewLimits.textContent = `${formatNumber(minValue)} – ${formatNumber(maxValue)} RUB`
+    }
+    
+    // Обновляем метод оплаты в предпросмотре
+    const previewPaymentMethodRow = document.querySelector('.preview_detail_row:last-child .preview_detail_value')
+    if (previewPaymentMethodRow && paymentMethod) {
+        previewPaymentMethodRow.textContent = paymentMethod
+    }
+}
+
+// Инициализация preview screen
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initPreviewScreen)
+} else {
+    initPreviewScreen()
+}
+
+// ========== Функции для загрузки и отображения объявлений ==========
+
+async function loadAds(adType = 'sell', cryptoCurrency = null) {
+    try {
+        let url = `${API_BASE_URL}/api/ads?ad_type=${adType}&status=active`
+        
+        if (cryptoCurrency) {
+            url += `&crypto_currency=${cryptoCurrency}`
+        }
+        
+        console.log('Загрузка объявлений:', { url, adType, cryptoCurrency })
+        
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        })
+        
+        console.log('Ответ сервера:', { status: response.status, ok: response.ok })
+        
+        if (!response.ok) {
+            const errorText = await response.text()
+            console.error('Ошибка загрузки объявлений:', response.status, errorText)
+            throw new Error(`Ошибка загрузки объявлений: ${response.status}`)
+        }
+        
+        const ads = await response.json()
+        console.log('Получено объявлений:', ads.length, ads)
+        return ads
+    } catch (error) {
+        console.error('Ошибка загрузки объявлений:', error)
+        return []
+    }
+}
+
+function displayAds(ads) {
+    console.log('displayAds вызвана с объявлениями:', ads)
+    const listingsContainer = document.querySelector('.listings__container')
+    
+    if (!listingsContainer) {
+        console.error('Контейнер для объявлений не найден! Ищем .listings__container')
+        return
+    }
+    
+    console.log('Контейнер найден, очищаем и добавляем объявления')
+    
+    // Очищаем контейнер
+    listingsContainer.innerHTML = ''
+    
+    if (!ads || ads.length === 0) {
+        console.log('Нет объявлений для отображения')
+        listingsContainer.innerHTML = '<p style="text-align: center; color: grey; margin-top: 20px;">Объявлений пока нет</p>'
+        return
+    }
+    
+    console.log(`Отображаем ${ads.length} объявлений`)
+    
+    // Создаем карточки для каждого объявления
+    ads.forEach(ad => {
+        const cardHTML = `
+            <div class="listing__card">
+                <div class="listing__header">
+                    <div class="listing__price">
+                        <div class="price__main">${ad.price.toFixed(2)} RUB</div>
+                        <div class="price__subtitle">Цена за 1 ${ad.crypto_currency}</div>
+                    </div>
+                    <div class="listing__actions">
+                        <button class="buy__btn" data-ad-id="${ad.Id}">КУПИТЬ</button>
+                    </div>
+                </div>
+                <div class="listing__seller">
+                    <div class="seller__avatar" style="background-color: ${getRandomColor()};"></div>
+                    <div class="seller__info">
+                        <div class="seller__name">${ad.seller_name || 'Анонимный пользователь'}</div>
+                        <div class="seller__stats">сделок: ${ad.seller_transactions || 0} • ${calculateSuccessRate(ad.seller_good_transactions, ad.seller_transactions)}%</div>
+                    </div>
+                </div>
+                <div class="listing__details">
+                    <div class="detail__row">
+                        <span class="detail__label">Доступно</span>
+                        <span class="detail__value">${ad.crypto_amount.toFixed(2)} ${ad.crypto_currency}</span>
+                    </div>
+                    <div class="detail__row">
+                        <span class="detail__label">Лимиты</span>
+                        <span class="detail__value">${formatNumber(ad.min_limit)} – ${ad.max_limit ? formatNumber(ad.max_limit) : formatNumber(ad.min_limit * 10)} RUB</span>
+                    </div>
+                    <div class="detail__row">
+                        <span class="detail__label">Методы оплаты</span>
+                        <span class="detail__value">${ad.bank_name || 'Не указано'}</span>
+                    </div>
+                </div>
+            </div>
+        `
+        
+        listingsContainer.innerHTML += cardHTML
+    })
+}
+
+function getRandomColor() {
+    const colors = ['#5BA3D0', '#D05B5B', '#5BD08D', '#D0A65B', '#8D5BD0', '#5BD0C4']
+    return colors[Math.floor(Math.random() * colors.length)]
+}
+
+function calculateSuccessRate(good, total) {
+    if (!total || total === 0) return 0
+    return Math.round((good / total) * 100)
+}
+
+function formatNumber(num) {
+    if (!num) return '0'
+    return new Intl.NumberFormat('ru-RU').format(num)
+}
+
+// Инициализация buy screen с загрузкой объявлений
+function initBuyScreen() {
+    // Обработчик смены криптовалюты в фильтре
+    const cryptoDropdownItems = document.querySelectorAll('.buy__screen .filter__dropdown .dropdown__item')
+    cryptoDropdownItems.forEach(item => {
+        const originalClickHandler = item.onclick
+        
+        item.addEventListener('click', async () => {
+            // Даем время на обновление UI
+            setTimeout(async () => {
+                const crypto = item.getAttribute('data-value')
+                if (crypto) {
+                    // Загружаем объявления для выбранной криптовалюты
+                    const ads = await loadAds('sell', crypto)
+                    displayAds(ads)
+                }
+            }, 100)
+        })
+    })
+}
+
+// Инициализация buy screen
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initBuyScreen)
+} else {
+    initBuyScreen()
+}
