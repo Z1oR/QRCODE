@@ -1797,12 +1797,19 @@ function openAdDetailsScreen(ad, userAction = 'buy') {
     }
     
     if (buyerPaymentDetailsSection) {
-        if (userAction === 'sell') {
-            // Для продажи показываем форму реквизитов для получения денег
-            buyerPaymentDetailsSection.style.display = 'block';
-        } else {
-            // Для покупки скрываем (реквизиты продавца будут показаны на экране оплаты)
-            buyerPaymentDetailsSection.style.display = 'none';
+        // Показываем форму реквизитов всегда:
+        // - При покупке (userAction='buy', ad.type='sell'): покупатель вводит свои реквизиты (куда продавец переведет деньги)
+        // - При продаже (userAction='sell', ad.type='buy'): продавец вводит свои реквизиты (куда покупатель переведет деньги)
+        buyerPaymentDetailsSection.style.display = 'block';
+        
+        // Обновляем текст подсказки в зависимости от действия
+        const paymentLabel = buyerPaymentDetailsSection.querySelector('.purchase_label');
+        if (paymentLabel) {
+            if (userAction === 'buy') {
+                paymentLabel.textContent = 'Реквизиты для получения денег (куда продавец переведет деньги)';
+            } else {
+                paymentLabel.textContent = 'Реквизиты для получения денег (куда покупатель переведет деньги)';
+            }
         }
     }
     
@@ -1860,11 +1867,12 @@ function openAdDetailsScreen(ad, userAction = 'buy') {
             purchaseAmountInput.min = ad.min_limit / ad.price;
             purchaseAmountInput.max = ad.max_limit ? ad.max_limit / ad.price : 999999;
             if (purchaseCurrency) purchaseCurrency.textContent = ad.crypto_currency;
-            // Для продажи скрываем переключатель
+            // Для продажи скрываем переключатель валюты (всегда вводим криптовалюту)
             if (toggleRub && toggleCrypto) {
                 toggleRub.style.display = 'none';
                 toggleCrypto.style.display = 'none';
             }
+            // Для продажи форма реквизитов уже показана выше
         }
     }
     
@@ -2066,95 +2074,96 @@ document.addEventListener('DOMContentLoaded', () => {
                     cryptoAmount = purchaseAmount;
                 }
                 
-                // Собираем реквизиты покупателя (если это продажа)
+                // Собираем реквизиты покупателя (всегда требуются)
+                // При покупке (userAction='buy', ad.type='sell'): покупатель вводит свои реквизиты
+                // При продаже (userAction='sell', ad.type='buy'): продавец вводит свои реквизиты
                 let buyerBankName = null;
                 let buyerPaymentDetails = null;
                 
-                if (userAction === 'sell') {
-                    // Получаем элементы полей ввода - используем querySelector для надежности
-                    const bankInput = document.querySelector('#buyer-bank-name');
-                    const detailsInput = document.querySelector('#buyer-payment-details');
-                    
-                    console.log('Проверка реквизитов:', {
-                        userAction,
+                // Получаем элементы полей ввода - используем querySelector для надежности
+                const bankInput = document.querySelector('#buyer-bank-name');
+                const detailsInput = document.querySelector('#buyer-payment-details');
+                
+                console.log('Проверка реквизитов:', {
+                    userAction,
+                    adType: selectedAd.type,
+                    bankInput: !!bankInput,
+                    detailsInput: !!detailsInput,
+                    bankInputId: bankInput?.id,
+                    detailsInputId: detailsInput?.id,
+                    bankValue: bankInput?.value,
+                    detailsValue: detailsInput?.value,
+                    bankInputType: bankInput?.tagName,
+                    detailsInputType: detailsInput?.tagName,
+                    bankInputDisplay: bankInput ? window.getComputedStyle(bankInput).display : 'none',
+                    detailsInputDisplay: detailsInput ? window.getComputedStyle(detailsInput).display : 'none'
+                });
+                
+                // Получаем значения напрямую из элементов
+                if (!bankInput || !detailsInput) {
+                    console.error('Поля ввода реквизитов не найдены!', {
                         bankInput: !!bankInput,
                         detailsInput: !!detailsInput,
-                        bankInputId: bankInput?.id,
-                        detailsInputId: detailsInput?.id,
-                        bankValue: bankInput?.value,
-                        detailsValue: detailsInput?.value,
-                        bankInputType: bankInput?.tagName,
-                        detailsInputType: detailsInput?.tagName,
-                        bankInputDisplay: bankInput ? window.getComputedStyle(bankInput).display : 'none',
-                        detailsInputDisplay: detailsInput ? window.getComputedStyle(detailsInput).display : 'none'
+                        allInputs: document.querySelectorAll('input').length
                     });
-                    
-                    // Получаем значения напрямую из элементов
-                    if (!bankInput || !detailsInput) {
-                        console.error('Поля ввода реквизитов не найдены!', {
-                            bankInput: !!bankInput,
-                            detailsInput: !!detailsInput,
-                            allInputs: document.querySelectorAll('input').length
-                        });
-                        alert('Ошибка: поля ввода реквизитов не найдены. Пожалуйста, обновите страницу.');
-                        return;
-                    }
-                    
-                    // Получаем значения напрямую, проверяя все возможные способы
-                    buyerBankName = (bankInput.value || bankInput.textContent || '').trim();
-                    buyerPaymentDetails = (detailsInput.value || detailsInput.textContent || '').trim();
-                    
-                    // Дополнительная проверка через getAttribute
-                    if (!buyerBankName && bankInput.getAttribute('value')) {
-                        buyerBankName = bankInput.getAttribute('value').trim();
-                    }
-                    if (!buyerPaymentDetails && detailsInput.getAttribute('value')) {
-                        buyerPaymentDetails = detailsInput.getAttribute('value').trim();
-                    }
-                    
-                    console.log('Значения после получения:', {
-                        buyerBankName,
-                        buyerPaymentDetails,
-                        bankLength: buyerBankName.length,
-                        detailsLength: buyerPaymentDetails.length,
-                        bankIsEmpty: !buyerBankName,
-                        detailsIsEmpty: !buyerPaymentDetails
-                    });
-                    
-                    // Убираем классы ошибок
-                    bankInput.classList.remove('error');
-                    detailsInput.classList.remove('error');
-                    
-                    // Проверяем, что реквизиты указаны
-                    let hasError = false;
-                    if (!buyerBankName || buyerBankName.length === 0) {
-                        console.log('Ошибка: банк не указан или пустой');
-                        bankInput.classList.add('error');
-                        hasError = true;
-                    }
-                    if (!buyerPaymentDetails || buyerPaymentDetails.length === 0) {
-                        console.log('Ошибка: реквизиты не указаны или пустые');
-                        detailsInput.classList.add('error');
-                        hasError = true;
-                    }
-                    
-                    if (hasError) {
-                        alert('Пожалуйста, укажите банк и реквизиты для получения денег');
-                        // Прокручиваем к форме реквизитов
-                        const paymentDetailsSection = document.getElementById('buyer-payment-details-section');
-                        if (paymentDetailsSection) {
-                            paymentDetailsSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        }
-                        return;
-                    }
-                    
-                    console.log('Реквизиты валидны и будут отправлены:', { 
-                        buyerBankName, 
-                        buyerPaymentDetails,
-                        bankLength: buyerBankName.length,
-                        detailsLength: buyerPaymentDetails.length
-                    });
+                    alert('Ошибка: поля ввода реквизитов не найдены. Пожалуйста, обновите страницу.');
+                    return;
                 }
+                
+                // Получаем значения напрямую, проверяя все возможные способы
+                buyerBankName = (bankInput.value || bankInput.textContent || '').trim();
+                buyerPaymentDetails = (detailsInput.value || detailsInput.textContent || '').trim();
+                
+                // Дополнительная проверка через getAttribute
+                if (!buyerBankName && bankInput.getAttribute('value')) {
+                    buyerBankName = bankInput.getAttribute('value').trim();
+                }
+                if (!buyerPaymentDetails && detailsInput.getAttribute('value')) {
+                    buyerPaymentDetails = detailsInput.getAttribute('value').trim();
+                }
+                
+                console.log('Значения после получения:', {
+                    buyerBankName,
+                    buyerPaymentDetails,
+                    bankLength: buyerBankName.length,
+                    detailsLength: buyerPaymentDetails.length,
+                    bankIsEmpty: !buyerBankName,
+                    detailsIsEmpty: !buyerPaymentDetails
+                });
+                
+                // Убираем классы ошибок
+                bankInput.classList.remove('error');
+                detailsInput.classList.remove('error');
+                
+                // Проверяем, что реквизиты указаны
+                let hasError = false;
+                if (!buyerBankName || buyerBankName.length === 0) {
+                    console.log('Ошибка: банк не указан или пустой');
+                    bankInput.classList.add('error');
+                    hasError = true;
+                }
+                if (!buyerPaymentDetails || buyerPaymentDetails.length === 0) {
+                    console.log('Ошибка: реквизиты не указаны или пустые');
+                    detailsInput.classList.add('error');
+                    hasError = true;
+                }
+                
+                if (hasError) {
+                    alert('Пожалуйста, укажите банк и реквизиты для получения денег');
+                    // Прокручиваем к форме реквизитов
+                    const paymentDetailsSection = document.getElementById('buyer-payment-details-section');
+                    if (paymentDetailsSection) {
+                        paymentDetailsSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                    return;
+                }
+                
+                console.log('Реквизиты валидны и будут отправлены:', { 
+                    buyerBankName, 
+                    buyerPaymentDetails,
+                    bankLength: buyerBankName.length,
+                    detailsLength: buyerPaymentDetails.length
+                });
                 
                 const transactionData = {
                     ad_id: selectedAd.Id,
@@ -2163,20 +2172,25 @@ document.addEventListener('DOMContentLoaded', () => {
                     fiat_amount: fiatAmount
                 };
                 
-                // Добавляем реквизиты только если они есть
-                if (userAction === 'sell' && buyerBankName && buyerPaymentDetails) {
+                // Добавляем реквизиты всегда (они уже проверены выше)
+                if (buyerBankName && buyerPaymentDetails) {
                     transactionData.buyer_bank_name = buyerBankName;
                     transactionData.buyer_payment_details = buyerPaymentDetails;
                     console.log('Реквизиты добавлены в transactionData:', {
+                        userAction,
+                        adType: selectedAd.type,
                         buyer_bank_name: transactionData.buyer_bank_name,
                         buyer_payment_details: transactionData.buyer_payment_details
                     });
                 } else {
-                    console.log('Реквизиты не добавлены:', {
+                    console.error('Реквизиты не добавлены, хотя должны быть:', {
                         userAction,
+                        adType: selectedAd.type,
                         buyerBankName: !!buyerBankName,
                         buyerPaymentDetails: !!buyerPaymentDetails
                     });
+                    alert('Ошибка: реквизиты не были получены. Пожалуйста, попробуйте снова.');
+                    return;
                 }
                 
                 console.log('Отправка transactionData:', transactionData);
@@ -2698,24 +2712,8 @@ function displayPendingTransactions(transactions) {
                     ` : ''}
                 </div>
             </div>
-            <div class="notification_payment_details" id="payment-details-${transaction.id}" style="display: none;">
-                <div class="notification_payment_title">Укажите реквизиты для получения денег</div>
-                <div class="notification_payment_form">
-                    <div class="notification_payment_field">
-                        <label>Банк</label>
-                        <input type="text" class="notification_payment_input" id="bank-name-${transaction.id}" placeholder="Например: Т-Банк" />
-                    </div>
-                    <div class="notification_payment_field">
-                        <label>Реквизиты (номер карты или телефона)</label>
-                        <input type="text" class="notification_payment_input" id="payment-details-input-${transaction.id}" placeholder="Введите номер карты или телефона" />
-                    </div>
-                </div>
-            </div>
             <div class="notification_actions">
-                <button class="notification_show_details_btn" data-transaction-id="${transaction.id}" id="show-details-${transaction.id}">
-                    Указать реквизиты
-                </button>
-                <button class="notification_confirm_btn" data-transaction-id="${transaction.id}" id="confirm-${transaction.id}" style="display: none;">
+                <button class="notification_confirm_btn" data-transaction-id="${transaction.id}" id="confirm-${transaction.id}">
                     Подтвердить получение
                 </button>
             </div>
@@ -2724,36 +2722,13 @@ function displayPendingTransactions(transactions) {
         notificationsList.appendChild(notificationCard);
     });
     
-    // Добавляем обработчики кнопок показа формы реквизитов
-    document.querySelectorAll('.notification_show_details_btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const transactionId = btn.getAttribute('data-transaction-id');
-            const paymentDetailsDiv = document.getElementById(`payment-details-${transactionId}`);
-            const showDetailsBtn = document.getElementById(`show-details-${transactionId}`);
-            const confirmBtn = document.getElementById(`confirm-${transactionId}`);
-            
-            if (paymentDetailsDiv && paymentDetailsDiv.style.display === 'none') {
-                paymentDetailsDiv.style.display = 'block';
-                if (showDetailsBtn) showDetailsBtn.style.display = 'none';
-                if (confirmBtn) confirmBtn.style.display = 'block';
-            }
-        });
-    });
-    
     // Добавляем обработчики кнопок подтверждения
     document.querySelectorAll('.notification_confirm_btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             const transactionId = parseInt(btn.getAttribute('data-transaction-id'));
-            const bankName = document.getElementById(`bank-name-${transactionId}`)?.value?.trim();
-            const paymentDetails = document.getElementById(`payment-details-input-${transactionId}`)?.value?.trim();
             
-            // Проверяем, что реквизиты указаны
-            if (!bankName || !paymentDetails) {
-                alert('Пожалуйста, укажите банк и реквизиты для получения денег');
-                return;
-            }
-            
-            await confirmTransaction(transactionId, bankName, paymentDetails);
+            // Реквизиты продавца уже указаны в объявлении, поэтому просто подтверждаем
+            await confirmTransaction(transactionId, null, null);
         });
     });
 }
@@ -2765,15 +2740,16 @@ async function confirmTransaction(transactionId, bankName, paymentDetails) {
     }
     
     try {
-        // Отправляем реквизиты вместе с подтверждением
+        // Реквизиты продавца уже указаны в объявлении, поэтому отправляем пустые значения
+        // (или можно вообще не отправлять, если бэкенд не требует)
         const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/transactions/${transactionId}/confirm`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                bank_name: bankName,
-                payment_details: paymentDetails
+                bank_name: bankName || null,
+                payment_details: paymentDetails || null
             })
         });
         
