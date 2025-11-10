@@ -510,28 +510,40 @@ let btn_my_ads = document.querySelector("#my_ads")
 let btn_create_ads = document.querySelector("#create_ads")
 // ------------
 
-btn_buy_crypto.addEventListener("click", async () => {
-    main__screen.style.display = "none"
-    buy_screen.style.display = "block"
-    sell_screen.style.display = "none"
+// Функция для безопасного скрытия/показа экранов
+function showScreen(screen) {
+    // Скрываем все экраны
+    if (main__screen) main__screen.style.display = "none"
+    if (buy_screen) buy_screen.style.display = "none"
+    if (sell_screen) sell_screen.style.display = "none"
+    if (create_ads_screen) create_ads_screen.style.display = "none"
     
-    console.log('Экран покупки открыт, загружаем объявления...')
-    
-    // Загружаем объявления при открытии экрана покупки (объявления людей, которые продают)
-    const selectedCrypto = document.querySelector('.buy__screen .filter__value')?.textContent || 'TON'
-    console.log('Выбранная криптовалюта:', selectedCrypto)
-    
-    const ads = await loadAds('sell', selectedCrypto)
-    console.log('Объявления загружены, отображаем:', ads.length)
-    displayAds(ads, 'buy')
-})
+    // Показываем нужный экран
+    if (screen) {
+        screen.style.display = "block"
+    }
+}
+
+if (btn_buy_crypto) {
+    btn_buy_crypto.addEventListener("click", async () => {
+        showScreen(buy_screen)
+        
+        console.log('Экран покупки открыт, загружаем объявления...')
+        
+        // Загружаем объявления при открытии экрана покупки (объявления людей, которые продают)
+        const selectedCrypto = document.querySelector('.buy__screen .filter__value')?.textContent || 'TON'
+        console.log('Выбранная криптовалюта:', selectedCrypto)
+        
+        const ads = await loadAds('sell', selectedCrypto)
+        console.log('Объявления загружены, отображаем:', ads.length)
+        displayAds(ads, 'buy')
+    })
+}
 
 // Обработчик кнопки "Продать криптовалюту"
 if (btn_sell_crypto) {
     btn_sell_crypto.addEventListener("click", async () => {
-        main__screen.style.display = "none"
-        buy_screen.style.display = "none"
-        sell_screen.style.display = "block"
+        showScreen(sell_screen)
         
         console.log('Экран продажи открыт, загружаем объявления...')
         
@@ -548,9 +560,7 @@ if (btn_sell_crypto) {
 // Обработчик кнопки "Мои объявления"
 if (btn_my_ads) {
     btn_my_ads.addEventListener("click", async () => {
-        main__screen.style.display = "none"
-        buy_screen.style.display = "none"
-        create_ads_screen.style.display = "none"
+        showScreen(null)
         
         const myAdsScreen = document.getElementById('my-ads-screen');
         if (myAdsScreen) {
@@ -563,10 +573,7 @@ if (btn_my_ads) {
 // Обработчик кнопки "Создать объявление"
 if (btn_create_ads) {
     btn_create_ads.addEventListener("click", () => {
-        main__screen.style.display = "none"
-        buy_screen.style.display = "none"
-        sell_screen.style.display = "none"
-        create_ads_screen.style.display = "block"
+        showScreen(create_ads_screen)
     });
 }
 
@@ -1276,7 +1283,7 @@ function formatNumber(num) {
     return new Intl.NumberFormat('ru-RU').format(num)
 }
 
-// Инициализация buy screen с загрузкой объявлений
+// Инициализация buy/sell screen с загрузкой объявлений
 function initBuyScreen() {
     // Обработчик смены криптовалюты в фильтре покупки
     const cryptoDropdownItems = document.querySelectorAll('.buy__screen .filter__dropdown .dropdown__item')
@@ -1307,6 +1314,61 @@ function initBuyScreen() {
             }, 100)
         })
     })
+    
+    // Инициализация фильтра криптовалюты для экрана продажи
+    initCryptoFilterSell()
+}
+
+// Инициализация фильтра криптовалюты для экрана продажи
+function initCryptoFilterSell() {
+    let cryptoFilter = document.querySelector("#crypto-filter-sell")
+    if (!cryptoFilter) return
+    
+    let cryptoDropdown = document.querySelector("#crypto-dropdown-sell")
+    let cryptoFilterValue = cryptoFilter.querySelector(".filter__value")
+    let dropdownItems = cryptoDropdown ? cryptoDropdown.querySelectorAll(".dropdown__item") : []
+
+    // Открытие/закрытие меню
+    const filterHeader = cryptoFilter.querySelector(".filter__header")
+    if (filterHeader) {
+        filterHeader.addEventListener("click", (e) => {
+            e.stopPropagation()
+            cryptoFilter.classList.toggle("filter__open")
+        })
+    }
+
+    // Выбор опции из меню
+    dropdownItems.forEach(item => {
+        item.addEventListener("click", (e) => {
+            e.stopPropagation()
+            let value = item.getAttribute("data-value")
+            
+            // Обновляем выбранное значение
+            if (cryptoFilterValue) {
+                cryptoFilterValue.textContent = value
+            }
+            
+            // Убираем выделение со всех элементов
+            dropdownItems.forEach(i => i.classList.remove("dropdown__item--selected"))
+            
+            // Добавляем выделение на выбранный элемент
+            item.classList.add("dropdown__item--selected")
+            
+            // Закрываем меню
+            cryptoFilter.classList.remove("filter__open")
+        })
+    })
+
+    // Закрытие меню при клике вне его
+    if (!window.cryptoFilterSellClickHandler) {
+        window.cryptoFilterSellClickHandler = (e) => {
+            let cryptoFilter = document.querySelector("#crypto-filter-sell")
+            if (cryptoFilter && !cryptoFilter.contains(e.target)) {
+                cryptoFilter.classList.remove("filter__open")
+            }
+        }
+        document.addEventListener("click", window.cryptoFilterSellClickHandler)
+    }
 }
 
 // Инициализация buy screen
