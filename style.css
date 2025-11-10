@@ -2358,6 +2358,80 @@ body {
   color: white;
   font-weight: 600;
 }
+.notifications_screen .notifications_container .notifications_list .notification_card .notification_payment_details {
+  margin-top: 20px;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.notifications_screen .notifications_container .notifications_list .notification_card .notification_payment_details .notification_payment_title {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 600;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.notifications_screen .notifications_container .notifications_list .notification_card .notification_payment_details .notification_payment_form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.notifications_screen .notifications_container .notifications_list .notification_card .notification_payment_details .notification_payment_form .notification_payment_field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.notifications_screen .notifications_container .notifications_list .notification_card .notification_payment_details .notification_payment_form .notification_payment_field label {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 600;
+}
+.notifications_screen .notifications_container .notifications_list .notification_card .notification_payment_details .notification_payment_form .notification_payment_field .notification_payment_input {
+  padding: 12px 16px;
+  background: rgba(27, 27, 29, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  color: white;
+  font-size: 15px;
+  font-weight: 500;
+  outline: none;
+  transition: all 0.3s;
+}
+.notifications_screen .notifications_container .notifications_list .notification_card .notification_payment_details .notification_payment_form .notification_payment_field .notification_payment_input:focus {
+  border-color: #00c864;
+  background: rgba(27, 27, 29, 0.95);
+}
+.notifications_screen .notifications_container .notifications_list .notification_card .notification_payment_details .notification_payment_form .notification_payment_field .notification_payment_input::-moz-placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+.notifications_screen .notifications_container .notifications_list .notification_card .notification_payment_details .notification_payment_form .notification_payment_field .notification_payment_input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+.notifications_screen .notifications_container .notifications_list .notification_card .notification_actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 20px;
+}
+.notifications_screen .notifications_container .notifications_list .notification_card .notification_actions .notification_show_details_btn {
+  width: 100%;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, rgba(0, 128, 255, 0.2) 0%, rgba(0, 128, 255, 0.1) 100%);
+  border: 1px solid rgba(0, 128, 255, 0.3);
+  border-radius: 12px;
+  color: #0080ff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.notifications_screen .notifications_container .notifications_list .notification_card .notification_actions .notification_show_details_btn:hover {
+  background: linear-gradient(135deg, rgba(0, 128, 255, 0.3) 0%, rgba(0, 128, 255, 0.2) 100%);
+  border-color: rgba(0, 128, 255, 0.5);
+  transform: translateY(-2px);
+}
 .notifications_screen .notifications_container .notifications_list .notification_card .notification_actions .notification_confirm_btn {
   width: 100%;
   padding: 14px 20px;
@@ -2369,10 +2443,10 @@ body {
   font-weight: 700;
   cursor: pointer;
   transition: all 0.3s;
-  box-shadow: 0 4px 16px rgba(0, 200, 100, 0.3);
 }
 .notifications_screen .notifications_container .notifications_list .notification_card .notification_actions .notification_confirm_btn:hover {
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 200, 100, 0.4);
   box-shadow: 0 8px 24px rgba(0, 200, 100, 0.4);
 }
 .notifications_screen .notifications_container .notifications_list .notification_card .notification_actions .notification_confirm_btn:active {
