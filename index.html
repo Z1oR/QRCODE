@@ -413,6 +413,92 @@
         </div>
     </div>
 
+    <!-- Визуальный логгер для отладки на мобильных устройствах -->
+    <div id="debug-logger" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.9); color: white; padding: 10px; max-height: 200px; overflow-y: auto; z-index: 10000; font-size: 10px; font-family: monospace;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+            <strong>Debug Log</strong>
+            <button onclick="document.getElementById('debug-logger').style.display='none'" style="background: red; color: white; border: none; padding: 2px 10px; cursor: pointer;">✕</button>
+        </div>
+        <div id="debug-log-content"></div>
+    </div>
+    
+    <script>
+        // Визуальный логгер для мобильных устройств
+        (function() {
+            const loggerDiv = document.getElementById('debug-logger');
+            const logContent = document.getElementById('debug-log-content');
+            let logCount = 0;
+            const maxLogs = 50;
+            
+            // Перехватываем console.log, console.error, console.warn
+            const originalLog = console.log;
+            const originalError = console.error;
+            const originalWarn = console.warn;
+            
+            function addLog(type, ...args) {
+                // Вызываем оригинальный метод
+                if (type === 'log') originalLog.apply(console, args);
+                if (type === 'error') originalError.apply(console, args);
+                if (type === 'warn') originalWarn.apply(console, args);
+                
+                // Добавляем в визуальный логгер
+                const logEntry = document.createElement('div');
+                logEntry.style.marginBottom = '3px';
+                logEntry.style.padding = '2px';
+                logEntry.style.borderLeft = '2px solid ' + (type === 'error' ? 'red' : type === 'warn' ? 'yellow' : 'green');
+                logEntry.style.paddingLeft = '5px';
+                
+                const timestamp = new Date().toLocaleTimeString();
+                const message = args.map(arg => {
+                    if (typeof arg === 'object') return JSON.stringify(arg, null, 2);
+                    return String(arg);
+                }).join(' ');
+                
+                logEntry.innerHTML = `<span style="color: #888;">[${timestamp}]</span> <span style="color: ${type === 'error' ? 'red' : type === 'warn' ? 'yellow' : 'white'};">${message}</span>`;
+                
+                logContent.appendChild(logEntry);
+                logCount++;
+                
+                // Удаляем старые логи
+                if (logCount > maxLogs) {
+                    logContent.removeChild(logContent.firstChild);
+                    logCount--;
+                }
+                
+                // Прокручиваем вниз
+                logContent.scrollTop = logContent.scrollHeight;
+                
+                // Показываем логгер при ошибках
+                if (type === 'error') {
+                    loggerDiv.style.display = 'block';
+                }
+            }
+            
+            console.log = function(...args) {
+                addLog('log', ...args);
+            };
+            
+            console.error = function(...args) {
+                addLog('error', ...args);
+            };
+            
+            console.warn = function(...args) {
+                addLog('warn', ...args);
+            };
+            
+            // Добавляем кнопку для показа/скрытия логгера
+            const toggleBtn = document.createElement('button');
+            toggleBtn.innerHTML = '📋';
+            toggleBtn.style.cssText = 'position: fixed; top: 10px; right: 10px; z-index: 10001; background: rgba(0,0,0,0.7); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 20px; cursor: pointer;';
+            toggleBtn.onclick = function() {
+                loggerDiv.style.display = loggerDiv.style.display === 'none' ? 'block' : 'none';
+            };
+            document.body.appendChild(toggleBtn);
+            
+            console.log('Визуальный логгер инициализирован');
+        })();
+    </script>
+
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="index.js"></script>
 </body>
