@@ -341,6 +341,34 @@ async function makeAuthenticatedRequest(url, options = {}) {
         console.error('- accessToken в памяти:', accessToken);
         console.error('- ACCESS_TOKEN в cookie:', cookieToken);
         console.error('- Все cookies:', document.cookie);
+        
+        // Пытаемся пройти аутентификацию заново, если токенов нет
+        console.log('Попытка повторной аутентификации...');
+        try {
+            await authenticateWithTelegram();
+            // После аутентификации получаем токен снова
+            token = accessToken || getCookie('ACCESS_TOKEN');
+            if (token) {
+                defaultOptions.headers['Authorization'] = `Bearer ${token}`;
+                console.log('Токен получен после повторной аутентификации');
+            } else {
+                console.error('Не удалось получить токен после повторной аутентификации');
+                const errorResponse = new Response(JSON.stringify({ error: 'Требуется аутентификация' }), {
+                    status: 401,
+                    statusText: 'Unauthorized',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                return errorResponse;
+            }
+        } catch (authError) {
+            console.error('Ошибка при повторной аутентификации:', authError);
+            const errorResponse = new Response(JSON.stringify({ error: 'Требуется аутентификация. Пожалуйста, обновите страницу.' }), {
+                status: 401,
+                statusText: 'Unauthorized',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            return errorResponse;
+        }
     }
 
     const response = await fetch(url, { ...defaultOptions, ...options });
@@ -371,11 +399,36 @@ async function makeAuthenticatedRequest(url, options = {}) {
                 accessToken = tokenData.access_token;
                 refreshToken = tokenData.refresh_token;
                 
+                console.log('Токены обновлены, повторяем запрос');
+                
                 // Повторяем оригинальный запрос с новым токеном
                 defaultOptions.headers['Authorization'] = `Bearer ${accessToken}`;
-                return fetch(url, { ...defaultOptions, ...options });
+                const retryResponse = await fetch(url, { ...defaultOptions, ...options });
+                
+                if (retryResponse.ok) {
+                    console.log('Запрос успешно выполнен после обновления токена');
+                } else {
+                    console.error('Запрос все еще не прошел после обновления токена:', retryResponse.status);
+                }
+                
+                return retryResponse;
             } else {
-                console.error('Ошибка обновления токена:', await refreshResponse.text());
+                const errorText = await refreshResponse.text();
+                console.error('Ошибка обновления токена:', errorText);
+                
+                // Если refresh token тоже не работает, пытаемся пройти аутентификацию заново
+                console.log('Попытка повторной аутентификации после неудачного обновления токена...');
+                try {
+                    await authenticateWithTelegram();
+                    token = accessToken || getCookie('ACCESS_TOKEN');
+                    if (token) {
+                        defaultOptions.headers['Authorization'] = `Bearer ${token}`;
+                        console.log('Токен получен после повторной аутентификации, повторяем запрос');
+                        return await fetch(url, { ...defaultOptions, ...options });
+                    }
+                } catch (authError) {
+                    console.error('Ошибка при повторной аутентификации:', authError);
+                }
             }
         } catch (error) {
             console.error('Ошибка при обновлении токенов:', error);
@@ -2043,6 +2096,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 console.log('Отправка transactionData:', transactionData);
                 
+                // Проверяем наличие токена перед отправкой
+                const currentToken = accessToken || getCookie('ACCESS_TOKEN');
+                if (!currentToken) {
+                    console.warn('Токен не найден перед созданием сделки, пытаемся аутентифицироваться...');
+                    await authenticateWithTelegram();
+                }
+                
                 const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/transactions`, {
                     method: 'POST',
                     headers: {
@@ -2052,7 +2112,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 
                 if (!response.ok) {
-                    throw new Error('Ошибка создания сделки');
+                    const errorText = await response.text().catch(() => 'Не удалось прочитать ошибку');
+                    console.error('Ошибка создания сделки:', response.status, errorText);
+                    throw new Error(`Ошибка создания сделки: ${response.status} ${errorText}`);
                 }
                 
                 currentTransaction = await response.json();
