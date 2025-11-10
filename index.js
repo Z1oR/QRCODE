@@ -105,6 +105,17 @@ async function initTelegramWebApp() {
             setTimeout(() => clearInterval(checkInitData), 5000);
         }
         
+        // Показываем информацию из Telegram, если доступна (до аутентификации)
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            const tgUser = tg.initDataUnsafe.user;
+            const tempUserData = {
+                username: tgUser.username,
+                name: tgUser.first_name,
+                balance: 0
+            };
+            updateUserInfo(tempUserData);
+        }
+        
         return true;
     }
     return false;
@@ -217,6 +228,9 @@ async function authenticateWithTelegram() {
         // Сохраняем токены
         accessToken = data.access_token;
         refreshToken = data.refresh_token;
+        
+        // Обновляем информацию о пользователе на главном экране
+        updateUserInfo(data);
         
         console.log('Токены сохранены в память:', {
             hasAccessToken: !!accessToken,
@@ -372,6 +386,105 @@ async function makeAuthenticatedRequest(url, options = {}) {
 }
 
 
+
+// ========== Функции для работы с информацией о пользователе ==========
+
+// Функция обновления информации о пользователе на главном экране
+function updateUserInfo(userData) {
+    // Поддержка новых и старых селекторов
+    const userNameEl = document.querySelector('#user-name') || document.querySelector('.user_name');
+    const userBalanceEl = document.querySelector('#user-balance');
+    
+    if (!userNameEl || !userBalanceEl) {
+        console.warn('Элементы для отображения информации о пользователе не найдены');
+        return;
+    }
+    
+    // Обновляем имя (приоритет: username > name > tgData > дефолт)
+    let displayName = 'Пользователь';
+    if (userData.username) {
+        displayName = userData.username;
+    } else if (userData.name) {
+        displayName = userData.name;
+    } else if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+        const tgUser = tg.initDataUnsafe.user;
+        displayName = tgUser.first_name || tgUser.username || displayName;
+    }
+    
+    userNameEl.textContent = displayName;
+    
+    // Обновляем баланс
+    const balance = userData.balance !== undefined && userData.balance !== null ? userData.balance : 0;
+    userBalanceEl.textContent = parseFloat(balance).toFixed(2);
+    
+    // Обновляем аватар (генерируем цвет на основе имени)
+    // Поддержка нового и старого селекторов
+    const avatarSelectors = ['#user-avatar', '.user_avatar_small', '.avatar_circle'];
+    avatarSelectors.forEach(selector => {
+        const avatarEl = document.querySelector(selector);
+        if (avatarEl) {
+            const avatarColor = getAvatarColor(displayName);
+            avatarEl.style.backgroundColor = avatarColor;
+            const firstLetter = displayName.charAt(0).toUpperCase();
+            avatarEl.textContent = firstLetter;
+        }
+    });
+    
+    console.log('Информация о пользователе обновлена:', { displayName, balance, userData });
+}
+
+// Функция для получения цвета аватара на основе имени
+function getAvatarColor(name) {
+    const colors = [
+        '#5BA3D0', '#D05B5B', '#5BD08D', '#D0A65B', 
+        '#8D5BD0', '#5BD0C4', '#D05B8D', '#8DD05B'
+    ];
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+        hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return colors[Math.abs(hash) % colors.length];
+}
+
+// Функция для загрузки и обновления баланса пользователя
+async function refreshUserBalance() {
+    try {
+        if (!userData || !userData.id) {
+            console.warn('Данные пользователя не загружены');
+            return;
+        }
+        
+        // Здесь можно добавить запрос к API для получения актуального баланса
+        // Пока используем данные из userData
+        const balanceEl = document.querySelector('#user-balance');
+        if (balanceEl && userData.balance !== undefined) {
+            balanceEl.textContent = parseFloat(userData.balance || 0).toFixed(2);
+        }
+    } catch (error) {
+        console.error('Ошибка при обновлении баланса:', error);
+    }
+}
+
+// Инициализация кнопки обновления баланса
+function initBalanceRefresh() {
+    const refreshBtn = document.querySelector('#refresh-balance-btn');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', async () => {
+            refreshBtn.style.animation = 'spin 1s linear';
+            await refreshUserBalance();
+            setTimeout(() => {
+                refreshBtn.style.animation = '';
+            }, 1000);
+        });
+    }
+}
+
+// Инициализация при загрузке
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initBalanceRefresh);
+} else {
+    initBalanceRefresh();
+}
 
 let main__screen = document.querySelector("#main__screen")
 let buy_screen = document.querySelector(".buy__screen")
