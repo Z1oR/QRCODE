@@ -17,9 +17,9 @@
                         <div class="logo_text">
                             <h1 class="app_title">P2P Маркет</h1>
                             <p class="app_subtitle">Безопасные сделки с криптовалютой</p>
-                        </div>
-                    </div>
                 </div>
+                </div>
+            </div>
 
                 <!-- User Balance Card -->
                 <div class="balance_card" id="user-info-card">
@@ -29,8 +29,8 @@
                             <div class="balance_value">
                                 <span class="balance_amount" id="user-balance">0.00</span>
                                 <span class="balance_currency">USDT</span>
-                            </div>
-                        </div>
+                    </div>
+                </div>
                         <div class="user_avatar_small" id="user-avatar"></div>
                     </div>
                     <div class="balance_card_footer">
@@ -246,6 +246,14 @@
 
     <div class="buy__screen" style="display: none;">
         <div class="buy__container">
+            <div class="buy__header">
+                <button class="back_btn" id="back-from-buy">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+                <h2 class="buy__title">Купить криптовалюту</h2>
+            </div>
             <!-- Фильтры -->
             <div class="filters__bar">
                 <div class="filter__item filter__crypto" id="crypto-filter">
@@ -527,13 +535,13 @@
     <!-- Preview Screen -->
     <div class="preview_screen" style="display: none;">
         <div class="preview_container">
-            <!-- Header -->
             <div class="preview_header">
                 <button class="back_btn" id="back-from-preview">
-                    <span class="back_arrow">‹</span>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
                 </button>
-                <h1 class="preview_title">Предпросмотр</h1>
-                <span class="preview_progress">2/2</span>
+                <h2 class="preview_title">Предпросмотр объявления</h2>
             </div>
 
             <!-- Preview Card -->
