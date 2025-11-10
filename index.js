@@ -449,19 +449,31 @@ function getAvatarColor(name) {
 // Функция для загрузки и обновления баланса пользователя
 async function refreshUserBalance() {
     try {
-        if (!userData || !userData.id) {
-            console.warn('Данные пользователя не загружены');
-            return;
-        }
+        // Загружаем актуальный баланс с сервера
+        const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/auth/me`, {
+            method: 'GET'
+        });
         
-        // Здесь можно добавить запрос к API для получения актуального баланса
-        // Пока используем данные из userData
-        const balanceEl = document.querySelector('#user-balance');
-        if (balanceEl && userData.balance !== undefined) {
-            balanceEl.textContent = parseFloat(userData.balance || 0).toFixed(2);
+        if (response.ok) {
+            const userInfo = await response.json();
+            if (userInfo && userInfo.balance !== undefined) {
+                if (userData) {
+                    userData.balance = userInfo.balance;
+                }
+                updateUserInfo(userData || userInfo);
+            }
+        } else {
+            // В случае ошибки просто обновляем из userData
+            if (userData) {
+                updateUserInfo(userData);
+            }
         }
     } catch (error) {
         console.error('Ошибка при обновлении баланса:', error);
+        // В случае ошибки просто обновляем из userData
+        if (userData) {
+            updateUserInfo(userData);
+        }
     }
 }
 
@@ -493,7 +505,8 @@ let create_ads_screen = document.querySelector(".create_ads_screen")
 
 let btn_buy_crypto = document.querySelector("#btn-for-buycrpyto")
 let btn_sell_crypto = document.querySelector("#btn-for-sellcrpyto")
-let btn_my_ads = document.querySelector("#create_ads")
+let btn_my_ads = document.querySelector("#my_ads")
+let btn_create_ads = document.querySelector("#create_ads")
 // ------------
 
 btn_buy_crypto.addEventListener("click", async () => {
@@ -511,11 +524,29 @@ btn_buy_crypto.addEventListener("click", async () => {
     displayAds(ads)
 })
 
-btn_my_ads.addEventListener("click", () => {
-    main__screen.style.display = "none"
-    buy_screen.style.display = "none"
-    create_ads_screen.style.display = "block"
-})
+// Обработчик кнопки "Мои объявления"
+if (btn_my_ads) {
+    btn_my_ads.addEventListener("click", async () => {
+        main__screen.style.display = "none"
+        buy_screen.style.display = "none"
+        create_ads_screen.style.display = "none"
+        
+        const myAdsScreen = document.getElementById('my-ads-screen');
+        if (myAdsScreen) {
+            myAdsScreen.style.display = 'block';
+            await loadMyAds('all');
+        }
+    });
+}
+
+// Обработчик кнопки "Создать объявление"
+if (btn_create_ads) {
+    btn_create_ads.addEventListener("click", () => {
+        main__screen.style.display = "none"
+        buy_screen.style.display = "none"
+        create_ads_screen.style.display = "block"
+    });
+}
 // ------------
 // Выпадающее меню для фильтра "Крипта"
 
@@ -889,6 +920,17 @@ function initPreviewScreen() {
                 return
             }
             
+            // Проверка баланса для объявлений на продажу (проверка на фронтенде для UX)
+            if (action === 'sell') {
+                const userBalance = userData?.balance || 0;
+                const requiredAmount = amount; // Количество криптовалюты, которое хотим продать
+                
+                if (userBalance < requiredAmount) {
+                    alert(`Недостаточно средств на балансе!\nВаш баланс: ${userBalance.toFixed(2)} USDT\nТребуется: ${requiredAmount.toFixed(2)} ${crypto}`);
+                    return;
+                }
+            }
+            
             // Отправляем данные на сервер
             createListingBtn.textContent = 'Создание...'
             createListingBtn.disabled = true
@@ -910,12 +952,26 @@ function initPreviewScreen() {
             })
             
             if (!response.ok) {
-                const errorData = await response.json()
-                throw new Error(errorData.detail || 'Ошибка создания объявления')
+                const errorData = await response.json().catch(() => ({ detail: 'Ошибка создания объявления' }))
+                const errorMessage = errorData.detail || errorData.message || 'Ошибка создания объявления'
+                
+                // Если ошибка связана с балансом, показываем понятное сообщение
+                if (errorMessage.includes('Недостаточно средств') || errorMessage.includes('баланс')) {
+                    alert(errorMessage);
+                    return;
+                }
+                
+                throw new Error(errorMessage)
             }
             
             const createdAd = await response.json()
             console.log('Объявление создано успешно:', createdAd)
+            
+            // Обновляем баланс пользователя (средства заморожены)
+            if (action === 'sell' && userData) {
+                userData.balance = (userData.balance || 0) - amount;
+                updateUserInfo(userData);
+            }
             
             // Анимация успеха
             createListingBtn.textContent = 'Создано! ✓'
@@ -1103,7 +1159,7 @@ function displayAds(ads) {
                         <div class="price__subtitle">Цена за 1 ${ad.crypto_currency}</div>
                     </div>
                     <div class="listing__actions">
-                        <button class="buy__btn" data-ad-id="${ad.Id}">КУПИТЬ</button>
+                        <button class="buy__btn" data-ad-id="${ad.Id}" data-ad-data='${JSON.stringify(ad)}'>КУПИТЬ</button>
                     </div>
                 </div>
                 <div class="listing__seller">
@@ -1175,4 +1231,639 @@ if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initBuyScreen)
 } else {
     initBuyScreen()
+}
+
+// ========== ФУНКЦИОНАЛ СДЕЛОК ==========
+
+// Глобальные переменные для текущей сделки
+let selectedAd = null;
+let currentTransaction = null;
+
+// Обработчик клика на кнопку "КУПИТЬ" в объявлении
+document.addEventListener('click', async (e) => {
+    if (e.target.classList.contains('buy__btn') || e.target.closest('.buy__btn')) {
+        const btn = e.target.classList.contains('buy__btn') ? e.target : e.target.closest('.buy__btn');
+        const adDataStr = btn.getAttribute('data-ad-data');
+        
+        if (adDataStr) {
+            try {
+                selectedAd = JSON.parse(adDataStr);
+                openAdDetailsScreen(selectedAd);
+            } catch (error) {
+                console.error('Ошибка при парсинге данных объявления:', error);
+            }
+        }
+    }
+});
+
+// Функция открытия экрана деталей объявления
+function openAdDetailsScreen(ad) {
+    const detailsScreen = document.getElementById('ad-details-screen');
+    const buyScreen = document.querySelector('.buy__screen');
+    
+    if (!detailsScreen) {
+        console.error('Экран деталей не найден');
+        return;
+    }
+    
+    // Скрываем экран покупки
+    if (buyScreen) {
+        buyScreen.style.display = 'none';
+    }
+    
+    // Заполняем данные объявления
+    const adCard = document.getElementById('ad-details-card');
+    if (adCard) {
+        adCard.innerHTML = `
+            <div class="ad_details_info">
+                <div class="ad_details_row">
+                    <span class="ad_details_label">Продавец:</span>
+                    <span class="ad_details_value">${ad.seller_name || 'Неизвестно'}</span>
+                </div>
+                <div class="ad_details_row">
+                    <span class="ad_details_label">Криптовалюта:</span>
+                    <span class="ad_details_value">${ad.crypto_currency}</span>
+                </div>
+                <div class="ad_details_row">
+                    <span class="ad_details_label">Цена за 1 ${ad.crypto_currency}:</span>
+                    <span class="ad_details_value">${ad.price.toFixed(2)} RUB</span>
+                </div>
+                <div class="ad_details_row">
+                    <span class="ad_details_label">Доступно:</span>
+                    <span class="ad_details_value">${ad.crypto_amount.toFixed(4)} ${ad.crypto_currency}</span>
+                </div>
+                <div class="ad_details_row">
+                    <span class="ad_details_label">Лимиты:</span>
+                    <span class="ad_details_value">${ad.min_limit.toFixed(2)} - ${ad.max_limit ? ad.max_limit.toFixed(2) : '∞'} RUB</span>
+                </div>
+                <div class="ad_details_row">
+                    <span class="ad_details_label">Способ оплаты:</span>
+                    <span class="ad_details_value">${ad.bank_name || 'Не указан'}</span>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Обновляем тип криптовалюты
+    const cryptoTypeEl = document.getElementById('crypto-type');
+    if (cryptoTypeEl) {
+        cryptoTypeEl.textContent = ad.crypto_currency;
+    }
+    
+    // Очищаем поле ввода суммы
+    const purchaseAmountInput = document.getElementById('purchase-amount');
+    if (purchaseAmountInput) {
+        purchaseAmountInput.value = '';
+        purchaseAmountInput.min = ad.min_limit;
+        purchaseAmountInput.max = ad.max_limit || 999999;
+    }
+    
+    // Показываем экран деталей
+    detailsScreen.style.display = 'block';
+    
+    // Обработчик изменения суммы покупки
+    if (purchaseAmountInput) {
+        purchaseAmountInput.addEventListener('input', (e) => {
+            updatePurchaseInfo(ad, parseFloat(e.target.value) || 0);
+        });
+    }
+}
+
+// Функция обновления информации о покупке
+function updatePurchaseInfo(ad, usdtAmount) {
+    if (!ad || usdtAmount <= 0) {
+        document.getElementById('crypto-amount').textContent = '0.00';
+        return;
+    }
+    
+    // Проверяем лимиты
+    if (usdtAmount < ad.min_limit) {
+        document.getElementById('purchase-info').innerHTML = 
+            `<span class="purchase_info_text error">Минимальная сумма: ${ad.min_limit.toFixed(2)} USDT</span>`;
+        return;
+    }
+    
+    if (ad.max_limit && usdtAmount > ad.max_limit) {
+        document.getElementById('purchase-info').innerHTML = 
+            `<span class="purchase_info_text error">Максимальная сумма: ${ad.max_limit.toFixed(2)} USDT</span>`;
+        return;
+    }
+    
+    // Рассчитываем количество криптовалюты
+    // Цена указана в RUB за 1 криптовалюту, но мы покупаем за USDT
+    // Предполагаем, что 1 USDT = 1 RUB (или нужно использовать курс)
+    const cryptoAmount = usdtAmount / ad.price;
+    const availableCrypto = ad.crypto_amount || 0;
+    
+    if (cryptoAmount > availableCrypto) {
+        document.getElementById('purchase-info').innerHTML = 
+            `<span class="purchase_info_text error">Доступно только ${availableCrypto.toFixed(4)} ${ad.crypto_currency}</span>`;
+        return;
+    }
+    
+    document.getElementById('purchase-info').innerHTML = 
+        `<span class="purchase_info_text">Вы получите: <span id="crypto-amount">${cryptoAmount.toFixed(4)}</span> <span id="crypto-type">${ad.crypto_currency}</span></span>`;
+}
+
+// Обработчик кнопки "Купить" на экране деталей
+document.addEventListener('DOMContentLoaded', () => {
+    const confirmPurchaseBtn = document.getElementById('confirm-purchase-btn');
+    if (confirmPurchaseBtn) {
+        confirmPurchaseBtn.addEventListener('click', async () => {
+            const purchaseAmount = parseFloat(document.getElementById('purchase-amount').value);
+            
+            if (!selectedAd) {
+                alert('Ошибка: объявление не выбрано');
+                return;
+            }
+            
+            if (!purchaseAmount || purchaseAmount <= 0) {
+                alert('Введите сумму покупки');
+                return;
+            }
+            
+            if (purchaseAmount < selectedAd.min_limit) {
+                alert(`Минимальная сумма покупки: ${selectedAd.min_limit.toFixed(2)} USDT`);
+                return;
+            }
+            
+            if (selectedAd.max_limit && purchaseAmount > selectedAd.max_limit) {
+                alert(`Максимальная сумма покупки: ${selectedAd.max_limit.toFixed(2)} USDT`);
+                return;
+            }
+            
+            // Создаем сделку
+            try {
+                const cryptoAmount = purchaseAmount / selectedAd.price;
+                
+                const transactionData = {
+                    ad_id: selectedAd.Id,
+                    crypto_currency: selectedAd.crypto_currency,
+                    crypto_amount: cryptoAmount,
+                    fiat_amount: purchaseAmount
+                };
+                
+                const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/transactions`, {
+                    method: 'POST',
+                    body: JSON.stringify(transactionData)
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Ошибка создания сделки');
+                }
+                
+                currentTransaction = await response.json();
+                
+                // Открываем экран оплаты
+                openPaymentScreen(selectedAd, purchaseAmount);
+            } catch (error) {
+                console.error('Ошибка при создании сделки:', error);
+                alert('Ошибка создания сделки: ' + error.message);
+            }
+        });
+    }
+    
+    // Обработчик кнопки "Назад" на экране деталей
+    const backFromDetailsBtn = document.getElementById('back-from-details');
+    if (backFromDetailsBtn) {
+        backFromDetailsBtn.addEventListener('click', () => {
+            document.getElementById('ad-details-screen').style.display = 'none';
+            document.querySelector('.buy__screen').style.display = 'block';
+        });
+    }
+    
+    // Обработчик кнопки "Назад" на экране оплаты
+    const backFromPaymentBtn = document.getElementById('back-from-payment');
+    if (backFromPaymentBtn) {
+        backFromPaymentBtn.addEventListener('click', () => {
+            document.getElementById('payment-screen').style.display = 'none';
+            document.getElementById('ad-details-screen').style.display = 'block';
+        });
+    }
+    
+    // Обработчик кнопки "Я перевел средства"
+    const paymentConfirmedBtn = document.getElementById('payment-confirmed-btn');
+    if (paymentConfirmedBtn) {
+        paymentConfirmedBtn.addEventListener('click', async () => {
+            if (!selectedAd || !currentTransaction) {
+                alert('Ошибка: данные сделки не найдены');
+                return;
+            }
+            
+            try {
+                // Отмечаем сделку как оплаченную
+                const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/transactions/${currentTransaction.id}/pay`, {
+                    method: 'POST'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Ошибка подтверждения оплаты');
+                }
+                
+                alert('Оплата подтверждена! Продавец получит уведомление.');
+                // Закрываем экран оплаты и возвращаемся на главный
+                document.getElementById('payment-screen').style.display = 'none';
+                document.getElementById('main__screen').style.display = 'block';
+                
+                // Очищаем переменные
+                selectedAd = null;
+                currentTransaction = null;
+            } catch (error) {
+                console.error('Ошибка при подтверждении оплаты:', error);
+                alert('Ошибка подтверждения оплаты: ' + error.message);
+            }
+        });
+    }
+    
+    // Обработчик кнопки копирования реквизитов
+    const copyPaymentDetailsBtn = document.getElementById('copy-payment-details');
+    if (copyPaymentDetailsBtn) {
+        copyPaymentDetailsBtn.addEventListener('click', () => {
+            const paymentDetails = document.getElementById('payment-details').textContent;
+            navigator.clipboard.writeText(paymentDetails).then(() => {
+                copyPaymentDetailsBtn.textContent = 'Скопировано!';
+                setTimeout(() => {
+                    copyPaymentDetailsBtn.textContent = 'Скопировать реквизиты';
+                }, 2000);
+            });
+        });
+    }
+});
+
+// Функция открытия экрана оплаты
+function openPaymentScreen(ad, usdtAmount) {
+    const paymentScreen = document.getElementById('payment-screen');
+    const detailsScreen = document.getElementById('ad-details-screen');
+    
+    if (!paymentScreen) {
+        console.error('Экран оплаты не найден');
+        return;
+    }
+    
+    // Скрываем экран деталей
+    if (detailsScreen) {
+        detailsScreen.style.display = 'none';
+    }
+    
+    // Заполняем сумму
+    const paymentAmountEl = document.getElementById('payment-amount');
+    if (paymentAmountEl) {
+        paymentAmountEl.textContent = `${usdtAmount.toFixed(2)} USDT`;
+    }
+    
+    // Заполняем реквизиты
+    const paymentDetailsEl = document.getElementById('payment-details');
+    if (paymentDetailsEl) {
+        paymentDetailsEl.innerHTML = `
+            <div class="payment_detail_item">
+                <span class="payment_detail_label">Банк:</span>
+                <span class="payment_detail_value">${ad.bank_name || 'Не указан'}</span>
+            </div>
+            <div class="payment_detail_item">
+                <span class="payment_detail_label">Реквизиты:</span>
+                <span class="payment_detail_value">${ad.payment_details || 'Не указаны'}</span>
+            </div>
+        `;
+    }
+    
+    // Показываем экран оплаты
+    paymentScreen.style.display = 'block';
+}
+
+// ========== ЭКРАН "МОИ ОБЪЯВЛЕНИЯ" ==========
+
+// Функция загрузки моих объявлений
+async function loadMyAds(filter = 'all') {
+    try {
+        const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/ads/my`, {
+            method: 'GET'
+        });
+        
+        if (!response.ok) {
+            throw new Error('Ошибка загрузки объявлений');
+        }
+        
+        let ads = await response.json();
+        
+        // Фильтруем по типу
+        if (filter !== 'all') {
+            ads = ads.filter(ad => ad.action === filter);
+        }
+        
+        displayMyAds(ads);
+    } catch (error) {
+        console.error('Ошибка при загрузке моих объявлений:', error);
+        const myAdsList = document.getElementById('my-ads-list');
+        if (myAdsList) {
+            myAdsList.innerHTML = '<p style="text-align: center; color: rgba(255,255,255,0.6); padding: 40px;">Ошибка загрузки объявлений</p>';
+        }
+    }
+}
+
+// Функция отображения моих объявлений
+function displayMyAds(ads) {
+    const myAdsList = document.getElementById('my-ads-list');
+    if (!myAdsList) return;
+    
+    myAdsList.innerHTML = '';
+    
+    if (!ads || ads.length === 0) {
+        myAdsList.innerHTML = '<p style="text-align: center; color: rgba(255,255,255,0.6); padding: 40px;">У вас пока нет объявлений</p>';
+        return;
+    }
+    
+    ads.forEach(ad => {
+        const adCard = document.createElement('div');
+        adCard.className = 'my_ad_card';
+        adCard.setAttribute('data-ad-id', ad.Id);
+        adCard.innerHTML = `
+            <div class="my_ad_header">
+                <div class="my_ad_badge ${ad.action === 'buy' ? 'badge_buy' : 'badge_sell'}">
+                    ${ad.action === 'buy' ? 'ПОКУПКА' : 'ПРОДАЖА'}
+                </div>
+                <button class="delete_ad_btn" data-ad-id="${ad.Id}" title="Удалить">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <path d="M3 6H5H21M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="my_ad_content">
+                <div class="my_ad_row">
+                    <span class="my_ad_label">Криптовалюта:</span>
+                    <span class="my_ad_value">${ad.crypto_currency}</span>
+                </div>
+                <div class="my_ad_row">
+                    <span class="my_ad_label">Цена:</span>
+                    <span class="my_ad_value">${ad.price.toFixed(2)} RUB</span>
+                </div>
+                <div class="my_ad_row">
+                    <span class="my_ad_label">Количество:</span>
+                    <span class="my_ad_value">${ad.crypto_amount.toFixed(4)} ${ad.crypto_currency}</span>
+                </div>
+                <div class="my_ad_row">
+                    <span class="my_ad_label">Лимиты:</span>
+                    <span class="my_ad_value">${ad.min_limit.toFixed(2)} - ${ad.max_limit ? ad.max_limit.toFixed(2) : '∞'} RUB</span>
+                </div>
+                <div class="my_ad_row">
+                    <span class="my_ad_label">Статус:</span>
+                    <span class="my_ad_value status_${ad.status || 'active'}">${ad.status === 'active' ? 'Активно' : ad.status || 'Активно'}</span>
+                </div>
+            </div>
+        `;
+        
+        myAdsList.appendChild(adCard);
+    });
+    
+    // Добавляем обработчики удаления
+    document.querySelectorAll('.delete_ad_btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const adId = btn.getAttribute('data-ad-id');
+            if (confirm('Вы уверены, что хотите удалить это объявление?')) {
+                await deleteAd(adId);
+            }
+        });
+    });
+}
+
+// Функция удаления объявления
+async function deleteAd(adId) {
+    try {
+        // Получаем данные объявления перед удалением для обновления баланса
+        const myAdsList = document.getElementById('my-ads-list');
+        const adCard = myAdsList?.querySelector(`[data-ad-id="${adId}"]`)?.closest('.my_ad_card');
+        let adData = null;
+        
+        if (adCard) {
+            // Пытаемся извлечь данные из карточки
+            const adType = adCard.querySelector('.badge_buy') ? 'buy' : 'sell';
+            // Ищем строку с количеством криптовалюты
+            const rows = adCard.querySelectorAll('.my_ad_row');
+            let cryptoAmount = 0;
+            rows.forEach(row => {
+                const label = row.querySelector('.my_ad_label')?.textContent;
+                if (label && label.includes('Количество')) {
+                    const valueText = row.querySelector('.my_ad_value')?.textContent || '';
+                    cryptoAmount = parseFloat(valueText.split(' ')[0]) || 0;
+                }
+            });
+            adData = { action: adType, crypto_amount: cryptoAmount };
+        }
+        
+        const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/ads/${adId}`, {
+            method: 'DELETE'
+        });
+        
+        if (!response.ok) {
+            throw new Error('Ошибка удаления объявления');
+        }
+        
+        // Если это было объявление на продажу, обновляем баланс (средства разморожены)
+        if (adData && adData.action === 'sell' && adData.crypto_amount && userData) {
+            userData.balance = (userData.balance || 0) + adData.crypto_amount;
+            updateUserInfo(userData);
+        }
+        
+        // Обновляем список объявлений
+        const activeFilter = document.querySelector('.filter_tab.active')?.getAttribute('data-filter') || 'all';
+        await loadMyAds(activeFilter);
+        
+        // Показываем уведомление
+        alert('Объявление удалено');
+    } catch (error) {
+        console.error('Ошибка при удалении объявления:', error);
+        alert('Ошибка удаления объявления: ' + error.message);
+    }
+}
+
+// Инициализация фильтров "Мои объявления"
+document.addEventListener('DOMContentLoaded', () => {
+    const filterTabs = document.querySelectorAll('.filter_tab');
+    filterTabs.forEach(tab => {
+        tab.addEventListener('click', async () => {
+            // Убираем активный класс у всех
+            filterTabs.forEach(t => t.classList.remove('active'));
+            // Добавляем активный класс текущему
+            tab.classList.add('active');
+            
+            // Загружаем объявления с выбранным фильтром
+            const filter = tab.getAttribute('data-filter');
+            await loadMyAds(filter);
+        });
+    });
+    
+    // Обработчик кнопки "Назад" на экране "Мои объявления"
+    const backFromMyAdsBtn = document.getElementById('back-from-my-ads');
+    if (backFromMyAdsBtn) {
+        backFromMyAdsBtn.addEventListener('click', () => {
+            document.getElementById('my-ads-screen').style.display = 'none';
+            document.getElementById('main__screen').style.display = 'block';
+        });
+    }
+    
+    // Обработчик кнопки уведомлений
+    const notificationsBtn = document.getElementById('notifications-btn');
+    if (notificationsBtn) {
+        notificationsBtn.addEventListener('click', async () => {
+            document.getElementById('main__screen').style.display = 'none';
+            document.getElementById('notifications-screen').style.display = 'block';
+            await loadPendingTransactions();
+        });
+    }
+    
+    // Обработчик кнопки "Назад" на экране уведомлений
+    const backFromNotificationsBtn = document.getElementById('back-from-notifications');
+    if (backFromNotificationsBtn) {
+        backFromNotificationsBtn.addEventListener('click', () => {
+            document.getElementById('notifications-screen').style.display = 'none';
+            document.getElementById('main__screen').style.display = 'block';
+        });
+    }
+    
+    // Периодическая проверка уведомлений (каждые 30 секунд)
+    setInterval(async () => {
+        await checkPendingTransactions();
+    }, 30000);
+    
+    // Первоначальная проверка
+    checkPendingTransactions();
+});
+
+// ========== ФУНКЦИИ ДЛЯ УВЕДОМЛЕНИЙ ==========
+
+// Функция проверки ожидающих сделок
+async function checkPendingTransactions() {
+    try {
+        const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/transactions/pending`, {
+            method: 'GET'
+        });
+        
+        if (!response.ok) {
+            return;
+        }
+        
+        const transactions = await response.json();
+        const badge = document.getElementById('notifications-badge');
+        
+        if (transactions && transactions.length > 0) {
+            if (badge) {
+                badge.textContent = transactions.length;
+                badge.style.display = 'flex';
+            }
+        } else {
+            if (badge) {
+                badge.style.display = 'none';
+            }
+        }
+    } catch (error) {
+        console.error('Ошибка при проверке уведомлений:', error);
+    }
+}
+
+// Функция загрузки ожидающих сделок
+async function loadPendingTransactions() {
+    try {
+        const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/transactions/pending`, {
+            method: 'GET'
+        });
+        
+        if (!response.ok) {
+            throw new Error('Ошибка загрузки уведомлений');
+        }
+        
+        const transactions = await response.json();
+        displayPendingTransactions(transactions);
+    } catch (error) {
+        console.error('Ошибка при загрузке уведомлений:', error);
+        const notificationsList = document.getElementById('notifications-list');
+        if (notificationsList) {
+            notificationsList.innerHTML = '<p style="text-align: center; color: rgba(255,255,255,0.6); padding: 40px;">Ошибка загрузки уведомлений</p>';
+        }
+    }
+}
+
+// Функция отображения ожидающих сделок
+function displayPendingTransactions(transactions) {
+    const notificationsList = document.getElementById('notifications-list');
+    if (!notificationsList) return;
+    
+    notificationsList.innerHTML = '';
+    
+    if (!transactions || transactions.length === 0) {
+        notificationsList.innerHTML = '<p style="text-align: center; color: rgba(255,255,255,0.6); padding: 40px;">Нет ожидающих подтверждения сделок</p>';
+        return;
+    }
+    
+    transactions.forEach(transaction => {
+        const notificationCard = document.createElement('div');
+        notificationCard.className = 'notification_card';
+        notificationCard.innerHTML = `
+            <div class="notification_header">
+                <div class="notification_badge_new">Новое</div>
+                <div class="notification_time">${new Date(transaction.buyer_paid_at).toLocaleString('ru-RU')}</div>
+            </div>
+            <div class="notification_content">
+                <div class="notification_text">
+                    Покупатель перевел <strong>${transaction.fiat_amount.toFixed(2)} USDT</strong>
+                </div>
+                <div class="notification_details">
+                    <div class="notification_detail_row">
+                        <span>Криптовалюта:</span>
+                        <span>${transaction.crypto_amount.toFixed(4)} ${transaction.crypto_currency}</span>
+                    </div>
+                    <div class="notification_detail_row">
+                        <span>Цена:</span>
+                        <span>${transaction.price.toFixed(2)} RUB</span>
+                    </div>
+                </div>
+            </div>
+            <div class="notification_actions">
+                <button class="notification_confirm_btn" data-transaction-id="${transaction.id}">
+                    Подтвердить получение
+                </button>
+            </div>
+        `;
+        
+        notificationsList.appendChild(notificationCard);
+    });
+    
+    // Добавляем обработчики кнопок подтверждения
+    document.querySelectorAll('.notification_confirm_btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const transactionId = parseInt(btn.getAttribute('data-transaction-id'));
+            await confirmTransaction(transactionId);
+        });
+    });
+}
+
+// Функция подтверждения сделки продавцом
+async function confirmTransaction(transactionId) {
+    if (!confirm('Вы подтверждаете получение денег от покупателя?')) {
+        return;
+    }
+    
+    try {
+        const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/transactions/${transactionId}/confirm`, {
+            method: 'POST'
+        });
+        
+        if (!response.ok) {
+            throw new Error('Ошибка подтверждения сделки');
+        }
+        
+        alert('Сделка подтверждена! Криптовалюта переведена покупателю.');
+        
+        // Обновляем список уведомлений
+        await loadPendingTransactions();
+        
+        // Обновляем счетчик уведомлений
+        await checkPendingTransactions();
+        
+        // Обновляем баланс пользователя
+        if (userData) {
+            await refreshUserBalance();
+        }
+    } catch (error) {
+        console.error('Ошибка при подтверждении сделки:', error);
+        alert('Ошибка подтверждения сделки: ' + error.message);
+    }
 }
