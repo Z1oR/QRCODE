@@ -3107,8 +3107,7 @@ async function displayTransactionDetails(transaction, ad) {
                         'paid': 'Оплачено',
                         'confirmed': 'Подтверждено',
                         'completed': 'Завершено',
-                        'cancelled': 'Отменено',
-                        'disputed': 'Спор'
+                        'cancelled': 'Отменено'
                     }[transaction.status] || transaction.status}
                 </span>
             </div>
@@ -3199,16 +3198,8 @@ async function displayTransactionDetails(transaction, ad) {
     
     detailsCard.innerHTML = detailsHTML;
     
-    // Загружаем апелляции для этой сделки
-    await loadTransactionAppeals(transaction.id, isBuyer, isSeller);
-    
     // Формируем кнопки действий
     let actionsHTML = '';
-    
-    // Проверяем, можно ли создать апелляцию (только для pending или paid, и если нет активной апелляции)
-    const canCreateAppeal = (transaction.status === 'pending' || transaction.status === 'paid') && 
-                            transaction.status !== 'disputed' && 
-                            (!transaction.appeal_id || transaction.appeal_id === null);
     
     if (isBuyer && transaction.status === 'pending') {
         // Покупатель может подтвердить перевод
@@ -3217,32 +3208,11 @@ async function displayTransactionDetails(transaction, ad) {
                 Я перевел средства
             </button>
         `;
-        if (canCreateAppeal) {
-            actionsHTML += `
-                <button class="transaction_action_btn btn_danger" id="create-appeal-btn" data-transaction-id="${transaction.id}" data-appeal-type="buyer">
-                    Создать апелляцию
-                </button>
-            `;
-        }
     } else if (isSeller && transaction.status === 'paid') {
         // Продавец может подтвердить получение
         actionsHTML = `
             <button class="transaction_action_btn btn_primary" id="confirm-transaction-btn" data-transaction-id="${transaction.id}">
                 Подтвердить получение
-            </button>
-        `;
-        if (canCreateAppeal) {
-            actionsHTML += `
-                <button class="transaction_action_btn btn_danger" id="create-appeal-btn" data-transaction-id="${transaction.id}" data-appeal-type="seller">
-                    Создать апелляцию
-                </button>
-            `;
-        }
-    } else if ((isBuyer || isSeller) && canCreateAppeal) {
-        // Если сделка в подходящем статусе, но нет других действий
-        actionsHTML = `
-            <button class="transaction_action_btn btn_danger" id="create-appeal-btn" data-transaction-id="${transaction.id}" data-appeal-type="${isBuyer ? 'buyer' : 'seller'}">
-                Создать апелляцию
             </button>
         `;
     }
@@ -3266,121 +3236,6 @@ async function displayTransactionDetails(transaction, ad) {
         });
     }
     
-    // Обработчик кнопки создания апелляции
-    const createAppealBtn = document.getElementById('create-appeal-btn');
-    if (createAppealBtn) {
-        createAppealBtn.addEventListener('click', () => {
-            const transactionId = parseInt(createAppealBtn.getAttribute('data-transaction-id'));
-            const appealType = createAppealBtn.getAttribute('data-appeal-type');
-            openAppealCreateScreen(transactionId, appealType);
-        });
-    }
-}
-
-// Функция загрузки апелляций для сделки
-async function loadTransactionAppeals(transactionId, isBuyer, isSeller) {
-    try {
-        const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/appeals/transaction/${transactionId}`, {
-            method: 'GET'
-        });
-        
-        if (!response.ok) {
-            console.error('Ошибка загрузки апелляций');
-            return;
-        }
-        
-        const appeals = await response.json();
-        const appealsSection = document.getElementById('transaction-appeals-section');
-        const appealsList = document.getElementById('transaction-appeals-list');
-        
-        if (!appealsSection || !appealsList) return;
-        
-        if (appeals && appeals.length > 0) {
-            appealsSection.style.display = 'block';
-            appealsList.innerHTML = '';
-            
-            appeals.forEach(appeal => {
-                const appealCard = document.createElement('div');
-                appealCard.className = 'appeal_card';
-                
-                const statusText = {
-                    'pending': 'Ожидает рассмотрения',
-                    'reviewing': 'На рассмотрении',
-                    'resolved': 'Решена',
-                    'rejected': 'Отклонена',
-                    'cancelled': 'Отменена'
-                }[appeal.status] || appeal.status;
-                
-                const resolutionText = {
-                    'refund_buyer': 'Возврат покупателю',
-                    'confirm_seller': 'Подтверждено в пользу продавца',
-                    'cancel': 'Отменена'
-                }[appeal.resolution] || '';
-                
-                appealCard.innerHTML = `
-                    <div class="appeal_card_header">
-                        <div class="appeal_card_info">
-                            <div class="appeal_card_type">${appeal.appeal_type === 'buyer' ? 'Покупатель' : 'Продавец'}</div>
-                            <div class="appeal_card_date">${new Date(appeal.created_at).toLocaleString('ru-RU')}</div>
-                        </div>
-                        <div class="appeal_card_status status_${appeal.status}">${statusText}</div>
-                    </div>
-                    <div class="appeal_card_content">
-                        <div class="appeal_card_reason">
-                            <strong>Причина:</strong> ${escapeHtml(appeal.reason)}
-                        </div>
-                        <div class="appeal_card_description">
-                            ${escapeHtml(appeal.description)}
-                        </div>
-                        ${appeal.evidence ? `
-                            <div class="appeal_card_evidence">
-                                <strong>Доказательства:</strong> ${escapeHtml(appeal.evidence)}
-                            </div>
-                        ` : ''}
-                        ${appeal.admin_comment ? `
-                            <div class="appeal_card_admin_comment">
-                                <strong>Комментарий администратора:</strong> ${escapeHtml(appeal.admin_comment)}
-                            </div>
-                        ` : ''}
-                        ${appeal.resolution ? `
-                            <div class="appeal_card_resolution">
-                                <strong>Решение:</strong> ${resolutionText}
-                            </div>
-                        ` : ''}
-                    </div>
-                `;
-                
-                appealsList.appendChild(appealCard);
-            });
-        } else {
-            appealsSection.style.display = 'none';
-        }
-    } catch (error) {
-        console.error('Ошибка при загрузке апелляций:', error);
-    }
-}
-
-// Функция открытия экрана создания апелляции
-function openAppealCreateScreen(transactionId, appealType) {
-    const appealScreen = document.getElementById('appeal-create-screen');
-    const transactionScreen = document.getElementById('transaction-details-screen');
-    
-    if (appealScreen && transactionScreen) {
-        // Сохраняем данные для формы
-        appealScreen.setAttribute('data-transaction-id', transactionId);
-        appealScreen.setAttribute('data-appeal-type', appealType);
-        
-        // Очищаем форму
-        document.getElementById('appeal-reason').value = '';
-        document.getElementById('appeal-description').value = '';
-        document.getElementById('appeal-evidence').value = '';
-        document.getElementById('appeal-description-counter').textContent = '0';
-        
-        // Скрываем экран деталей сделки и показываем экран создания апелляции
-        transactionScreen.style.display = 'none';
-        appealScreen.style.display = 'block';
-        window.scrollTo(0, 0);
-    }
 }
 
 // Функция подтверждения перевода покупателем
@@ -3445,134 +3300,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // ========== ОБРАБОТЧИКИ ДЛЯ СОЗДАНИЯ АПЕЛЛЯЦИИ ==========
-    
-    // Обработчик кнопки "Назад" на экране создания апелляции
-    const backFromAppealCreateBtn = document.getElementById('back-from-appeal-create');
-    if (backFromAppealCreateBtn) {
-        backFromAppealCreateBtn.addEventListener('click', () => {
-            const appealScreen = document.getElementById('appeal-create-screen');
-            const transactionScreen = document.getElementById('transaction-details-screen');
-            
-            if (appealScreen && transactionScreen) {
-                appealScreen.style.display = 'none';
-                transactionScreen.style.display = 'block';
-            }
-        });
-    }
-    
-    // Обработчик кнопки "Отмена" на экране создания апелляции
-    const appealCancelBtn = document.getElementById('appeal-cancel-btn');
-    if (appealCancelBtn) {
-        appealCancelBtn.addEventListener('click', () => {
-            const appealScreen = document.getElementById('appeal-create-screen');
-            const transactionScreen = document.getElementById('transaction-details-screen');
-            
-            if (appealScreen && transactionScreen) {
-                appealScreen.style.display = 'none';
-                transactionScreen.style.display = 'block';
-            }
-        });
-    }
-    
-    // Счетчик символов для описания
-    const appealDescriptionTextarea = document.getElementById('appeal-description');
-    const appealDescriptionCounter = document.getElementById('appeal-description-counter');
-    if (appealDescriptionTextarea && appealDescriptionCounter) {
-        appealDescriptionTextarea.addEventListener('input', (e) => {
-            const length = e.target.value.length;
-            appealDescriptionCounter.textContent = length;
-            
-            if (length > 5000) {
-                appealDescriptionCounter.style.color = '#ff4444';
-            } else if (length > 4500) {
-                appealDescriptionCounter.style.color = '#ffc107';
-            } else {
-                appealDescriptionCounter.style.color = 'rgba(255, 255, 255, 0.6)';
-            }
-        });
-    }
-    
-    // Обработчик кнопки "Создать апелляцию"
-    const appealSubmitBtn = document.getElementById('appeal-submit-btn');
-    if (appealSubmitBtn) {
-        appealSubmitBtn.addEventListener('click', async () => {
-            const appealScreen = document.getElementById('appeal-create-screen');
-            if (!appealScreen) return;
-            
-            const transactionId = parseInt(appealScreen.getAttribute('data-transaction-id'));
-            const appealType = appealScreen.getAttribute('data-appeal-type');
-            
-            const reason = document.getElementById('appeal-reason')?.value.trim();
-            const description = document.getElementById('appeal-description')?.value.trim();
-            const evidence = document.getElementById('appeal-evidence')?.value.trim();
-            
-            // Валидация на клиенте
-            if (!reason || reason === '') {
-                alert('Пожалуйста, выберите причину апелляции');
-                document.getElementById('appeal-reason')?.focus();
-                return;
-            }
-            
-            if (!description || description.length < 10) {
-                alert('Пожалуйста, опишите проблему подробно (минимум 10 символов)');
-                document.getElementById('appeal-description')?.focus();
-                return;
-            }
-            
-            if (description.length > 5000) {
-                alert('Описание слишком длинное (максимум 5000 символов)');
-                return;
-            }
-            
-            // Подтверждение
-            if (!confirm('Вы уверены, что хотите создать апелляцию? После создания сделка будет приостановлена до решения администрации.')) {
-                return;
-            }
-            
-            // Отключаем кнопку на время отправки
-            appealSubmitBtn.disabled = true;
-            appealSubmitBtn.textContent = 'Создание...';
-            
-            try {
-                const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/appeals`, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        transaction_id: transactionId,
-                        appeal_type: appealType,
-                        reason: reason,
-                        description: description,
-                        evidence: evidence || null
-                    })
-                });
-                
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({ detail: 'Ошибка создания апелляции' }));
-                    throw new Error(errorData.detail || 'Ошибка создания апелляции');
-                }
-                
-                const appeal = await response.json();
-                alert('Апелляция успешно создана! Администрация рассмотрит её в ближайшее время.');
-                
-                // Возвращаемся к деталям сделки и обновляем их
-                const transactionScreen = document.getElementById('transaction-details-screen');
-                if (transactionScreen) {
-                    appealScreen.style.display = 'none';
-                    transactionScreen.style.display = 'block';
-                    
-                    // Обновляем детали сделки
-                    await openTransactionDetails(transactionId);
-                }
-            } catch (error) {
-                console.error('Ошибка при создании апелляции:', error);
-                alert('Ошибка при создании апелляции: ' + error.message);
-            } finally {
-                appealSubmitBtn.disabled = false;
-                appealSubmitBtn.textContent = 'Создать апелляцию';
-            }
-        });
-    }
-    
     // ========== АДМИН ПАНЕЛЬ ==========
     
     // Проверяем, является ли пользователь администратором и показываем кнопку
@@ -3614,24 +3341,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 if (tabName === 'statistics') {
                     loadAdminStatistics();
-                } else if (tabName === 'appeals') {
-                    loadAdminAppeals();
                 }
             }
         });
     });
     
-    // Обработчики фильтров апелляций
-    const adminFilterBtns = document.querySelectorAll('.admin_filter_btn');
-    adminFilterBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            adminFilterBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            
-            const filter = btn.getAttribute('data-filter');
-            loadAdminAppeals(filter === 'all' ? null : filter);
-        });
-    });
 });
 
 // Функция проверки прав администратора
@@ -3726,213 +3440,8 @@ async function loadAdminStatistics() {
         document.getElementById('stat-completed-transactions').textContent = `Завершено: ${stats.completed_transactions || 0}`;
         document.getElementById('stat-total-volume').textContent = `${(stats.total_volume || 0).toFixed(2)} RUB`;
         document.getElementById('stat-crypto-volume').textContent = `Крипта: ${(stats.total_crypto_volume || 0).toFixed(2)}`;
-        document.getElementById('stat-total-appeals').textContent = stats.total_appeals || 0;
-        document.getElementById('stat-pending-appeals').textContent = `Ожидают: ${stats.pending_appeals || 0}`;
     } catch (error) {
         console.error('Ошибка при загрузке статистики:', error);
         alert('Ошибка при загрузке статистики');
-    }
-}
-
-// Функция загрузки апелляций для админа
-async function loadAdminAppeals(status = null) {
-    try {
-        let url = `${API_BASE_URL}/api/admin/appeals?limit=100`;
-        if (status) {
-            url += `&status=${status}`;
-        }
-        
-        const response = await makeAuthenticatedRequest(url, {
-            method: 'GET'
-        });
-        
-        if (!response.ok) {
-            throw new Error('Ошибка загрузки апелляций');
-        }
-        
-        const appeals = await response.json();
-        const appealsList = document.getElementById('admin-appeals-list');
-        
-        if (!appealsList) return;
-        
-        appealsList.innerHTML = '';
-        
-        if (appeals && appeals.length > 0) {
-            appeals.forEach(appeal => {
-                const appealCard = document.createElement('div');
-                appealCard.className = 'admin_appeal_card';
-                
-                const statusText = {
-                    'pending': 'Ожидает рассмотрения',
-                    'reviewing': 'На рассмотрении',
-                    'resolved': 'Решена',
-                    'rejected': 'Отклонена',
-                    'cancelled': 'Отменена'
-                }[appeal.status] || appeal.status;
-                
-                appealCard.innerHTML = `
-                    <div class="admin_appeal_card_header">
-                        <div class="admin_appeal_card_info">
-                            <div class="admin_appeal_card_id">Апелляция #${appeal.id}</div>
-                            <div class="admin_appeal_card_date">${new Date(appeal.created_at).toLocaleString('ru-RU')}</div>
-                        </div>
-                        <div class="admin_appeal_card_status status_${appeal.status}">${statusText}</div>
-                    </div>
-                    <div class="admin_appeal_card_content">
-                        <div class="admin_appeal_card_row">
-                            <strong>Сделка:</strong> #${appeal.transaction_id}
-                        </div>
-                        <div class="admin_appeal_card_row">
-                            <strong>Тип:</strong> ${appeal.appeal_type === 'buyer' ? 'Покупатель' : 'Продавец'}
-                        </div>
-                        <div class="admin_appeal_card_row">
-                            <strong>Причина:</strong> ${escapeHtml(appeal.reason)}
-                        </div>
-                        <div class="admin_appeal_card_row">
-                            <strong>Описание:</strong> ${escapeHtml(appeal.description)}
-                        </div>
-                        ${appeal.evidence ? `
-                            <div class="admin_appeal_card_row">
-                                <strong>Доказательства:</strong> ${escapeHtml(appeal.evidence)}
-                            </div>
-                        ` : ''}
-                        ${appeal.admin_comment ? `
-                            <div class="admin_appeal_card_row admin_appeal_admin_comment">
-                                <strong>Комментарий:</strong> ${escapeHtml(appeal.admin_comment)}
-                            </div>
-                        ` : ''}
-                    </div>
-                    ${appeal.status === 'pending' || appeal.status === 'reviewing' ? `
-                        <div class="admin_appeal_card_actions">
-                            ${appeal.status === 'pending' ? `
-                                <button class="admin_appeal_action_btn btn_review" data-appeal-id="${appeal.id}">
-                                    Начать рассмотрение
-                                </button>
-                            ` : ''}
-                            <button class="admin_appeal_action_btn btn_resolve" data-appeal-id="${appeal.id}">
-                                Разрешить
-                            </button>
-                            <button class="admin_appeal_action_btn btn_reject" data-appeal-id="${appeal.id}">
-                                Отклонить
-                            </button>
-                        </div>
-                    ` : ''}
-                `;
-                
-                appealsList.appendChild(appealCard);
-            });
-            
-            // Добавляем обработчики кнопок
-            document.querySelectorAll('.btn_review').forEach(btn => {
-                btn.addEventListener('click', async () => {
-                    const appealId = parseInt(btn.getAttribute('data-appeal-id'));
-                    await reviewAppeal(appealId);
-                });
-            });
-            
-            document.querySelectorAll('.btn_resolve').forEach(btn => {
-                btn.addEventListener('click', async () => {
-                    const appealId = parseInt(btn.getAttribute('data-appeal-id'));
-                    await showResolveAppealModal(appealId);
-                });
-            });
-            
-            document.querySelectorAll('.btn_reject').forEach(btn => {
-                btn.addEventListener('click', async () => {
-                    const appealId = parseInt(btn.getAttribute('data-appeal-id'));
-                    await showRejectAppealModal(appealId);
-                });
-            });
-        } else {
-            appealsList.innerHTML = '<div class="admin_empty_state">Апелляций не найдено</div>';
-        }
-    } catch (error) {
-        console.error('Ошибка при загрузке апелляций:', error);
-        alert('Ошибка при загрузке апелляций');
-    }
-}
-
-// Функция начала рассмотрения апелляции
-async function reviewAppeal(appealId) {
-    try {
-        const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/admin/appeals/${appealId}/review`, {
-            method: 'POST'
-        });
-        
-        if (!response.ok) {
-            throw new Error('Ошибка при начале рассмотрения');
-        }
-        
-        alert('Рассмотрение апелляции начато');
-        loadAdminAppeals();
-    } catch (error) {
-        console.error('Ошибка:', error);
-        alert('Ошибка при начале рассмотрения апелляции');
-    }
-}
-
-// Функция показа модального окна для разрешения апелляции
-async function showResolveAppealModal(appealId) {
-    const resolution = prompt('Выберите решение:\n1. refund_buyer - Возврат покупателю\n2. confirm_seller - Подтвердить в пользу продавца\n3. cancel - Отменить сделку\n\nВведите номер (1, 2 или 3):');
-    
-    if (!resolution) return;
-    
-    let resolutionType = null;
-    if (resolution === '1') resolutionType = 'refund_buyer';
-    else if (resolution === '2') resolutionType = 'confirm_seller';
-    else if (resolution === '3') resolutionType = 'cancel';
-    else {
-        alert('Неверный выбор');
-        return;
-    }
-    
-    const comment = prompt('Комментарий (необязательно):') || null;
-    
-    try {
-        const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/admin/appeals/${appealId}/resolve`, {
-            method: 'POST',
-            body: JSON.stringify({
-                resolution: resolutionType,
-                admin_comment: comment
-            })
-        });
-        
-        if (!response.ok) {
-            throw new Error('Ошибка при разрешении апелляции');
-        }
-        
-        alert('Апелляция успешно разрешена');
-        loadAdminAppeals();
-    } catch (error) {
-        console.error('Ошибка:', error);
-        alert('Ошибка при разрешении апелляции');
-    }
-}
-
-// Функция показа модального окна для отклонения апелляции
-async function showRejectAppealModal(appealId) {
-    const comment = prompt('Причина отклонения (необязательно):') || null;
-    
-    if (comment === null && !confirm('Вы уверены, что хотите отклонить апелляцию без комментария?')) {
-        return;
-    }
-    
-    try {
-        const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/admin/appeals/${appealId}/reject`, {
-            method: 'POST',
-            body: JSON.stringify({
-                admin_comment: comment
-            })
-        });
-        
-        if (!response.ok) {
-            throw new Error('Ошибка при отклонении апелляции');
-        }
-        
-        alert('Апелляция отклонена');
-        loadAdminAppeals();
-    } catch (error) {
-        console.error('Ошибка:', error);
-        alert('Ошибка при отклонении апелляции');
     }
 }
