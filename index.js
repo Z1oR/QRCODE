@@ -1635,6 +1635,18 @@ function openAdDetailsScreen(ad, userAction = 'buy') {
         purchaseInfo.innerHTML = `<span class="purchase_info_text">Вы получите: <span id="fiat-amount">0.00</span> RUB</span>`;
     }
     
+    // Показываем/скрываем форму реквизитов в зависимости от действия
+    const buyerPaymentDetails = document.getElementById('buyer-payment-details');
+    if (buyerPaymentDetails) {
+        if (userAction === 'sell') {
+            // Для продажи показываем форму реквизитов для получения денег
+            buyerPaymentDetails.style.display = 'block';
+        } else {
+            // Для покупки скрываем (реквизиты продавца будут показаны на экране оплаты)
+            buyerPaymentDetails.style.display = 'none';
+        }
+    }
+    
     // Заполняем данные объявления
     const adCard = document.getElementById('ad-details-card');
     if (adCard) {
@@ -1895,15 +1907,35 @@ document.addEventListener('DOMContentLoaded', () => {
                     cryptoAmount = purchaseAmount;
                 }
                 
+                // Собираем реквизиты покупателя (если это продажа)
+                let buyerBankName = null;
+                let buyerPaymentDetails = null;
+                
+                if (userAction === 'sell') {
+                    buyerBankName = document.getElementById('buyer-bank-name')?.value?.trim();
+                    buyerPaymentDetails = document.getElementById('buyer-payment-details')?.value?.trim();
+                    
+                    // Проверяем, что реквизиты указаны
+                    if (!buyerBankName || !buyerPaymentDetails) {
+                        alert('Пожалуйста, укажите банк и реквизиты для получения денег');
+                        return;
+                    }
+                }
+                
                 const transactionData = {
                     ad_id: selectedAd.Id,
                     crypto_currency: selectedAd.crypto_currency,
                     crypto_amount: cryptoAmount,
-                    fiat_amount: fiatAmount
+                    fiat_amount: fiatAmount,
+                    buyer_bank_name: buyerBankName,
+                    buyer_payment_details: buyerPaymentDetails
                 };
                 
                 const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/transactions`, {
                     method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
                     body: JSON.stringify(transactionData)
                 });
                 
@@ -2399,6 +2431,12 @@ function displayPendingTransactions(transactions) {
                         <span>Цена:</span>
                         <span>${transaction.price.toFixed(2)} RUB</span>
                     </div>
+                    ${transaction.buyer_bank_name && transaction.buyer_payment_details ? `
+                    <div class="notification_detail_row">
+                        <span>Реквизиты покупателя:</span>
+                        <span>${transaction.buyer_bank_name} - ${transaction.buyer_payment_details}</span>
+                    </div>
+                    ` : ''}
                 </div>
             </div>
             <div class="notification_payment_details" id="payment-details-${transaction.id}" style="display: none;">
