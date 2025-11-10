@@ -2819,4 +2819,349 @@ body {
 .preview_screen .preview_container .footer_preview .footer_btn button:active {
   transform: translateY(0);
   box-shadow: 0 6px 20px rgba(0, 200, 100, 0.4), 0 3px 10px rgba(0, 0, 0, 0.3);
+}
+
+.my_transactions_screen {
+  width: 100%;
+  min-height: 100vh;
+  background: linear-gradient(180deg, #0a0a0b 0%, #141416 50%, #1a1a1c 100%);
+  padding: 20px;
+  padding-bottom: 40px;
+  animation: fadeIn 0.3s ease-out;
+}
+.my_transactions_screen .my_transactions_container {
+  max-width: 100%;
+  margin: 0 auto;
+}
+.my_transactions_screen .my_transactions_container .my_transactions_header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.my_transactions_screen .my_transactions_container .my_transactions_header .back_btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(27, 27, 29, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.my_transactions_screen .my_transactions_container .my_transactions_header .back_btn:hover {
+  background: rgb(27, 27, 29);
+  transform: translateX(-2px);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+.my_transactions_screen .my_transactions_container .my_transactions_header .back_btn:active {
+  transform: translateX(0);
+}
+.my_transactions_screen .my_transactions_container .my_transactions_header .my_transactions_title {
+  font-size: 24px;
+  font-weight: 700;
+  color: white;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+.my_transactions_screen .my_transactions_container .transactions_list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.my_transactions_screen .my_transactions_container .transactions_list .transaction_card {
+  background: linear-gradient(135deg, rgba(27, 27, 29, 0.95) 0%, rgba(42, 42, 43, 0.9) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+.my_transactions_screen .my_transactions_container .transactions_list .transaction_card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+.my_transactions_screen .my_transactions_container .transactions_list .transaction_card .transaction_card_header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  gap: 12px;
+}
+.my_transactions_screen .my_transactions_container .transactions_list .transaction_card .transaction_card_header .transaction_role_badge {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.my_transactions_screen .my_transactions_container .transactions_list .transaction_card .transaction_card_header .transaction_role_badge.badge_buyer {
+  background: rgba(0, 128, 255, 0.2);
+  color: #0080ff;
+  border: 1px solid rgba(0, 128, 255, 0.3);
+}
+.my_transactions_screen .my_transactions_container .transactions_list .transaction_card .transaction_card_header .transaction_role_badge.badge_seller {
+  background: rgba(0, 200, 100, 0.2);
+  color: #00c864;
+  border: 1px solid rgba(0, 200, 100, 0.3);
+}
+.my_transactions_screen .my_transactions_container .transactions_list .transaction_card .transaction_card_header .transaction_status_badge {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.my_transactions_screen .my_transactions_container .transactions_list .transaction_card .transaction_card_header .transaction_status_badge.status_pending {
+  background: rgba(255, 193, 7, 0.2);
+  color: #ffc107;
+  border: 1px solid rgba(255, 193, 7, 0.3);
+}
+.my_transactions_screen .my_transactions_container .transactions_list .transaction_card .transaction_card_header .transaction_status_badge.status_paid {
+  background: rgba(0, 128, 255, 0.2);
+  color: #0080ff;
+  border: 1px solid rgba(0, 128, 255, 0.3);
+}
+.my_transactions_screen .my_transactions_container .transactions_list .transaction_card .transaction_card_header .transaction_status_badge.status_confirmed {
+  background: rgba(0, 200, 100, 0.2);
+  color: #00c864;
+  border: 1px solid rgba(0, 200, 100, 0.3);
+}
+.my_transactions_screen .my_transactions_container .transactions_list .transaction_card .transaction_card_header .transaction_status_badge.status_completed {
+  background: rgba(0, 200, 100, 0.2);
+  color: #00c864;
+  border: 1px solid rgba(0, 200, 100, 0.3);
+}
+.my_transactions_screen .my_transactions_container .transactions_list .transaction_card .transaction_card_header .transaction_status_badge.status_cancelled {
+  background: rgba(220, 53, 69, 0.2);
+  color: #dc3545;
+  border: 1px solid rgba(220, 53, 69, 0.3);
+}
+.my_transactions_screen .my_transactions_container .transactions_list .transaction_card .transaction_card_content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.my_transactions_screen .my_transactions_container .transactions_list .transaction_card .transaction_card_content .transaction_card_row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+.my_transactions_screen .my_transactions_container .transactions_list .transaction_card .transaction_card_content .transaction_card_row:last-child {
+  border-bottom: none;
+}
+.my_transactions_screen .my_transactions_container .transactions_list .transaction_card .transaction_card_content .transaction_card_row .transaction_card_label {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 500;
+}
+.my_transactions_screen .my_transactions_container .transactions_list .transaction_card .transaction_card_content .transaction_card_row .transaction_card_value {
+  font-size: 15px;
+  color: white;
+  font-weight: 600;
+  text-align: right;
+}
+.my_transactions_screen .my_transactions_container .transactions_list .transaction_card .transaction_card_actions {
+  display: flex;
+  gap: 12px;
+}
+.my_transactions_screen .my_transactions_container .transactions_list .transaction_card .transaction_card_actions .transaction_view_btn {
+  flex: 1;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, rgba(0, 128, 255, 0.2) 0%, rgba(0, 102, 204, 0.15) 100%);
+  border: 1px solid rgba(0, 128, 255, 0.3);
+  border-radius: 12px;
+  color: #0080ff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.my_transactions_screen .my_transactions_container .transactions_list .transaction_card .transaction_card_actions .transaction_view_btn:hover {
+  background: linear-gradient(135deg, rgba(0, 128, 255, 0.3) 0%, rgba(0, 102, 204, 0.25) 100%);
+  border-color: rgba(0, 128, 255, 0.5);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 128, 255, 0.2);
+}
+.my_transactions_screen .my_transactions_container .transactions_list .transaction_card .transaction_card_actions .transaction_view_btn:active {
+  transform: translateY(0);
+}
+
+.transaction_details_screen {
+  width: 100%;
+  min-height: 100vh;
+  background: linear-gradient(180deg, #0a0a0b 0%, #141416 50%, #1a1a1c 100%);
+  padding: 20px;
+  padding-bottom: 40px;
+  animation: fadeIn 0.3s ease-out;
+}
+.transaction_details_screen .transaction_details_container {
+  max-width: 100%;
+  margin: 0 auto;
+}
+.transaction_details_screen .transaction_details_container .transaction_details_header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.transaction_details_screen .transaction_details_container .transaction_details_header .back_btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(27, 27, 29, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.transaction_details_screen .transaction_details_container .transaction_details_header .back_btn:hover {
+  background: rgb(27, 27, 29);
+  transform: translateX(-2px);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+.transaction_details_screen .transaction_details_container .transaction_details_header .back_btn:active {
+  transform: translateX(0);
+}
+.transaction_details_screen .transaction_details_container .transaction_details_header .transaction_details_title {
+  font-size: 24px;
+  font-weight: 700;
+  color: white;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+.transaction_details_screen .transaction_details_container .transaction_details_card {
+  background: linear-gradient(135deg, rgba(27, 27, 29, 0.95) 0%, rgba(42, 42, 43, 0.9) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  margin-bottom: 24px;
+}
+.transaction_details_screen .transaction_details_container .transaction_details_card .transaction_details_info {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.transaction_details_screen .transaction_details_container .transaction_details_card .transaction_details_info .transaction_details_row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+.transaction_details_screen .transaction_details_container .transaction_details_card .transaction_details_info .transaction_details_row:last-child {
+  border-bottom: none;
+}
+.transaction_details_screen .transaction_details_container .transaction_details_card .transaction_details_info .transaction_details_row .transaction_details_label {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 500;
+}
+.transaction_details_screen .transaction_details_container .transaction_details_card .transaction_details_info .transaction_details_row .transaction_details_value {
+  font-size: 15px;
+  color: white;
+  font-weight: 600;
+  text-align: right;
+}
+.transaction_details_screen .transaction_details_container .transaction_details_card .transaction_details_info .transaction_details_row .transaction_details_value.status_pending {
+  color: #ffc107;
+}
+.transaction_details_screen .transaction_details_container .transaction_details_card .transaction_details_info .transaction_details_row .transaction_details_value.status_paid {
+  color: #0080ff;
+}
+.transaction_details_screen .transaction_details_container .transaction_details_card .transaction_details_info .transaction_details_row .transaction_details_value.status_confirmed {
+  color: #00c864;
+}
+.transaction_details_screen .transaction_details_container .transaction_details_card .transaction_details_info .transaction_details_row .transaction_details_value.status_completed {
+  color: #00c864;
+}
+.transaction_details_screen .transaction_details_container .transaction_details_card .transaction_details_info .transaction_details_row .transaction_details_value.status_cancelled {
+  color: #dc3545;
+}
+.transaction_details_screen .transaction_details_container .transaction_details_card .transaction_details_info .transaction_details_section {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 2px solid rgba(255, 255, 255, 0.1);
+}
+.transaction_details_screen .transaction_details_container .transaction_details_card .transaction_details_info .transaction_details_section .transaction_details_section_title {
+  font-size: 16px;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 16px;
+  letter-spacing: -0.3px;
+}
+.transaction_details_screen .transaction_details_container .transaction_actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.transaction_details_screen .transaction_details_container .transaction_actions .transaction_action_btn {
+  width: 100%;
+  padding: 15px 20px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+  font-family: "Inter", sans-serif;
+}
+.transaction_details_screen .transaction_details_container .transaction_actions .transaction_action_btn.btn_primary {
+  background: linear-gradient(135deg, #00c864 0%, #00a854 100%);
+  color: white;
+  box-shadow: 0 4px 16px rgba(0, 200, 100, 0.3);
+}
+.transaction_details_screen .transaction_details_container .transaction_actions .transaction_action_btn.btn_primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 200, 100, 0.4);
+}
+.transaction_details_screen .transaction_details_container .transaction_actions .transaction_action_btn.btn_primary:active {
+  transform: translateY(0);
+}
+.transaction_details_screen .transaction_details_container .transaction_actions .transaction_action_btn.btn_secondary {
+  background: linear-gradient(135deg, rgba(0, 128, 255, 0.2) 0%, rgba(0, 102, 204, 0.15) 100%);
+  border: 1px solid rgba(0, 128, 255, 0.3);
+  color: #0080ff;
+}
+.transaction_details_screen .transaction_details_container .transaction_actions .transaction_action_btn.btn_secondary:hover {
+  background: linear-gradient(135deg, rgba(0, 128, 255, 0.3) 0%, rgba(0, 102, 204, 0.25) 100%);
+  border-color: rgba(0, 128, 255, 0.5);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 128, 255, 0.2);
+}
+.transaction_details_screen .transaction_details_container .transaction_actions .transaction_action_btn.btn_secondary:active {
+  transform: translateY(0);
+}
+.transaction_details_screen .transaction_details_container .transaction_actions .transaction_action_btn.btn_danger {
+  background: linear-gradient(135deg, rgba(220, 53, 69, 0.2) 0%, rgba(200, 35, 51, 0.15) 100%);
+  border: 1px solid rgba(220, 53, 69, 0.3);
+  color: #dc3545;
+}
+.transaction_details_screen .transaction_details_container .transaction_actions .transaction_action_btn.btn_danger:hover {
+  background: linear-gradient(135deg, rgba(220, 53, 69, 0.3) 0%, rgba(200, 35, 51, 0.25) 100%);
+  border-color: rgba(220, 53, 69, 0.5);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.2);
+}
+.transaction_details_screen .transaction_details_container .transaction_actions .transaction_action_btn.btn_danger:active {
+  transform: translateY(0);
+}
+.transaction_details_screen .transaction_details_container .transaction_actions .transaction_action_btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
 }/*# sourceMappingURL=style.css.map */
