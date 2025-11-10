@@ -196,19 +196,19 @@ body {
 .main__screen .container__main .quick_actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 32px;
+  gap: 10px;
+  margin-bottom: 24px;
 }
 .main__screen .container__main .quick_actions .action_btn {
   background: linear-gradient(135deg, rgba(27, 27, 29, 0.95) 0%, rgba(42, 42, 43, 0.9) 100%);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 18px;
-  padding: 20px;
+  border-radius: 16px;
+  padding: 14px 16px;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   position: relative;
   overflow: hidden;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
@@ -239,32 +239,39 @@ body {
   transform: translateY(-2px);
 }
 .main__screen .container__main .quick_actions .action_btn .action_btn_icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   transition: all 0.3s;
 }
+.main__screen .container__main .quick_actions .action_btn .action_btn_icon svg {
+  width: 20px;
+  height: 20px;
+}
 .main__screen .container__main .quick_actions .action_btn .action_btn_content {
   flex: 1;
   text-align: left;
+  min-width: 0;
 }
 .main__screen .container__main .quick_actions .action_btn .action_btn_content .action_btn_title {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
   color: white;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
+  line-height: 1.2;
 }
 .main__screen .container__main .quick_actions .action_btn .action_btn_content .action_btn_subtitle {
-  font-size: 13px;
+  font-size: 12px;
   color: rgba(255, 255, 255, 0.6);
   font-weight: 500;
+  line-height: 1.2;
 }
 .main__screen .container__main .quick_actions .action_btn .action_btn_arrow {
-  font-size: 24px;
+  font-size: 20px;
   color: rgba(255, 255, 255, 0.4);
   transition: transform 0.3s;
   flex-shrink: 0;
