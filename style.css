@@ -1859,46 +1859,60 @@ body {
   font-weight: 600;
 }
 .ad_details_screen .ad_details_container .purchase_section .payment_details_section {
-  margin-top: 20px;
-  margin-bottom: 20px;
+  margin-top: 16px;
+  margin-bottom: 16px;
+}
+.ad_details_screen .ad_details_container .purchase_section .payment_details_section .purchase_label {
+  margin-bottom: 12px;
 }
 .ad_details_screen .ad_details_container .purchase_section .payment_details_section .payment_details_form {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
+.ad_details_screen .ad_details_container .purchase_section .payment_details_section .payment_details_form .payment_details_field {
+  width: 100%;
+}
 .ad_details_screen .ad_details_container .purchase_section .payment_details_section .payment_details_form .payment_details_field .payment_details_input {
   width: 100%;
-  padding: 12px 16px;
-  background: rgba(27, 27, 29, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
+  padding: 14px 16px;
+  background: rgba(27, 27, 29, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
   color: white;
   font-size: 15px;
   font-weight: 500;
   outline: none;
-  transition: all 0.3s;
+  transition: all 0.3s ease;
   box-sizing: border-box;
+}
+.ad_details_screen .ad_details_container .purchase_section .payment_details_section .payment_details_form .payment_details_field .payment_details_input:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+  background: rgba(27, 27, 29, 0.95);
 }
 .ad_details_screen .ad_details_container .purchase_section .payment_details_section .payment_details_form .payment_details_field .payment_details_input:focus {
   border-color: #00c864;
-  background: rgba(27, 27, 29, 0.95);
-  box-shadow: 0 0 0 3px rgba(0, 200, 100, 0.1);
+  background: rgb(27, 27, 29);
+  box-shadow: 0 0 0 3px rgba(0, 200, 100, 0.15);
 }
 .ad_details_screen .ad_details_container .purchase_section .payment_details_section .payment_details_form .payment_details_field .payment_details_input::-moz-placeholder {
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.5);
 }
 .ad_details_screen .ad_details_container .purchase_section .payment_details_section .payment_details_form .payment_details_field .payment_details_input::placeholder {
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.5);
 }
 .ad_details_screen .ad_details_container .purchase_section .payment_details_section .payment_details_form .payment_details_field .payment_details_input.error {
   border-color: #ff4444;
-  background: rgba(255, 68, 68, 0.1);
+  background: rgba(255, 68, 68, 0.15);
+}
+.ad_details_screen .ad_details_container .purchase_section .payment_details_section .payment_details_form .payment_details_field .payment_details_input.error:hover {
+  border-color: #ff6666;
+  background: rgba(255, 68, 68, 0.2);
 }
 .ad_details_screen .ad_details_container .purchase_section .payment_details_section .payment_details_form .payment_details_field .payment_details_input.error:focus {
   border-color: #ff4444;
-  background: rgba(255, 68, 68, 0.15);
-  box-shadow: 0 0 0 3px rgba(255, 68, 68, 0.1);
+  background: rgba(255, 68, 68, 0.2);
+  box-shadow: 0 0 0 3px rgba(255, 68, 68, 0.2);
 }
 .ad_details_screen .ad_details_container .purchase_section .payment_details_section .payment_details_form.error {
   color: #ff4444;
