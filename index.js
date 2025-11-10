@@ -375,15 +375,50 @@ async function makeAuthenticatedRequest(url, options = {}) {
     
     // Если получили 401, токены могли истечь - пытаемся обновить
     if (response.status === 401) {
+        console.log('Получен 401, пытаемся обновить токен...');
         try {
             // Получаем refresh token
             const refreshTokenValue = refreshToken || getCookie('REFRESH_TOKEN');
             
+            console.log('Проверка refresh token:', {
+                hasRefreshToken: !!refreshToken,
+                hasCookieRefreshToken: !!getCookie('REFRESH_TOKEN'),
+                refreshTokenValue: !!refreshTokenValue
+            });
+            
             if (!refreshTokenValue) {
-                console.error('Refresh token не найден');
+                console.error('Refresh token не найден, пытаемся пройти аутентификацию заново...');
+                // Если refresh token нет, пытаемся пройти аутентификацию заново
+                try {
+                    await authenticateWithTelegram();
+                    const newToken = accessToken || getCookie('ACCESS_TOKEN');
+                    if (newToken) {
+                        // Создаем новый объект options с обновленным токеном
+                        const retryOptions = {
+                            method: options.method || 'GET',
+                            credentials: 'include',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                ...options.headers,
+                                'Authorization': `Bearer ${newToken}`
+                            }
+                        };
+                        
+                        // Копируем body, если он есть
+                        if (options.body) {
+                            retryOptions.body = options.body;
+                        }
+                        
+                        console.log('Токен получен после повторной аутентификации, повторяем запрос');
+                        return await fetch(url, retryOptions);
+                    }
+                } catch (authError) {
+                    console.error('Ошибка при повторной аутентификации:', authError);
+                }
                 return response;
             }
             
+            console.log('Отправка запроса на обновление токена...');
             const refreshResponse = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
                 method: 'POST',
                 credentials: 'include',
@@ -393,38 +428,88 @@ async function makeAuthenticatedRequest(url, options = {}) {
                 }
             });
             
+            console.log('Ответ на обновление токена:', refreshResponse.status);
+            
             if (refreshResponse.ok) {
                 const tokenData = await refreshResponse.json();
+                console.log('Токены получены от сервера:', {
+                    hasAccessToken: !!tokenData.access_token,
+                    hasRefreshToken: !!tokenData.refresh_token
+                });
+                
                 // Обновляем токены
                 accessToken = tokenData.access_token;
                 refreshToken = tokenData.refresh_token;
                 
-                console.log('Токены обновлены, повторяем запрос');
+                console.log('Токены обновлены в памяти, повторяем запрос');
+                console.log('Новый access token (первые 20 символов):', accessToken ? accessToken.substring(0, 20) + '...' : 'null');
                 
-                // Повторяем оригинальный запрос с новым токеном
-                defaultOptions.headers['Authorization'] = `Bearer ${accessToken}`;
-                const retryResponse = await fetch(url, { ...defaultOptions, ...options });
+                // Создаем новый объект options с обновленным токеном
+                // Важно: создаем новый объект, чтобы не мутировать старый
+                const retryOptions = {
+                    method: options.method || defaultOptions.method || 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers,
+                        'Authorization': `Bearer ${accessToken}`
+                    }
+                };
+                
+                // Копируем body, если он есть
+                if (options.body) {
+                    retryOptions.body = options.body;
+                }
+                
+                console.log('Повторный запрос с новым токеном:', {
+                    url,
+                    method: retryOptions.method,
+                    hasAuthorization: !!retryOptions.headers['Authorization'],
+                    authorizationLength: retryOptions.headers['Authorization'] ? retryOptions.headers['Authorization'].length : 0,
+                    hasBody: !!retryOptions.body,
+                    bodyType: typeof retryOptions.body
+                });
+                
+                const retryResponse = await fetch(url, retryOptions);
+                
+                console.log('Ответ на повторный запрос:', retryResponse.status);
                 
                 if (retryResponse.ok) {
                     console.log('Запрос успешно выполнен после обновления токена');
                 } else {
                     console.error('Запрос все еще не прошел после обновления токена:', retryResponse.status);
+                    const errorText = await retryResponse.text().catch(() => '');
+                    console.error('Текст ошибки:', errorText);
                 }
                 
                 return retryResponse;
             } else {
                 const errorText = await refreshResponse.text();
-                console.error('Ошибка обновления токена:', errorText);
+                console.error('Ошибка обновления токена:', refreshResponse.status, errorText);
                 
                 // Если refresh token тоже не работает, пытаемся пройти аутентификацию заново
                 console.log('Попытка повторной аутентификации после неудачного обновления токена...');
                 try {
                     await authenticateWithTelegram();
-                    token = accessToken || getCookie('ACCESS_TOKEN');
-                    if (token) {
-                        defaultOptions.headers['Authorization'] = `Bearer ${token}`;
+                    const newToken = accessToken || getCookie('ACCESS_TOKEN');
+                    if (newToken) {
+                        const retryOptions = {
+                            method: options.method || 'GET',
+                            credentials: 'include',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                ...options.headers,
+                                'Authorization': `Bearer ${newToken}`
+                            }
+                        };
+                        
+                        // Копируем body, если он есть
+                        if (options.body) {
+                            retryOptions.body = options.body;
+                        }
+                        
                         console.log('Токен получен после повторной аутентификации, повторяем запрос');
-                        return await fetch(url, { ...defaultOptions, ...options });
+                        return await fetch(url, retryOptions);
                     }
                 } catch (authError) {
                     console.error('Ошибка при повторной аутентификации:', authError);
