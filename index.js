@@ -1,8 +1,14 @@
 // API базовый URL
-const API_BASE_URL = 'https://82.97.240.215';
+// ВАЖНО: Для Telegram Mini App нужен HTTPS!
+// Настройте HTTPS на сервере (см. backend/HTTPS_SETUP.md)
+// Временно можно использовать самоподписанный сертификат или ngrok для тестирования
+const API_BASE_URL = 'https://82.97.240.215';  // HTTPS вместо HTTP
 
 // Инициализация Telegram Web App
 let tg = null;
+
+// Глобальная переменная для данных пользователя
+let userData = null;
 
 // Функция инициализации Telegram Web App
 async function initTelegramWebApp() {
@@ -112,23 +118,19 @@ async function authenticateWithTelegram() {
             return;
         }
 
-        console.log('Начинаем аутентификацию...');
-        console.log('API URL:', `${API_BASE_URL}/api/auth/telegram`);
-
-        // Отправляем initData на сервер для аутентификации
         const response = await fetch(`${API_BASE_URL}/api/auth/telegram`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            credentials: 'include', // Важно для работы с cookies
-            mode: 'cors', // Явно указываем CORS режим
+            credentials: 'include', 
+            mode: 'cors', 
             body: JSON.stringify({
                 init_data: initData
             })
         });
 
-        console.log('Ответ сервера:', response.status, response.statusText);
+        
 
         if (!response.ok) {
             const errorText = await response.text();
@@ -139,9 +141,9 @@ async function authenticateWithTelegram() {
         const data = await response.json();
         console.log('Аутентификация успешна', data);
         
-        // Токены автоматически установлены в cookies сервером
-        // Можно загрузить данные пользователя
-        await loadUserData();
+        // Сохраняем данные пользователя в глобальную переменную
+        userData = data;
+        
         
     } catch (error) {
         console.error('Ошибка при аутентификации:', error);
@@ -150,42 +152,7 @@ async function authenticateWithTelegram() {
             name: error.name,
             stack: error.stack
         });
-        
-        // Показываем пользователю понятное сообщение
-        if (error.message.includes('Failed to fetch')) {
-            console.error('Проблема с подключением к серверу. Проверьте:');
-            console.error('1. Запущен ли сервер на', API_BASE_URL);
-            console.error('2. Открыт ли порт 8000 в firewall');
-            console.error('3. Правильно ли настроен CORS на сервере');
-        }
-    }
-}
-
-// Функция для загрузки данных пользователя
-async function loadUserData() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
-            method: 'GET',
-            credentials: 'include', // Важно для отправки cookies
-        });
-
-        if (!response.ok) {
-            if (response.status === 401) {
-                // Если не авторизован, пытаемся аутентифицироваться
-                await authenticateWithTelegram();
-                return;
-            }
-            throw new Error('Ошибка загрузки данных пользователя');
-        }
-
-        const user = await response.json();
-        console.log('Данные пользователя:', user);
-        
-        // Здесь можно обновить UI с данными пользователя
-        // Например, отобразить имя пользователя
-        
-    } catch (error) {
-        console.error('Ошибка при загрузке данных пользователя:', error);
+    
     }
 }
 
@@ -221,16 +188,16 @@ async function makeAuthenticatedRequest(url, options = {}) {
     return response;
 }
 
-// Аутентификация теперь запускается автоматически в initTelegramWebApp()
+
 
 let main__screen = document.querySelector("#main__screen")
 let buy_screen = document.querySelector(".buy__screen")
-
+let create_ads_screen = document.querySelector(".create_ads_screen")
 // ------------
 
 let btn_buy_crypto = document.querySelector("#btn-for-buycrpyto")
 let btn_sell_crypto = document.querySelector("#btn-for-sellcrpyto")
-
+let btn_my_ads = document.querySelector("#create_ads")
 // ------------
 
 btn_buy_crypto.addEventListener("click", () => {
@@ -239,6 +206,11 @@ btn_buy_crypto.addEventListener("click", () => {
     buy_screen.style.display = "block"
 })
 
+btn_my_ads.addEventListener("click", () => {
+    main__screen.style.display = "none"
+    buy_screen.style.display = "none"
+    create_ads_screen.style.display = "block"
+})
 // ------------
 // Выпадающее меню для фильтра "Крипта"
 
@@ -295,3 +267,121 @@ if (document.readyState === 'loading') {
     initCryptoFilter()
 }
 
+// Segmented Control для создания объявления
+function initSegmentedControl() {
+    const segmentedBtns = document.querySelectorAll('.segmented_btn')
+    if (!segmentedBtns.length) return
+    
+    segmentedBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            // Убираем активный класс со всех кнопок
+            segmentedBtns.forEach(b => b.classList.remove('segmented_btn--active'))
+            // Добавляем активный класс на нажатую кнопку
+            btn.classList.add('segmented_btn--active')
+        })
+    })
+}
+
+// Инициализация segmented control
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSegmentedControl)
+} else {
+    initSegmentedControl()
+}
+
+// Crypto Select Dropdown
+function initCryptoSelect() {
+    const cryptoSelectRow = document.querySelector('#crypto-select-row')
+    const cryptoDropdown = document.querySelector('#crypto-dropdown')
+    const selectedCrypto = document.querySelector('#selected-crypto')
+    const cryptoOptions = document.querySelectorAll('.crypto_option')
+    const checkUsdt = document.querySelector('#check-usdt')
+    const checkTon = document.querySelector('#check-ton')
+    const priceCryptoName = document.querySelector('#price-crypto-name')
+    const priceCryptoSuffix = document.querySelector('#price-crypto-suffix')
+    const amountCryptoSuffix = document.querySelector('#amount-crypto-suffix')
+    const balanceCrypto = document.querySelector('#balance-crypto')
+    const chevron = cryptoSelectRow?.querySelector('.chevron')
+    
+    if (!cryptoSelectRow || !cryptoDropdown) {
+        console.warn('Crypto select elements not found')
+        return
+    }
+    
+    // Открытие/закрытие выпадающего списка
+    cryptoSelectRow.addEventListener('click', (e) => {
+        e.stopPropagation()
+        const isOpen = cryptoDropdown.classList.contains('dropdown_open')
+        cryptoDropdown.classList.toggle('dropdown_open')
+        
+        // Анимация chevron
+        if (chevron) {
+            if (!isOpen) {
+                chevron.style.transform = 'rotate(90deg) translateX(3px)'
+            } else {
+                chevron.style.transform = 'translateX(0)'
+            }
+        }
+    })
+    
+    // Выбор криптовалюты
+    cryptoOptions.forEach(option => {
+        option.addEventListener('click', (e) => {
+            e.stopPropagation()
+            const crypto = option.getAttribute('data-crypto')
+            
+            if (!crypto) return
+            
+            // Обновляем выбранную криптовалюту
+            if (selectedCrypto) {
+                selectedCrypto.textContent = crypto
+            }
+            
+            // Обновляем галочки
+            if (crypto === 'USDT') {
+                if (checkUsdt) checkUsdt.style.display = 'inline-block'
+                if (checkTon) checkTon.style.display = 'none'
+            } else if (crypto === 'TON') {
+                if (checkUsdt) checkUsdt.style.display = 'none'
+                if (checkTon) checkTon.style.display = 'inline-block'
+            }
+            
+            // Обновляем текст в интерфейсе
+            if (priceCryptoName) {
+                priceCryptoName.textContent = `1 ${crypto}`
+            }
+            if (priceCryptoSuffix) {
+                priceCryptoSuffix.textContent = crypto
+            }
+            if (amountCryptoSuffix) {
+                amountCryptoSuffix.textContent = crypto
+            }
+            if (balanceCrypto) {
+                balanceCrypto.textContent = crypto
+            }
+            
+            // Закрываем выпадающий список
+            cryptoDropdown.classList.remove('dropdown_open')
+            if (chevron) {
+                chevron.style.transform = 'translateX(0)'
+            }
+        })
+    })
+    
+    // Закрытие при клике вне списка
+    document.addEventListener('click', (e) => {
+        if (cryptoSelectRow && !cryptoSelectRow.contains(e.target)) {
+            cryptoDropdown.classList.remove('dropdown_open')
+            if (chevron) {
+                chevron.style.transform = 'translateX(0)'
+            }
+        }
+    })
+}
+
+// Инициализация crypto select
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initCryptoSelect)
+} else {
+    initCryptoSelect()
+}
