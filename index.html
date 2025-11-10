@@ -130,7 +130,7 @@
             <!-- Header -->
             <div class="create_ads_header">
                 <h1 class="create_ads_title">Создайте объявление</h1>
-                <span class="create_ads_progress">1/4</span>
+                <span class="create_ads_progress">1/2</span>
             </div>
 
             <!-- Я хочу section -->
@@ -173,10 +173,10 @@
 
             <!-- Percentage of Market Price -->
             <div class="price_section">
-                <label class="section_header">% ОТ РЫНОЧНОЙ ЦЕНЫ (<span id="price-crypto-name">1 USDT</span>)</label>
+                <label class="section_header">Фикс цена за (<span id="price-crypto-name">1 USDT</span>)</label>
                 <div class="input_field">
-                    <input type="text" class="single_input" id="price-range" placeholder="80 ~ 120" />
-                    <span class="input_suffix" id="price-crypto-suffix">%</span>
+                    <input type="text" class="single_input" id="price-range" placeholder="81,13" />
+                    <span class="input_suffix" id="price-crypto-suffix">RUB</span>
                 </div>
                 <div class="info_text">
                     <div>Рыночная цена: <span id="market-price">81,13</span> ₽</div>
@@ -213,10 +213,161 @@
                 <div class="hint_text">Макс. можно не указывать.</div>
             </div>
 
+            <!-- Payment Details Section (only for selling) -->
+            <div class="payment_details_section" id="payment-details-section" style="display: block;">
+                <label class="section_header">РЕКВИЗИТЫ ДЛЯ ОПЛАТЫ</label>
+                
+                <!-- Payment Method Selection -->
+                <div class="payment_method_selector">
+                    <div class="payment_method_item" data-method="tinkoff">
+                        <div class="payment_method_icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <rect x="2" y="4" width="20" height="16" rx="3" stroke="currentColor" stroke-width="2"/>
+                                <path d="M2 10H22" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                        </div>
+                        <div class="payment_method_info">
+                            <div class="payment_method_name">Т-Банк (Тинькофф)</div>
+                            <div class="payment_method_desc">Карта или номер телефона</div>
+                        </div>
+                        <div class="payment_method_check">
+                            <span class="checkmark">✓</span>
+                        </div>
+                    </div>
+                    <div class="payment_method_item" data-method="sber">
+                        <div class="payment_method_icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <rect x="2" y="4" width="20" height="16" rx="3" stroke="currentColor" stroke-width="2"/>
+                                <path d="M2 10H22" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                        </div>
+                        <div class="payment_method_info">
+                            <div class="payment_method_name">Сбербанк</div>
+                            <div class="payment_method_desc">Карта или номер телефона</div>
+                        </div>
+                        <div class="payment_method_check">
+                            <span class="checkmark">✓</span>
+                        </div>
+                    </div>
+                    <div class="payment_method_item" data-method="raiffeisen">
+                        <div class="payment_method_icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <rect x="2" y="4" width="20" height="16" rx="3" stroke="currentColor" stroke-width="2"/>
+                                <path d="M2 10H22" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                        </div>
+                        <div class="payment_method_info">
+                            <div class="payment_method_name">Райффайзен</div>
+                            <div class="payment_method_desc">Карта или номер телефона</div>
+                        </div>
+                        <div class="payment_method_check">
+                            <span class="checkmark">✓</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Details Input -->
+                <div class="payment_input_wrapper">
+                    <div class="input_field">
+                        <input type="text" class="single_input" id="payment-details" placeholder="Введите номер карты или телефона" />
+                    </div>
+                    <div class="hint_text">Укажите реквизиты для получения платежей. Эти данные увидит покупатель.</div>
+                </div>
+            </div>
+
             <div class="footer_create_ads">
                 <div class="footer_btn">
-                    <button>
+                    <button id="next-btn">
                         Далее
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Preview Screen -->
+    <div class="preview_screen" style="display: none;">
+        <div class="preview_container">
+            <!-- Header -->
+            <div class="preview_header">
+                <button class="back_btn" id="back-from-preview">
+                    <span class="back_arrow">‹</span>
+                </button>
+                <h1 class="preview_title">Предпросмотр</h1>
+                <span class="preview_progress">2/4</span>
+            </div>
+
+            <!-- Preview Card -->
+            <div class="preview_card_wrapper">
+                <div class="preview_label">Так будет выглядеть ваше объявление:</div>
+                
+                <div class="preview_listing_card">
+                    <div class="preview_card_header">
+                        <div class="preview_badge" id="preview-action-badge">ПРОДАЖА</div>
+                        <div class="preview_crypto_pair">
+                            <span class="preview_crypto" id="preview-crypto">USDT</span>
+                            <span class="preview_arrow">→</span>
+                            <span class="preview_currency">RUB</span>
+                        </div>
+                    </div>
+
+                    <div class="preview_price_section">
+                        <div class="preview_price_label">Цена за 1 <span id="preview-price-crypto">USDT</span></div>
+                        <div class="preview_price_value">
+                            <span id="preview-price-amount">0.00</span> ₽
+                        </div>
+                    </div>
+
+                    <div class="preview_details">
+                        <div class="preview_detail_row">
+                            <span class="preview_detail_label">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                    <path d="M8 14.5C4.41 14.5 1.5 11.59 1.5 8C1.5 4.41 4.41 1.5 8 1.5C11.59 1.5 14.5 4.41 14.5 8C14.5 11.59 11.59 14.5 8 14.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M8 5.5V8.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M6 8.5H10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                Доступно
+                            </span>
+                            <span class="preview_detail_value" id="preview-available-amount">0 USDT</span>
+                        </div>
+                        <div class="preview_detail_row">
+                            <span class="preview_detail_label">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                    <path d="M5.5 6.5V3.5C5.5 2.67 6.17 2 7 2H13C13.83 2 14.5 2.67 14.5 3.5V9.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M10.5 9.5H3C2.17 9.5 1.5 10.17 1.5 11V12.5C1.5 13.33 2.17 14 3 14H10.5C11.33 14 12 13.33 12 12.5V11C12 10.17 11.33 9.5 10.5 9.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                Лимиты
+                            </span>
+                            <span class="preview_detail_value" id="preview-limits">500 – 50,000 RUB</span>
+                        </div>
+                        <div class="preview_detail_row">
+                            <span class="preview_detail_label">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                    <path d="M14.5 5.5H1.5C1.22 5.5 1 5.72 1 6V13C1 13.83 1.67 14.5 2.5 14.5H13.5C14.33 14.5 15 13.83 15 13V6C15 5.72 14.78 5.5 14.5 5.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M4 5.5V3.5C4 2.67 4.67 2 5.5 2H10.5C11.33 2 12 2.67 12 3.5V5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                Метод оплаты
+                            </span>
+                            <span class="preview_detail_value">Т-Банк (Тинькофф)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info Section -->
+            <div class="preview_info_box">
+                <div class="preview_info_icon">ℹ️</div>
+                <div class="preview_info_text">
+                    <div class="preview_info_title">Перед публикацией</div>
+                    <div class="preview_info_desc">Убедитесь, что все данные указаны верно. После создания объявления оно станет доступно всем пользователям.</div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="footer_preview">
+                <div class="footer_btn">
+                    <button id="create-listing-btn">
+                        Создать объявление
                     </button>
                 </div>
             </div>
