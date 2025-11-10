@@ -35,7 +35,7 @@ async function initTelegramWebApp() {
         console.log('Telegram WebApp version:', tg.version);
         console.log('Telegram WebApp platform:', tg.platform);
         
-            // Проверяем доступность сервера перед аутентификацией
+        // Проверяем доступность сервера перед аутентификацией
         try {
             console.log('Проверка доступности сервера:', `${API_BASE_URL}/health`);
             // Пробуем сначала HTTPS, если не работает - пробуем HTTP
@@ -44,10 +44,10 @@ async function initTelegramWebApp() {
             
             try {
                 healthCheck = await fetch(`${apiUrl}/health`, {
-                    method: 'GET',
-                    credentials: 'include',
-                    mode: 'cors'
-                });
+                method: 'GET',
+                credentials: 'include',
+                mode: 'cors'
+            });
             } catch (httpsError) {
                 console.warn('HTTPS запрос не прошел, пробуем HTTP...', httpsError);
                 // Пробуем HTTP как fallback
@@ -179,7 +179,7 @@ async function authenticateWithTelegram() {
         }
 
         console.log('Отправка запроса на аутентификацию:', API_BASE_URL);
-        
+
         const response = await fetch(`${API_BASE_URL}/api/auth/telegram`, {
             method: 'POST',
             headers: {
@@ -500,6 +500,7 @@ if (document.readyState === 'loading') {
 
 let main__screen = document.querySelector("#main__screen")
 let buy_screen = document.querySelector(".buy__screen")
+let sell_screen = document.querySelector(".sell__screen")
 let create_ads_screen = document.querySelector(".create_ads_screen")
 // ------------
 
@@ -512,17 +513,37 @@ let btn_create_ads = document.querySelector("#create_ads")
 btn_buy_crypto.addEventListener("click", async () => {
     main__screen.style.display = "none"
     buy_screen.style.display = "block"
+    sell_screen.style.display = "none"
     
     console.log('Экран покупки открыт, загружаем объявления...')
     
-    // Загружаем объявления при открытии экрана покупки
-    const selectedCrypto = document.querySelector('.filter__value')?.textContent || 'TON'
+    // Загружаем объявления при открытии экрана покупки (объявления людей, которые продают)
+    const selectedCrypto = document.querySelector('.buy__screen .filter__value')?.textContent || 'TON'
     console.log('Выбранная криптовалюта:', selectedCrypto)
     
     const ads = await loadAds('sell', selectedCrypto)
     console.log('Объявления загружены, отображаем:', ads.length)
-    displayAds(ads)
+    displayAds(ads, 'buy')
 })
+
+// Обработчик кнопки "Продать криптовалюту"
+if (btn_sell_crypto) {
+    btn_sell_crypto.addEventListener("click", async () => {
+        main__screen.style.display = "none"
+        buy_screen.style.display = "none"
+        sell_screen.style.display = "block"
+        
+        console.log('Экран продажи открыт, загружаем объявления...')
+        
+        // Загружаем объявления при открытии экрана продажи (объявления людей, которые покупают)
+        const selectedCrypto = document.querySelector('.sell__screen .filter__value')?.textContent || 'TON'
+        console.log('Выбранная криптовалюта:', selectedCrypto)
+        
+        const ads = await loadAds('buy', selectedCrypto)
+        console.log('Объявления загружены, отображаем:', ads.length)
+        displayAds(ads, 'sell')
+    });
+}
 
 // Обработчик кнопки "Мои объявления"
 if (btn_my_ads) {
@@ -544,9 +565,48 @@ if (btn_create_ads) {
     btn_create_ads.addEventListener("click", () => {
         main__screen.style.display = "none"
         buy_screen.style.display = "none"
+        sell_screen.style.display = "none"
         create_ads_screen.style.display = "block"
     });
 }
+
+// Обработчик кнопки "Назад" на экране покупки
+document.addEventListener('DOMContentLoaded', () => {
+    const backFromBuyBtn = document.getElementById('back-from-buy');
+    if (backFromBuyBtn) {
+        backFromBuyBtn.addEventListener('click', () => {
+            document.querySelector('.buy__screen').style.display = 'none';
+            document.getElementById('main__screen').style.display = 'block';
+        });
+    }
+    
+    // Обработчик кнопки "Назад" на экране продажи
+    const backFromSellBtn = document.getElementById('back-from-sell');
+    if (backFromSellBtn) {
+        backFromSellBtn.addEventListener('click', () => {
+            document.querySelector('.sell__screen').style.display = 'none';
+            document.getElementById('main__screen').style.display = 'block';
+        });
+    }
+    
+    // Обработчик кнопки "Назад" на экране создания объявления
+    const backFromCreateAdsBtn = document.getElementById('back-from-create-ads');
+    if (backFromCreateAdsBtn) {
+        backFromCreateAdsBtn.addEventListener('click', () => {
+            document.querySelector('.create_ads_screen').style.display = 'none';
+            document.getElementById('main__screen').style.display = 'block';
+        });
+    }
+    
+    // Обработчик кнопки "Назад" на экране предпросмотра
+    const backFromPreviewBtn = document.getElementById('back-from-preview');
+    if (backFromPreviewBtn) {
+        backFromPreviewBtn.addEventListener('click', () => {
+            document.querySelector('.preview_screen').style.display = 'none';
+            document.querySelector('.create_ads_screen').style.display = 'block';
+        });
+    }
+});
 // ------------
 // Выпадающее меню для фильтра "Крипта"
 
@@ -833,8 +893,8 @@ function initPreviewScreen() {
                     const customBankName = document.querySelector('#custom-bank-name')?.value
                     paymentMethod = customBankName || 'Другой банк'
                 } else {
-                    const methodName = selectedMethod.querySelector('.payment_method_name')?.textContent || ''
-                    paymentMethod = methodName
+                const methodName = selectedMethod.querySelector('.payment_method_name')?.textContent || ''
+                paymentMethod = methodName
                 }
             }
             paymentDetails = document.querySelector('#payment-details')?.value || ''
@@ -972,19 +1032,19 @@ function initPreviewScreen() {
                 userData.balance = (userData.balance || 0) - amount;
                 updateUserInfo(userData);
             }
+        
+        // Анимация успеха
+        createListingBtn.textContent = 'Создано! ✓'
+        createListingBtn.style.background = 'linear-gradient(135deg, #00c864 0%, #00a854 100%)'
+        
+        // Возвращаем на главный экран через 1.5 секунды
+        setTimeout(() => {
+            previewScreen.style.display = 'none'
+            main__screen.style.display = 'block'
             
-            // Анимация успеха
-            createListingBtn.textContent = 'Создано! ✓'
+            // Сбрасываем кнопку
+            createListingBtn.textContent = 'Создать объявление'
             createListingBtn.style.background = 'linear-gradient(135deg, #00c864 0%, #00a854 100%)'
-            
-            // Возвращаем на главный экран через 1.5 секунды
-            setTimeout(() => {
-                previewScreen.style.display = 'none'
-                main__screen.style.display = 'block'
-                
-                // Сбрасываем кнопку
-                createListingBtn.textContent = 'Создать объявление'
-                createListingBtn.style.background = 'linear-gradient(135deg, #00c864 0%, #00a854 100%)'
                 createListingBtn.disabled = false
                 
                 // Очищаем форму
@@ -993,8 +1053,8 @@ function initPreviewScreen() {
                 document.querySelector('#min-limit').value = ''
                 document.querySelector('#max-limit').value = ''
                 document.querySelector('#payment-details').value = ''
-                
-                window.scrollTo(0, 0)
+            
+            window.scrollTo(0, 0)
                 
                 // Если пользователь на экране покупки, обновляем объявления
                 if (buy_screen.style.display === 'block' || buy_screen.style.display === '') {
@@ -1005,7 +1065,7 @@ function initPreviewScreen() {
                         displayAds(ads)
                     })
                 }
-            }, 1500)
+        }, 1500)
         } catch (error) {
             console.error('Ошибка при создании объявления:', error)
             alert('Ошибка создания объявления: ' + error.message)
@@ -1127,12 +1187,19 @@ async function loadAds(adType = 'sell', cryptoCurrency = null) {
     }
 }
 
-function displayAds(ads) {
-    console.log('displayAds вызвана с объявлениями:', ads)
-    const listingsContainer = document.querySelector('.listings__container')
+function displayAds(ads, action = 'buy') {
+    console.log('displayAds вызвана с объявлениями:', ads, 'action:', action)
+    
+    // Определяем контейнер в зависимости от экрана
+    let listingsContainer;
+    if (action === 'buy') {
+        listingsContainer = document.querySelector('.buy__screen .listings__container');
+    } else {
+        listingsContainer = document.querySelector('.sell__screen .listings__container');
+    }
     
     if (!listingsContainer) {
-        console.error('Контейнер для объявлений не найден! Ищем .listings__container')
+        console.error('Контейнер для объявлений не найден!')
         return
     }
     
@@ -1149,6 +1216,10 @@ function displayAds(ads) {
     
     console.log(`Отображаем ${ads.length} объявлений`)
     
+    // Определяем текст кнопки в зависимости от действия
+    const buttonText = action === 'buy' ? 'КУПИТЬ' : 'ПРОДАТЬ';
+    const buttonClass = action === 'buy' ? 'buy__btn' : 'sell__btn';
+    
     // Создаем карточки для каждого объявления
     ads.forEach(ad => {
         const cardHTML = `
@@ -1159,7 +1230,7 @@ function displayAds(ads) {
                         <div class="price__subtitle">Цена за 1 ${ad.crypto_currency}</div>
                     </div>
                     <div class="listing__actions">
-                        <button class="buy__btn" data-ad-id="${ad.Id}" data-ad-data='${JSON.stringify(ad)}'>КУПИТЬ</button>
+                        <button class="${buttonClass}" data-ad-id="${ad.Id}" data-ad-data='${JSON.stringify(ad)}' data-action="${action}">${buttonText}</button>
                     </div>
                 </div>
                 <div class="listing__seller">
@@ -1207,19 +1278,31 @@ function formatNumber(num) {
 
 // Инициализация buy screen с загрузкой объявлений
 function initBuyScreen() {
-    // Обработчик смены криптовалюты в фильтре
+    // Обработчик смены криптовалюты в фильтре покупки
     const cryptoDropdownItems = document.querySelectorAll('.buy__screen .filter__dropdown .dropdown__item')
     cryptoDropdownItems.forEach(item => {
-        const originalClickHandler = item.onclick
-        
         item.addEventListener('click', async () => {
-            // Даем время на обновление UI
             setTimeout(async () => {
                 const crypto = item.getAttribute('data-value')
                 if (crypto) {
-                    // Загружаем объявления для выбранной криптовалюты
+                    // Загружаем объявления людей, которые продают
                     const ads = await loadAds('sell', crypto)
-                    displayAds(ads)
+                    displayAds(ads, 'buy')
+                }
+            }, 100)
+        })
+    })
+    
+    // Обработчик смены криптовалюты в фильтре продажи
+    const cryptoDropdownItemsSell = document.querySelectorAll('.sell__screen .filter__dropdown .dropdown__item')
+    cryptoDropdownItemsSell.forEach(item => {
+        item.addEventListener('click', async () => {
+            setTimeout(async () => {
+                const crypto = item.getAttribute('data-value')
+                if (crypto) {
+                    // Загружаем объявления людей, которые покупают
+                    const ads = await loadAds('buy', crypto)
+                    displayAds(ads, 'sell')
                 }
             }, 100)
         })
@@ -1239,16 +1322,21 @@ if (document.readyState === 'loading') {
 let selectedAd = null;
 let currentTransaction = null;
 
-// Обработчик клика на кнопку "КУПИТЬ" в объявлении
+// Обработчик клика на кнопку "КУПИТЬ" или "ПРОДАТЬ" в объявлении
 document.addEventListener('click', async (e) => {
-    if (e.target.classList.contains('buy__btn') || e.target.closest('.buy__btn')) {
-        const btn = e.target.classList.contains('buy__btn') ? e.target : e.target.closest('.buy__btn');
+    if (e.target.classList.contains('buy__btn') || e.target.closest('.buy__btn') ||
+        e.target.classList.contains('sell__btn') || e.target.closest('.sell__btn')) {
+        const btn = e.target.classList.contains('buy__btn') || e.target.classList.contains('sell__btn') 
+            ? e.target 
+            : e.target.closest('.buy__btn') || e.target.closest('.sell__btn');
         const adDataStr = btn.getAttribute('data-ad-data');
+        const action = btn.getAttribute('data-action') || 'buy';
         
         if (adDataStr) {
             try {
                 selectedAd = JSON.parse(adDataStr);
-                openAdDetailsScreen(selectedAd);
+                selectedAd.userAction = action; // Сохраняем действие пользователя
+                openAdDetailsScreen(selectedAd, action);
             } catch (error) {
                 console.error('Ошибка при парсинге данных объявления:', error);
             }
@@ -1257,18 +1345,48 @@ document.addEventListener('click', async (e) => {
 });
 
 // Функция открытия экрана деталей объявления
-function openAdDetailsScreen(ad) {
+function openAdDetailsScreen(ad, userAction = 'buy') {
     const detailsScreen = document.getElementById('ad-details-screen');
     const buyScreen = document.querySelector('.buy__screen');
+    const sellScreen = document.querySelector('.sell__screen');
     
     if (!detailsScreen) {
         console.error('Экран деталей не найден');
         return;
     }
     
-    // Скрываем экран покупки
+    // Скрываем экраны покупки/продажи
     if (buyScreen) {
         buyScreen.style.display = 'none';
+    }
+    if (sellScreen) {
+        sellScreen.style.display = 'none';
+    }
+    
+    // Обновляем заголовок в зависимости от действия
+    const detailsTitle = document.querySelector('.ad_details_title');
+    if (detailsTitle) {
+        detailsTitle.textContent = userAction === 'buy' ? 'Детали объявления' : 'Детали объявления';
+    }
+    
+    // Обновляем текст кнопки
+    const confirmBtn = document.getElementById('confirm-purchase-btn');
+    if (confirmBtn) {
+        confirmBtn.textContent = userAction === 'buy' ? 'Купить' : 'Продать';
+    }
+    
+    // Обновляем текст поля ввода
+    const purchaseLabel = document.querySelector('.purchase_label');
+    if (purchaseLabel) {
+        purchaseLabel.textContent = userAction === 'buy' 
+            ? 'Сумма покупки (USDT)' 
+            : 'Сумма продажи (USDT)';
+    }
+    
+    const purchaseInfo = document.getElementById('purchase-info');
+    if (purchaseInfo && userAction === 'sell') {
+        // Для продажи показываем, сколько рублей получим
+        purchaseInfo.innerHTML = `<span class="purchase_info_text">Вы получите: <span id="fiat-amount">0.00</span> RUB</span>`;
     }
     
     // Заполняем данные объявления
@@ -1329,12 +1447,17 @@ function openAdDetailsScreen(ad) {
     }
 }
 
-// Функция обновления информации о покупке
+// Функция обновления информации о покупке/продаже
 function updatePurchaseInfo(ad, usdtAmount) {
     if (!ad || usdtAmount <= 0) {
-        document.getElementById('crypto-amount').textContent = '0.00';
+        const cryptoAmountEl = document.getElementById('crypto-amount');
+        if (cryptoAmountEl) cryptoAmountEl.textContent = '0.00';
+        const fiatAmountEl = document.getElementById('fiat-amount');
+        if (fiatAmountEl) fiatAmountEl.textContent = '0.00';
         return;
     }
+    
+    const userAction = ad.userAction || 'buy';
     
     // Проверяем лимиты
     if (usdtAmount < ad.min_limit) {
@@ -1349,20 +1472,34 @@ function updatePurchaseInfo(ad, usdtAmount) {
         return;
     }
     
-    // Рассчитываем количество криптовалюты
-    // Цена указана в RUB за 1 криптовалюту, но мы покупаем за USDT
-    // Предполагаем, что 1 USDT = 1 RUB (или нужно использовать курс)
-    const cryptoAmount = usdtAmount / ad.price;
-    const availableCrypto = ad.crypto_amount || 0;
-    
-    if (cryptoAmount > availableCrypto) {
+    if (userAction === 'buy') {
+        // Покупка: рассчитываем количество криптовалюты, которое получим
+        const cryptoAmount = usdtAmount / ad.price;
+        const availableCrypto = ad.crypto_amount || 0;
+        
+        if (cryptoAmount > availableCrypto) {
+            document.getElementById('purchase-info').innerHTML = 
+                `<span class="purchase_info_text error">Доступно только ${availableCrypto.toFixed(4)} ${ad.crypto_currency}</span>`;
+            return;
+        }
+        
         document.getElementById('purchase-info').innerHTML = 
-            `<span class="purchase_info_text error">Доступно только ${availableCrypto.toFixed(4)} ${ad.crypto_currency}</span>`;
-        return;
+            `<span class="purchase_info_text">Вы получите: <span id="crypto-amount">${cryptoAmount.toFixed(4)}</span> <span id="crypto-type">${ad.crypto_currency}</span></span>`;
+    } else {
+        // Продажа: рассчитываем количество рублей, которое получим
+        const fiatAmount = usdtAmount * ad.price;
+        const availableCrypto = ad.crypto_amount || 0;
+        
+        // Проверяем, достаточно ли у нас криптовалюты для продажи
+        if (usdtAmount > availableCrypto) {
+            document.getElementById('purchase-info').innerHTML = 
+                `<span class="purchase_info_text error">Доступно только ${availableCrypto.toFixed(4)} ${ad.crypto_currency}</span>`;
+            return;
+        }
+        
+        document.getElementById('purchase-info').innerHTML = 
+            `<span class="purchase_info_text">Вы получите: <span id="fiat-amount">${fiatAmount.toFixed(2)}</span> RUB</span>`;
     }
-    
-    document.getElementById('purchase-info').innerHTML = 
-        `<span class="purchase_info_text">Вы получите: <span id="crypto-amount">${cryptoAmount.toFixed(4)}</span> <span id="crypto-type">${ad.crypto_currency}</span></span>`;
 }
 
 // Обработчик кнопки "Купить" на экране деталей
@@ -1394,13 +1531,24 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Создаем сделку
             try {
-                const cryptoAmount = purchaseAmount / selectedAd.price;
+                const userAction = selectedAd.userAction || 'buy';
+                let cryptoAmount, fiatAmount;
+                
+                if (userAction === 'buy') {
+                    // Покупка: покупаем криптовалюту за фиат
+                    cryptoAmount = purchaseAmount / selectedAd.price;
+                    fiatAmount = purchaseAmount;
+                } else {
+                    // Продажа: продаем криптовалюту за фиат
+                    cryptoAmount = purchaseAmount; // Количество криптовалюты, которое продаем
+                    fiatAmount = purchaseAmount * selectedAd.price; // Рубли, которые получим
+                }
                 
                 const transactionData = {
                     ad_id: selectedAd.Id,
                     crypto_currency: selectedAd.crypto_currency,
                     crypto_amount: cryptoAmount,
-                    fiat_amount: purchaseAmount
+                    fiat_amount: fiatAmount
                 };
                 
                 const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/transactions`, {
@@ -1415,7 +1563,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 currentTransaction = await response.json();
                 
                 // Открываем экран оплаты
-                openPaymentScreen(selectedAd, purchaseAmount);
+                openPaymentScreen(selectedAd, purchaseAmount, userAction);
             } catch (error) {
                 console.error('Ошибка при создании сделки:', error);
                 alert('Ошибка создания сделки: ' + error.message);
@@ -1427,8 +1575,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const backFromDetailsBtn = document.getElementById('back-from-details');
     if (backFromDetailsBtn) {
         backFromDetailsBtn.addEventListener('click', () => {
+            const userAction = selectedAd?.userAction || 'buy';
             document.getElementById('ad-details-screen').style.display = 'none';
-            document.querySelector('.buy__screen').style.display = 'block';
+            if (userAction === 'buy') {
+                document.querySelector('.buy__screen').style.display = 'block';
+            } else {
+                document.querySelector('.sell__screen').style.display = 'block';
+            }
         });
     }
     
@@ -1491,7 +1644,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Функция открытия экрана оплаты
-function openPaymentScreen(ad, usdtAmount) {
+function openPaymentScreen(ad, usdtAmount, userAction = 'buy') {
     const paymentScreen = document.getElementById('payment-screen');
     const detailsScreen = document.getElementById('ad-details-screen');
     
@@ -1505,25 +1658,74 @@ function openPaymentScreen(ad, usdtAmount) {
         detailsScreen.style.display = 'none';
     }
     
+    // Обновляем заголовок
+    const paymentTitle = document.querySelector('.payment_title');
+    if (paymentTitle) {
+        paymentTitle.textContent = userAction === 'buy' ? 'Оплата' : 'Ожидание оплаты';
+    }
+    
     // Заполняем сумму
     const paymentAmountEl = document.getElementById('payment-amount');
     if (paymentAmountEl) {
-        paymentAmountEl.textContent = `${usdtAmount.toFixed(2)} USDT`;
+        if (userAction === 'buy') {
+            // Покупка: показываем сумму в USDT, которую нужно перевести
+            paymentAmountEl.textContent = `${usdtAmount.toFixed(2)} USDT`;
+        } else {
+            // Продажа: показываем сумму в RUB, которую получим
+            const fiatAmount = usdtAmount * ad.price;
+            paymentAmountEl.textContent = `${fiatAmount.toFixed(2)} RUB`;
+        }
     }
     
     // Заполняем реквизиты
     const paymentDetailsEl = document.getElementById('payment-details');
     if (paymentDetailsEl) {
-        paymentDetailsEl.innerHTML = `
-            <div class="payment_detail_item">
-                <span class="payment_detail_label">Банк:</span>
-                <span class="payment_detail_value">${ad.bank_name || 'Не указан'}</span>
-            </div>
-            <div class="payment_detail_item">
-                <span class="payment_detail_label">Реквизиты:</span>
-                <span class="payment_detail_value">${ad.payment_details || 'Не указаны'}</span>
-            </div>
-        `;
+        if (userAction === 'buy') {
+            // Покупка: показываем реквизиты продавца для перевода
+            paymentDetailsEl.innerHTML = `
+                <div class="payment_detail_item">
+                    <span class="payment_detail_label">Банк:</span>
+                    <span class="payment_detail_value">${ad.bank_name || 'Не указан'}</span>
+                </div>
+                <div class="payment_detail_item">
+                    <span class="payment_detail_label">Реквизиты:</span>
+                    <span class="payment_detail_value">${ad.payment_details || 'Не указаны'}</span>
+                </div>
+            `;
+        } else {
+            // Продажа: показываем реквизиты покупателя для получения денег
+            paymentDetailsEl.innerHTML = `
+                <div class="payment_detail_item">
+                    <span class="payment_detail_label">Банк:</span>
+                    <span class="payment_detail_value">${ad.bank_name || 'Не указан'}</span>
+                </div>
+                <div class="payment_detail_item">
+                    <span class="payment_detail_label">Реквизиты:</span>
+                    <span class="payment_detail_value">${ad.payment_details || 'Не указаны'}</span>
+                </div>
+            `;
+        }
+    }
+    
+    // Обновляем текст кнопки и предупреждения
+    const paymentWarning = document.querySelector('.payment_warning span');
+    if (paymentWarning) {
+        if (userAction === 'buy') {
+            paymentWarning.textContent = 'После перевода средств нажмите "Я перевел"';
+        } else {
+            paymentWarning.textContent = 'Ожидайте перевода средств от покупателя';
+        }
+    }
+    
+    const paymentConfirmBtn = document.getElementById('payment-confirmed-btn');
+    if (paymentConfirmBtn) {
+        if (userAction === 'buy') {
+            paymentConfirmBtn.textContent = 'Я перевел средства';
+            paymentConfirmBtn.style.display = 'block';
+        } else {
+            // Для продажи кнопка не нужна, покупатель подтверждает перевод
+            paymentConfirmBtn.style.display = 'none';
+        }
     }
     
     // Показываем экран оплаты
