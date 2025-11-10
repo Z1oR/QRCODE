@@ -15,22 +15,39 @@ let refreshToken = null;
 
 // Функция инициализации Telegram Web App
 async function initTelegramWebApp() {
+    console.log('Инициализация Telegram Web App...');
+    console.log('window.Telegram:', !!window.Telegram);
+    console.log('window.Telegram.WebApp:', !!(window.Telegram && window.Telegram.WebApp));
+    console.log('User Agent:', navigator.userAgent);
+    console.log('API Base URL:', API_BASE_URL);
+    
     if (window.Telegram && window.Telegram.WebApp) {
         tg = window.Telegram.WebApp;
         tg.ready();
         tg.expand();
         console.log('Telegram Web App инициализирован');
+        console.log('Telegram WebApp version:', tg.version);
+        console.log('Telegram WebApp platform:', tg.platform);
         
-        // Проверяем доступность сервера перед аутентификацией
+            // Проверяем доступность сервера перед аутентификацией
         try {
+            console.log('Проверка доступности сервера:', `${API_BASE_URL}/health`);
             const healthCheck = await fetch(`${API_BASE_URL}/health`, {
                 method: 'GET',
                 credentials: 'include',
                 mode: 'cors'
+            }).catch(error => {
+                console.error('Ошибка при проверке сервера:', error);
+                console.error('Детали ошибки:', {
+                    name: error.name,
+                    message: error.message,
+                    stack: error.stack
+                });
+                throw error;
             });
             
             if (healthCheck.ok) {
-                console.log('Сервер доступен');
+                console.log('Сервер доступен, статус:', healthCheck.status);
             } else {
                 console.warn('Сервер отвечает с ошибкой:', healthCheck.status);
             }
@@ -40,6 +57,13 @@ async function initTelegramWebApp() {
             console.error('2. Открыт ли порт 8000 в firewall');
             console.error('3. Возможно, Telegram блокирует запросы к IP адресам');
             console.error('   В этом случае используйте домен вместо IP');
+            console.error('4. Проверьте, что используется HTTPS (Telegram требует HTTPS)');
+            
+            // Показываем пользователю понятное сообщение
+            if (tg && tg.showAlert) {
+                tg.showAlert('Ошибка подключения к серверу. Проверьте интернет-соединение.');
+            }
+            
             return false;
         }
         
@@ -121,6 +145,8 @@ async function authenticateWithTelegram() {
             return;
         }
 
+        console.log('Отправка запроса на аутентификацию:', API_BASE_URL);
+        
         const response = await fetch(`${API_BASE_URL}/api/auth/telegram`, {
             method: 'POST',
             headers: {
@@ -131,7 +157,14 @@ async function authenticateWithTelegram() {
             body: JSON.stringify({
                 init_data: initData
             })
+        }).catch(error => {
+            console.error('Ошибка сети при отправке запроса:', error);
+            console.error('Тип ошибки:', error.name);
+            console.error('Сообщение:', error.message);
+            throw error;
         });
+        
+        console.log('Ответ получен:', response.status, response.statusText);
 
         
 
