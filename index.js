@@ -2401,8 +2401,24 @@ function displayPendingTransactions(transactions) {
                     </div>
                 </div>
             </div>
+            <div class="notification_payment_details" id="payment-details-${transaction.id}" style="display: none;">
+                <div class="notification_payment_title">Укажите реквизиты для получения денег</div>
+                <div class="notification_payment_form">
+                    <div class="notification_payment_field">
+                        <label>Банк</label>
+                        <input type="text" class="notification_payment_input" id="bank-name-${transaction.id}" placeholder="Например: Т-Банк" />
+                    </div>
+                    <div class="notification_payment_field">
+                        <label>Реквизиты (номер карты или телефона)</label>
+                        <input type="text" class="notification_payment_input" id="payment-details-input-${transaction.id}" placeholder="Введите номер карты или телефона" />
+                    </div>
+                </div>
+            </div>
             <div class="notification_actions">
-                <button class="notification_confirm_btn" data-transaction-id="${transaction.id}">
+                <button class="notification_show_details_btn" data-transaction-id="${transaction.id}" id="show-details-${transaction.id}">
+                    Указать реквизиты
+                </button>
+                <button class="notification_confirm_btn" data-transaction-id="${transaction.id}" id="confirm-${transaction.id}" style="display: none;">
                     Подтвердить получение
                 </button>
             </div>
@@ -2411,24 +2427,57 @@ function displayPendingTransactions(transactions) {
         notificationsList.appendChild(notificationCard);
     });
     
+    // Добавляем обработчики кнопок показа формы реквизитов
+    document.querySelectorAll('.notification_show_details_btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const transactionId = btn.getAttribute('data-transaction-id');
+            const paymentDetailsDiv = document.getElementById(`payment-details-${transactionId}`);
+            const showDetailsBtn = document.getElementById(`show-details-${transactionId}`);
+            const confirmBtn = document.getElementById(`confirm-${transactionId}`);
+            
+            if (paymentDetailsDiv && paymentDetailsDiv.style.display === 'none') {
+                paymentDetailsDiv.style.display = 'block';
+                if (showDetailsBtn) showDetailsBtn.style.display = 'none';
+                if (confirmBtn) confirmBtn.style.display = 'block';
+            }
+        });
+    });
+    
     // Добавляем обработчики кнопок подтверждения
     document.querySelectorAll('.notification_confirm_btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             const transactionId = parseInt(btn.getAttribute('data-transaction-id'));
-            await confirmTransaction(transactionId);
+            const bankName = document.getElementById(`bank-name-${transactionId}`)?.value?.trim();
+            const paymentDetails = document.getElementById(`payment-details-input-${transactionId}`)?.value?.trim();
+            
+            // Проверяем, что реквизиты указаны
+            if (!bankName || !paymentDetails) {
+                alert('Пожалуйста, укажите банк и реквизиты для получения денег');
+                return;
+            }
+            
+            await confirmTransaction(transactionId, bankName, paymentDetails);
         });
     });
 }
 
 // Функция подтверждения сделки продавцом
-async function confirmTransaction(transactionId) {
+async function confirmTransaction(transactionId, bankName, paymentDetails) {
     if (!confirm('Вы подтверждаете получение денег от покупателя?')) {
         return;
     }
     
     try {
+        // Отправляем реквизиты вместе с подтверждением
         const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/transactions/${transactionId}/confirm`, {
-            method: 'POST'
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                bank_name: bankName,
+                payment_details: paymentDetails
+            })
         });
         
         if (!response.ok) {
