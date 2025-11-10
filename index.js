@@ -235,6 +235,7 @@ async function authenticateWithTelegram() {
                     userData.id = meData.id;
                     userData.username = userData.username || meData.username;
                     userData.balance = userData.balance !== undefined ? userData.balance : meData.balance;
+                    userData.terms_accepted = meData.terms_accepted !== undefined ? meData.terms_accepted : false;
                 }
             } catch (error) {
                 console.error('Ошибка при получении ID пользователя:', error);
@@ -247,6 +248,12 @@ async function authenticateWithTelegram() {
         
         // Обновляем информацию о пользователе на главном экране
         updateUserInfo(data);
+        
+        // Проверяем, принял ли пользователь соглашение
+        if (userData && !userData.terms_accepted) {
+            // Показываем экран соглашения
+            showTermsScreen();
+        }
         
         console.log('Токены сохранены в память:', {
             hasAccessToken: !!accessToken,
@@ -613,8 +620,17 @@ async function refreshUserBalance() {
             if (userInfo && userInfo.balance !== undefined) {
                 if (userData) {
                     userData.balance = userInfo.balance;
+                    userData.terms_accepted = userInfo.terms_accepted !== undefined ? userInfo.terms_accepted : false;
+                } else {
+                    userData = userInfo;
                 }
                 updateUserInfo(userData || userInfo);
+                
+                // Проверяем, принял ли пользователь соглашение
+                if (userData && !userData.terms_accepted) {
+                    showTermsScreen();
+                }
+                
                 // Обновляем баланс на экране создания объявления, если он открыт
                 const createAdsScreen = document.querySelector('.create_ads_screen');
                 if (createAdsScreen && createAdsScreen.style.display !== 'none') {
@@ -739,6 +755,19 @@ if (btn_my_transactions) {
         if (myTransactionsScreen) {
             myTransactionsScreen.style.display = 'block';
             await loadMyTransactions();
+        }
+    });
+}
+
+// Обработчик кнопки "О нас"
+const btn_about_us = document.getElementById('about_us');
+if (btn_about_us) {
+    btn_about_us.addEventListener("click", () => {
+        showScreen(null);
+        
+        const aboutScreen = document.getElementById('about-screen');
+        if (aboutScreen) {
+            aboutScreen.style.display = 'block';
         }
     });
 }
@@ -1289,8 +1318,13 @@ function initPreviewScreen() {
                 return
             }
             
-            // Проверка баланса для объявлений на продажу (проверка на фронтенде для UX)
+            // Валидация метода оплаты и реквизитов для объявлений на продажу
             if (action === 'sell') {
+                if (!bankName || !paymentDetails) {
+                    alert('Пожалуйста, выберите метод оплаты и укажите реквизиты для получения платежей')
+                    return
+                }
+                
                 const userBalance = userData?.balance || 0;
                 const requiredAmount = amount; // Количество криптовалюты, которое хотим продать
                 
@@ -3238,3 +3272,114 @@ async function markTransactionPaid(transactionId) {
         alert('Ошибка подтверждения перевода: ' + error.message);
     }
 }
+
+// ========== ФУНКЦИОНАЛ ПОЛЬЗОВАТЕЛЬСКОГО СОГЛАШЕНИЯ ==========
+
+// Функция показа экрана соглашения
+function showTermsScreen() {
+    const termsScreen = document.getElementById('terms-screen');
+    const mainScreen = document.getElementById('main__screen');
+    
+    if (termsScreen && mainScreen) {
+        mainScreen.style.display = 'none';
+        termsScreen.style.display = 'block';
+        
+        // Прокручиваем в начало
+        window.scrollTo(0, 0);
+    }
+}
+
+// Инициализация обработчиков для экрана соглашения
+document.addEventListener('DOMContentLoaded', () => {
+    const termsCheckbox = document.getElementById('terms-checkbox');
+    const termsAcceptBtn = document.getElementById('terms-accept-btn');
+    
+    // Обработчик изменения чекбокса
+    if (termsCheckbox && termsAcceptBtn) {
+        termsCheckbox.addEventListener('change', (e) => {
+            termsAcceptBtn.disabled = !e.target.checked;
+        });
+    }
+    
+    // Обработчик кнопки принятия соглашения
+    if (termsAcceptBtn) {
+        termsAcceptBtn.addEventListener('click', async () => {
+            if (!termsCheckbox || !termsCheckbox.checked) {
+                alert('Пожалуйста, подтвердите согласие с условиями');
+                return;
+            }
+            
+            try {
+                const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/auth/accept-terms`, {
+                    method: 'POST'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Ошибка при принятии соглашения');
+                }
+                
+                // Обновляем userData
+                if (userData) {
+                    userData.terms_accepted = true;
+                }
+                
+                // Скрываем экран соглашения и показываем главный экран
+                const termsScreen = document.getElementById('terms-screen');
+                const mainScreen = document.getElementById('main__screen');
+                
+                if (termsScreen && mainScreen) {
+                    termsScreen.style.display = 'none';
+                    mainScreen.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Ошибка при принятии соглашения:', error);
+                alert('Ошибка при принятии соглашения: ' + error.message);
+            }
+        });
+    }
+    
+    // Обработчик кнопки "Назад" на экране "О нас"
+    const backFromAboutBtn = document.getElementById('back-from-about');
+    if (backFromAboutBtn) {
+        backFromAboutBtn.addEventListener('click', () => {
+            const aboutScreen = document.getElementById('about-screen');
+            const mainScreen = document.getElementById('main__screen');
+            
+            if (aboutScreen && mainScreen) {
+                aboutScreen.style.display = 'none';
+                mainScreen.style.display = 'block';
+            }
+        });
+    }
+    
+    // Обработчик кнопки "Пользовательское соглашение" в разделе "О нас"
+    const termsLinkBtn = document.getElementById('terms-link-btn');
+    if (termsLinkBtn) {
+        termsLinkBtn.addEventListener('click', () => {
+            const aboutScreen = document.getElementById('about-screen');
+            const termsScreen = document.getElementById('terms-screen');
+            
+            if (aboutScreen && termsScreen) {
+                aboutScreen.style.display = 'none';
+                termsScreen.style.display = 'block';
+                window.scrollTo(0, 0);
+            }
+        });
+    }
+    
+    // Обработчик кнопки "Правила сервиса" в разделе "О нас"
+    const rulesLinkBtn = document.getElementById('rules-link-btn');
+    if (rulesLinkBtn) {
+        rulesLinkBtn.addEventListener('click', () => {
+            // Можно открыть отдельный экран с правилами или показать alert
+            alert('Правила сервиса:\n\n' +
+                  '1. Всегда проверяйте реквизиты перед переводом\n' +
+                  '2. Не переводите средства до подтверждения сделки\n' +
+                  '3. Сохраняйте скриншоты всех переводов\n' +
+                  '4. Связывайтесь с поддержкой при возникновении проблем\n' +
+                  '5. Не передавайте доступ к аккаунту третьим лицам\n' +
+                  '6. Соблюдайте лимиты сделок\n' +
+                  '7. Будьте вежливы в общении с другими пользователями');
+        });
+    }
+});
