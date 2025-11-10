@@ -7,7 +7,7 @@
     <title>peer-to-peer</title>
 </head>
 <body>
-    <div class="main__screen" id="main__screen" >
+    <div class="main__screen" id="main__screen" style="display: none;">
         <div class="container__main">
             <div class="header__main">
                 <div class="content__main">
@@ -21,7 +21,7 @@
                 </div>
             </div>
             <div class="btn_market_main">
-                <div class="item__main">
+                <div class="item__main" id="my_ads">
                     <img src="./image/account_icon.svg" alt="">  
 
                     <div class="content__item">
@@ -29,11 +29,11 @@
                         <p>Настройки обьявлений и платежей</p>
                     </div>
                 </div>
-                <div class="item__main">
+                <div class="item__main" id="create_ads">
                     <img src="./image/add+.svg" alt="">  
 
                     <div class="content__item">
-                        <h3 class="new_ask">Мои обьявления</h3>
+                        <h3 class="new_ask">Создать обьявление</h3>
                     </div>
                 </div>
             </div>
@@ -125,9 +125,105 @@
     </div>
 
 
+    <div class="create_ads_screen" style="display: block;">
+        <div class="create_ads_container">
+            <!-- Header -->
+            <div class="create_ads_header">
+                <h1 class="create_ads_title">Создайте объявление</h1>
+                <span class="create_ads_progress">1/4</span>
+            </div>
 
+            <!-- Я хочу section -->
+            <div class="create_ads_section">
+                <div class="section_label_row">
+                    <span class="section_label">Я хочу</span>
+                    <div class="segmented_control">
+                        <button class="segmented_btn" data-action="buy">Купить</button>
+                        <button class="segmented_btn segmented_btn--active" data-action="sell">Продать</button>
+                    </div>
+                </div>
+            </div>
 
-    <script src="index.js"></script>
+            <!-- Advertisement Details -->
+            <div class="ad_details_section">
+                <div class="detail_row detail_row--selectable" id="crypto-select-row">
+                    <span class="detail_label">Продать криптовалюту</span>
+                    <div class="detail_value_wrapper crypto_select_wrapper">
+                        <span class="detail_value" id="selected-crypto">USDT</span>
+                        <span class="chevron">›</span>
+                        <div class="crypto_dropdown" id="crypto-dropdown">
+                            <div class="crypto_option" data-crypto="USDT">
+                                <span>USDT</span>
+                                <span class="checkmark" id="check-usdt">✓</span>
+                            </div>
+                            <div class="crypto_option" data-crypto="TON">
+                                <span>TON</span>
+                                <span class="checkmark" id="check-ton" style="display: none;">✓</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="detail_row">
+                    <span class="detail_label">Национальная валюта</span>
+                    <div class="detail_value_wrapper">
+                        <span class="detail_value">RUB</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Percentage of Market Price -->
+            <div class="price_section">
+                <label class="section_header">% ОТ РЫНОЧНОЙ ЦЕНЫ (<span id="price-crypto-name">1 USDT</span>)</label>
+                <div class="input_field">
+                    <input type="text" class="single_input" id="price-range" placeholder="80 ~ 120" />
+                    <span class="input_suffix" id="price-crypto-suffix">%</span>
+                </div>
+                <div class="info_text">
+                    <div>Рыночная цена: <span id="market-price">81,13</span> ₽</div>
+                    <div>Ваша цена: <span id="your-price">0,00</span> ₽</div>
+                </div>
+            </div>
+
+            <!-- Amount Section -->
+            <div class="amount_section">
+                <label class="section_header">СУММА</label>
+                <div class="input_field">
+                    <input type="text" class="single_input" id="amount-range" placeholder="10 ~ 1000000" />
+                    <span class="input_suffix" id="amount-crypto-suffix">USDT</span>
+                </div>
+                <div class="info_text">
+                    <div>
+                        Ваш баланс: <span id="balance-amount">0</span> <span id="balance-crypto">USDT</span>
+                        <span class="max_link" id="max-amount-btn">Макс.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Min and Max Transaction Amount -->
+            <div class="limits_section">
+                <label class="section_header">МИН. И МАКС. СУММА СДЕЛКИ</label>
+                <div class="input_field">
+                    <input type="text" class="single_input" id="min-limit" placeholder="Мин. 500" />
+                    <span class="input_suffix">RUB</span>
+                </div>
+                <div class="input_field">
+                    <input type="text" class="single_input" id="max-limit" placeholder="Макс." />
+                    <span class="input_suffix">RUB</span>
+                </div>
+                <div class="hint_text">Макс. можно не указывать.</div>
+            </div>
+
+            <div class="footer_create_ads">
+                <div class="footer_btn">
+                    <button>
+                        Далее
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="index.js"></script>
 </body>
 </html>
