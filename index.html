@@ -35,13 +35,22 @@
                     </div>
                     <div class="balance_card_footer">
                         <span class="user_name" id="user-name">Загрузка...</span>
-                        <button class="refresh_btn_small" id="refresh-balance-btn" title="Обновить">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                <path d="M1 4V10H7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                                <path d="M23 20V14H17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                                <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14L18.36 18.36A9 9 0 0 1 3.51 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                            </svg>
-                        </button>
+                        <div class="balance_footer_actions">
+                            <button class="notifications_btn" id="notifications-btn" title="Уведомления">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                                    <path d="M18 8A6 6 0 0 0 6 8C6 11.3137 3 14 3 17H21C21 14 18 11.3137 18 8Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M13.73 21C13.5542 21.3031 13.3019 21.5547 12.9982 21.7295C12.6946 21.9044 12.3504 21.9965 12 21.9965C11.6496 21.9965 11.3054 21.9044 11.0018 21.7295C10.6982 21.5547 10.4458 21.3031 10.27 21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                <span class="notifications_badge" id="notifications-badge" style="display: none;">0</span>
+                            </button>
+                            <button class="refresh_btn_small" id="refresh-balance-btn" title="Обновить">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                    <path d="M1 4V10H7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                    <path d="M23 20V14H17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                    <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14L18.36 18.36A9 9 0 0 1 3.51 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                </svg>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -116,6 +125,125 @@
 
         </div>
     </div>
+    <!-- Экран деталей объявления для покупки -->
+    <div class="ad_details_screen" id="ad-details-screen" style="display: none;">
+        <div class="ad_details_container">
+            <div class="ad_details_header">
+                <button class="back_btn" id="back-from-details">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+                <h2 class="ad_details_title">Детали объявления</h2>
+            </div>
+
+            <div class="ad_details_card" id="ad-details-card">
+                <!-- Данные будут заполнены через JS -->
+            </div>
+
+            <div class="purchase_section">
+                <label class="purchase_label">Сумма покупки (USDT)</label>
+                <div class="purchase_input_wrapper">
+                    <input type="number" class="purchase_input" id="purchase-amount" placeholder="0.00" step="0.01" min="0">
+                    <span class="purchase_currency">USDT</span>
+                </div>
+                <div class="purchase_info" id="purchase-info">
+                    <span class="purchase_info_text">Вы получите: <span id="crypto-amount">0.00</span> <span id="crypto-type">BTC</span></span>
+                </div>
+            </div>
+
+            <div class="purchase_footer">
+                <button class="purchase_btn" id="confirm-purchase-btn">
+                    Купить
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Экран с реквизитами для оплаты -->
+    <div class="payment_screen" id="payment-screen" style="display: none;">
+        <div class="payment_container">
+            <div class="payment_header">
+                <button class="back_btn" id="back-from-payment">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+                <h2 class="payment_title">Оплата</h2>
+            </div>
+
+            <div class="payment_card">
+                <div class="payment_amount_section">
+                    <div class="payment_label">Сумма к переводу</div>
+                    <div class="payment_amount" id="payment-amount">0.00 USDT</div>
+                </div>
+
+                <div class="payment_details_section">
+                    <div class="payment_details_label">Реквизиты для перевода</div>
+                    <div class="payment_details_content" id="payment-details">
+                        <!-- Данные будут заполнены через JS -->
+                    </div>
+                    <button class="copy_btn" id="copy-payment-details">Скопировать реквизиты</button>
+                </div>
+
+                <div class="payment_warning">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 9V13M12 17H12.01M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span>После перевода средств нажмите "Я перевел"</span>
+                </div>
+            </div>
+
+            <div class="payment_footer">
+                <button class="payment_confirm_btn" id="payment-confirmed-btn">
+                    Я перевел средства
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Экран уведомлений для продавца -->
+    <div class="notifications_screen" id="notifications-screen" style="display: none;">
+        <div class="notifications_container">
+            <div class="notifications_header">
+                <button class="back_btn" id="back-from-notifications">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+                <h2 class="notifications_title">Ожидают подтверждения</h2>
+            </div>
+
+            <div class="notifications_list" id="notifications-list">
+                <!-- Уведомления будут добавлены через JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Экран "Мои объявления" -->
+    <div class="my_ads_screen" id="my-ads-screen" style="display: none;">
+        <div class="my_ads_container">
+            <div class="my_ads_header">
+                <button class="back_btn" id="back-from-my-ads">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+                <h2 class="my_ads_title">Мои объявления</h2>
+            </div>
+
+            <div class="my_ads_filters">
+                <button class="filter_tab active" data-filter="all" id="filter-all">Все</button>
+                <button class="filter_tab" data-filter="buy" id="filter-buy">Покупка</button>
+                <button class="filter_tab" data-filter="sell" id="filter-sell">Продажа</button>
+            </div>
+
+            <div class="my_ads_list" id="my-ads-list">
+                <!-- Объявления будут добавлены через JS -->
+            </div>
+        </div>
+    </div>
+
     <div class="buy__screen" style="display: none;">
         <div class="buy__container">
             <!-- Фильтры -->
