@@ -3651,23 +3651,37 @@ async function checkAdminAccess() {
             const mainScreen = document.getElementById('main__screen');
             if (mainScreen) {
                 // Ищем место для вставки кнопки (например, после кнопки "О нас")
-                const aboutBtn = document.getElementById('about-btn');
-                if (aboutBtn && !document.getElementById('admin-panel-btn')) {
-                    const adminBtn = document.createElement('button');
+                const aboutBtn = document.getElementById('about_us');
+                const menuSection = aboutBtn ? aboutBtn.parentNode : document.querySelector('.menu_section');
+                
+                if (menuSection && !document.getElementById('admin-panel-btn')) {
+                    const adminBtn = document.createElement('div');
                     adminBtn.id = 'admin-panel-btn';
-                    adminBtn.className = 'nav__item';
+                    adminBtn.className = 'menu_item';
                     adminBtn.innerHTML = `
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                            <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                        <span>Админ панель</span>
+                        <div class="menu_item_icon" style="background: linear-gradient(135deg, rgba(0, 128, 255, 0.2) 0%, rgba(0, 102, 204, 0.15) 100%); color: #0080ff;">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <div class="menu_item_content">
+                            <div class="menu_item_title">Админ панель</div>
+                            <div class="menu_item_desc">Управление платформой</div>
+                        </div>
+                        <div class="menu_item_arrow">›</div>
                     `;
+                    adminBtn.style.cursor = 'pointer';
                     adminBtn.addEventListener('click', () => {
                         openAdminPanel();
                     });
-                    aboutBtn.parentNode.insertBefore(adminBtn, aboutBtn.nextSibling);
+                    
+                    if (aboutBtn) {
+                        aboutBtn.parentNode.insertBefore(adminBtn, aboutBtn.nextSibling);
+                    } else if (menuSection) {
+                        menuSection.appendChild(adminBtn);
+                    }
                 }
             }
         }
