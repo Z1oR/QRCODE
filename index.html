@@ -4,7 +4,7 @@
     <link rel="stylesheet" href="style.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FREE P2P</title>
+    <title>peer-to-peer</title>
 </head>
 <body>
     <div class="main__screen" id="main__screen">
@@ -160,6 +160,19 @@
                 </div>
                 <div class="purchase_info" id="purchase-info">
                     <span class="purchase_info_text">Вы получите: <span id="crypto-amount">0.00</span> <span id="crypto-type">BTC</span></span>
+                </div>
+            </div>
+
+            <!-- Реквизиты для получения денег (только для продажи) -->
+            <div class="payment_details_section" id="buyer-payment-details" style="display: none;">
+                <label class="purchase_label">Реквизиты для получения денег</label>
+                <div class="payment_details_form">
+                    <div class="payment_details_field">
+                        <input type="text" class="payment_details_input" id="buyer-bank-name" placeholder="Банк (например: Т-Банк)" />
+                    </div>
+                    <div class="payment_details_field">
+                        <input type="text" class="payment_details_input" id="buyer-payment-details" placeholder="Номер карты или телефона" />
+                    </div>
                 </div>
             </div>
 
