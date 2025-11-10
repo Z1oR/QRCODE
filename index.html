@@ -154,25 +154,25 @@
                     </button>
                 </div>
                 
+                <!-- Реквизиты для получения денег (только для продажи) -->
+                <div class="payment_details_section" id="buyer-payment-details" style="display: none;">
+                    <label class="purchase_label">Реквизиты для получения денег</label>
+                    <div class="payment_details_form">
+                        <div class="payment_details_field">
+                            <input type="text" class="payment_details_input" id="buyer-bank-name" placeholder="Банк (например: Т-Банк)" />
+                        </div>
+                        <div class="payment_details_field">
+                            <input type="text" class="payment_details_input" id="buyer-payment-details" placeholder="Номер карты или телефона" />
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="purchase_input_wrapper">
                     <input type="number" class="purchase_input" id="purchase-amount" placeholder="0.00" step="0.01" min="0">
                     <span class="purchase_currency" id="purchase-currency">RUB</span>
                 </div>
                 <div class="purchase_info" id="purchase-info">
                     <span class="purchase_info_text">Вы получите: <span id="crypto-amount">0.00</span> <span id="crypto-type">BTC</span></span>
-                </div>
-            </div>
-
-            <!-- Реквизиты для получения денег (только для продажи) -->
-            <div class="payment_details_section" id="buyer-payment-details" style="display: none;">
-                <label class="purchase_label">Реквизиты для получения денег</label>
-                <div class="payment_details_form">
-                    <div class="payment_details_field">
-                        <input type="text" class="payment_details_input" id="buyer-bank-name" placeholder="Банк (например: Т-Банк)" />
-                    </div>
-                    <div class="payment_details_field">
-                        <input type="text" class="payment_details_input" id="buyer-payment-details" placeholder="Номер карты или телефона" />
-                    </div>
                 </div>
             </div>
 
