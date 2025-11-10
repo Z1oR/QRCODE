@@ -391,6 +391,11 @@
         <div class="create_ads_container">
             <!-- Header -->
             <div class="create_ads_header">
+                <button class="back_btn" id="back-from-create-ads">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
                 <h1 class="create_ads_title">Создайте объявление</h1>
                 <span class="create_ads_progress">1/2</span>
             </div>
@@ -469,10 +474,10 @@
                     <span class="input_suffix">RUB</span>
                 </div>
                 <div class="input_field">
-                    <input type="text" class="single_input" id="max-limit" placeholder="Макс." />
+                    <input type="text" class="single_input" id="max-limit" placeholder="Макс. (автоматически)" readonly />
                     <span class="input_suffix">RUB</span>
                 </div>
-                <div class="hint_text">Макс. можно не указывать.</div>
+                <div class="hint_text">Макс. рассчитывается автоматически: курс × количество</div>
             </div>
 
             <!-- Payment Details Section (only for selling) -->
