@@ -1917,6 +1917,71 @@ body {
 .ad_details_screen .ad_details_container .purchase_section .payment_details_section .payment_details_form.error {
   color: #ff4444;
 }
+.ad_details_screen .ad_details_container .purchase_section #seller-payment-details-section {
+  margin-top: 20px;
+  margin-bottom: 16px;
+}
+.ad_details_screen .ad_details_container .purchase_section #seller-payment-details-section .purchase_label {
+  display: block;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 600;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.ad_details_screen .ad_details_container .purchase_section #seller-payment-details-section .payment_details_field {
+  margin-bottom: 12px;
+}
+.ad_details_screen .ad_details_container .purchase_section #seller-payment-details-section .payment_details_field:last-child {
+  margin-bottom: 0;
+}
+.ad_details_screen .ad_details_container .purchase_section #seller-payment-details-section .payment_details_field .payment_details_input {
+  width: 100%;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, rgba(27, 27, 29, 0.95) 0%, rgba(42, 42, 43, 0.9) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  color: white;
+  font-size: 15px;
+  font-weight: 500;
+  outline: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-sizing: border-box;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+.ad_details_screen .ad_details_container .purchase_section #seller-payment-details-section .payment_details_field .payment_details_input:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+  background: linear-gradient(135deg, rgb(27, 27, 29) 0%, rgba(42, 42, 43, 0.95) 100%);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+.ad_details_screen .ad_details_container .purchase_section #seller-payment-details-section .payment_details_field .payment_details_input:focus {
+  border-color: #00c864;
+  background: linear-gradient(135deg, rgb(27, 27, 29) 0%, rgb(42, 42, 43) 100%);
+  box-shadow: 0 0 0 3px rgba(0, 200, 100, 0.15), 0 4px 16px rgba(0, 200, 100, 0.2);
+  transform: translateY(-1px);
+}
+.ad_details_screen .ad_details_container .purchase_section #seller-payment-details-section .payment_details_field .payment_details_input::-moz-placeholder {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 14px;
+}
+.ad_details_screen .ad_details_container .purchase_section #seller-payment-details-section .payment_details_field .payment_details_input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 14px;
+}
+.ad_details_screen .ad_details_container .purchase_section #seller-payment-details-section .payment_details_field .payment_details_input.error {
+  border-color: #ff4444;
+  background: linear-gradient(135deg, rgba(255, 68, 68, 0.15) 0%, rgba(255, 68, 68, 0.1) 100%);
+}
+.ad_details_screen .ad_details_container .purchase_section #seller-payment-details-section .payment_details_field .payment_details_input.error:hover {
+  border-color: #ff6666;
+  background: linear-gradient(135deg, rgba(255, 68, 68, 0.2) 0%, rgba(255, 68, 68, 0.15) 100%);
+}
+.ad_details_screen .ad_details_container .purchase_section #seller-payment-details-section .payment_details_field .payment_details_input.error:focus {
+  border-color: #ff4444;
+  background: linear-gradient(135deg, rgba(255, 68, 68, 0.2) 0%, rgba(255, 68, 68, 0.15) 100%);
+  box-shadow: 0 0 0 3px rgba(255, 68, 68, 0.2), 0 4px 16px rgba(255, 68, 68, 0.2);
+}
 .ad_details_screen .ad_details_container .purchase_footer {
   position: fixed;
   bottom: 0;
