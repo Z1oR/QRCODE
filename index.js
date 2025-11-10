@@ -2,7 +2,13 @@
 // ВАЖНО: Для Telegram Mini App нужен HTTPS!
 // Настройте HTTPS на сервере (см. backend/HTTPS_SETUP.md)
 // Временно можно использовать самоподписанный сертификат или ngrok для тестирования
-const API_BASE_URL = 'https://82.97.240.215';  // HTTPS вместо HTTP
+// API базовый URL
+// ВАЖНО: Telegram приложение может блокировать запросы к IP адресам!
+// Рекомендуется использовать домен вместо IP
+const API_BASE_URL = 'https://82.97.240.215:8000';  // HTTPS с портом 8000
+
+// Альтернативный вариант с доменом (если настроен):
+// const API_BASE_URL = 'https://yourdomain.com';
 
 // Инициализация Telegram Web App
 let tg = null;
@@ -32,19 +38,35 @@ async function initTelegramWebApp() {
             // Проверяем доступность сервера перед аутентификацией
         try {
             console.log('Проверка доступности сервера:', `${API_BASE_URL}/health`);
-            const healthCheck = await fetch(`${API_BASE_URL}/health`, {
-                method: 'GET',
-                credentials: 'include',
-                mode: 'cors'
-            }).catch(error => {
-                console.error('Ошибка при проверке сервера:', error);
-                console.error('Детали ошибки:', {
-                    name: error.name,
-                    message: error.message,
-                    stack: error.stack
+            // Пробуем сначала HTTPS, если не работает - пробуем HTTP
+            let healthCheck;
+            let apiUrl = API_BASE_URL;
+            
+            try {
+                healthCheck = await fetch(`${apiUrl}/health`, {
+                    method: 'GET',
+                    credentials: 'include',
+                    mode: 'cors'
                 });
-                throw error;
-            });
+            } catch (httpsError) {
+                console.warn('HTTPS запрос не прошел, пробуем HTTP...', httpsError);
+                // Пробуем HTTP как fallback
+                apiUrl = API_BASE_URL.replace('https://', 'http://');
+                try {
+                    healthCheck = await fetch(`${apiUrl}/health`, {
+                        method: 'GET',
+                        credentials: 'include',
+                        mode: 'cors'
+                    });
+                    console.warn('ВНИМАНИЕ: Используется HTTP вместо HTTPS! Это небезопасно и может не работать в Telegram приложении.');
+                } catch (httpError) {
+                    console.error('Ошибка при проверке сервера (и HTTPS, и HTTP не работают):', {
+                        httpsError: httpsError.message,
+                        httpError: httpError.message
+                    });
+                    throw httpsError; // Бросаем оригинальную ошибку
+                }
+            }
             
             if (healthCheck.ok) {
                 console.log('Сервер доступен, статус:', healthCheck.status);
