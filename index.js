@@ -9,6 +9,9 @@ let tg = null;
 
 // Глобальная переменная для данных пользователя
 let userData = null;
+// Глобальные переменные для токенов
+let accessToken = null;
+let refreshToken = null;
 
 // Функция инициализации Telegram Web App
 async function initTelegramWebApp() {
@@ -144,6 +147,10 @@ async function authenticateWithTelegram() {
         // Сохраняем данные пользователя в глобальную переменную
         userData = data;
         
+        // Сохраняем токены
+        accessToken = data.access_token;
+        refreshToken = data.refresh_token;
+        
         
     } catch (error) {
         console.error('Ошибка при аутентификации:', error);
@@ -156,8 +163,42 @@ async function authenticateWithTelegram() {
     }
 }
 
+// Функция для получения токена из cookie
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
+}
+
+// Инициализация токенов из cookie при загрузке страницы
+function initTokensFromCookies() {
+    accessToken = getCookie('ACCESS_TOKEN');
+    refreshToken = getCookie('REFRESH_TOKEN');
+    if (accessToken || refreshToken) {
+        console.log('Токены загружены из cookie');
+    }
+}
+
+// Вызываем при загрузке
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initTokensFromCookies);
+} else {
+    initTokensFromCookies();
+}
+
 // Функция для выполнения защищенных запросов
 async function makeAuthenticatedRequest(url, options = {}) {
+    // Получаем токен из глобальной переменной или cookie
+    let token = accessToken || getCookie('ACCESS_TOKEN');
+    
+    console.log('makeAuthenticatedRequest:', {
+        url,
+        hasAccessToken: !!accessToken,
+        hasCookieToken: !!getCookie('ACCESS_TOKEN'),
+        hasToken: !!token
+    });
+    
     const defaultOptions = {
         credentials: 'include', // Всегда отправляем cookies
         headers: {
@@ -165,20 +206,48 @@ async function makeAuthenticatedRequest(url, options = {}) {
             ...options.headers
         }
     };
+    
+    // Добавляем токен в заголовок Authorization, если он есть
+    if (token) {
+        defaultOptions.headers['Authorization'] = `Bearer ${token}`;
+        console.log('Токен добавлен в заголовок Authorization');
+    } else {
+        console.warn('Токен не найден!');
+    }
 
     const response = await fetch(url, { ...defaultOptions, ...options });
     
     // Если получили 401, токены могли истечь - пытаемся обновить
     if (response.status === 401) {
         try {
+            // Получаем refresh token
+            const refreshTokenValue = refreshToken || getCookie('REFRESH_TOKEN');
+            
+            if (!refreshTokenValue) {
+                console.error('Refresh token не найден');
+                return response;
+            }
+            
             const refreshResponse = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
                 method: 'POST',
                 credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${refreshTokenValue}`
+                }
             });
             
             if (refreshResponse.ok) {
-                // Повторяем оригинальный запрос после обновления токенов
+                const tokenData = await refreshResponse.json();
+                // Обновляем токены
+                accessToken = tokenData.access_token;
+                refreshToken = tokenData.refresh_token;
+                
+                // Повторяем оригинальный запрос с новым токеном
+                defaultOptions.headers['Authorization'] = `Bearer ${accessToken}`;
                 return fetch(url, { ...defaultOptions, ...options });
+            } else {
+                console.error('Ошибка обновления токена:', await refreshResponse.text());
             }
         } catch (error) {
             console.error('Ошибка при обновлении токенов:', error);
