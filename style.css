@@ -744,28 +744,63 @@ body {
   }
 }
 
-.buy__screen {
+.buy__screen, .sell__screen {
   width: 100%;
   min-height: 100vh;
   padding: 20px;
+  padding-bottom: 120px;
   background: linear-gradient(180deg, rgb(15, 15, 16) 0%, rgb(20, 20, 21) 100%);
+  animation: fadeIn 0.3s ease-out;
 }
-.buy__screen .buy__container {
+.buy__screen .buy__container, .buy__screen .sell__container, .sell__screen .buy__container, .sell__screen .sell__container {
   max-width: 100%;
   margin: 0 auto;
 }
-.buy__screen .buy__container .filters__bar {
+.buy__screen .buy__container .buy__header, .buy__screen .buy__container .sell__header, .buy__screen .sell__container .buy__header, .buy__screen .sell__container .sell__header, .sell__screen .buy__container .buy__header, .sell__screen .buy__container .sell__header, .sell__screen .sell__container .buy__header, .sell__screen .sell__container .sell__header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.buy__screen .buy__container .buy__header .back_btn, .buy__screen .buy__container .sell__header .back_btn, .buy__screen .sell__container .buy__header .back_btn, .buy__screen .sell__container .sell__header .back_btn, .sell__screen .buy__container .buy__header .back_btn, .sell__screen .buy__container .sell__header .back_btn, .sell__screen .sell__container .buy__header .back_btn, .sell__screen .sell__container .sell__header .back_btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(27, 27, 29, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+}
+.buy__screen .buy__container .buy__header .back_btn:hover, .buy__screen .buy__container .sell__header .back_btn:hover, .buy__screen .sell__container .buy__header .back_btn:hover, .buy__screen .sell__container .sell__header .back_btn:hover, .sell__screen .buy__container .buy__header .back_btn:hover, .sell__screen .buy__container .sell__header .back_btn:hover, .sell__screen .sell__container .buy__header .back_btn:hover, .sell__screen .sell__container .sell__header .back_btn:hover {
+  background: rgb(27, 27, 29);
+  transform: translateX(-2px);
+}
+.buy__screen .buy__container .buy__header .buy__title, .buy__screen .buy__container .buy__header .sell__title, .buy__screen .buy__container .sell__header .buy__title, .buy__screen .buy__container .sell__header .sell__title, .buy__screen .sell__container .buy__header .buy__title, .buy__screen .sell__container .buy__header .sell__title, .buy__screen .sell__container .sell__header .buy__title, .buy__screen .sell__container .sell__header .sell__title, .sell__screen .buy__container .buy__header .buy__title, .sell__screen .buy__container .buy__header .sell__title, .sell__screen .buy__container .sell__header .buy__title, .sell__screen .buy__container .sell__header .sell__title, .sell__screen .sell__container .buy__header .buy__title, .sell__screen .sell__container .buy__header .sell__title, .sell__screen .sell__container .sell__header .buy__title, .sell__screen .sell__container .sell__header .sell__title {
+  font-size: 24px;
+  font-weight: 700;
+  color: white;
+  margin: 0;
+}
+.buy__screen .buy__container, .buy__screen .sell__container, .sell__screen .buy__container, .sell__screen .sell__container {
+  max-width: 100%;
+  margin: 0 auto;
+}
+.buy__screen .buy__container .filters__bar, .buy__screen .sell__container .filters__bar, .sell__screen .buy__container .filters__bar, .sell__screen .sell__container .filters__bar {
   display: flex;
   gap: 12px;
   margin-bottom: 24px;
   flex-wrap: wrap;
 }
-.buy__screen .buy__container .filters__bar .filter__item {
+.buy__screen .buy__container .filters__bar .filter__item, .buy__screen .sell__container .filters__bar .filter__item, .sell__screen .buy__container .filters__bar .filter__item, .sell__screen .sell__container .filters__bar .filter__item {
   position: relative;
   display: inline-block;
   min-width: 120px;
 }
-.buy__screen .buy__container .filters__bar .filter__item .filter__header {
+.buy__screen .buy__container .filters__bar .filter__item .filter__header, .buy__screen .sell__container .filters__bar .filter__item .filter__header, .sell__screen .buy__container .filters__bar .filter__item .filter__header, .sell__screen .sell__container .filters__bar .filter__item .filter__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -778,31 +813,31 @@ body {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
-.buy__screen .buy__container .filters__bar .filter__item .filter__header:hover {
+.buy__screen .buy__container .filters__bar .filter__item .filter__header:hover, .buy__screen .sell__container .filters__bar .filter__item .filter__header:hover, .sell__screen .buy__container .filters__bar .filter__item .filter__header:hover, .sell__screen .sell__container .filters__bar .filter__item .filter__header:hover {
   transform: translateY(-2px);
   border-color: rgba(0, 128, 255, 0.3);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
 }
-.buy__screen .buy__container .filters__bar .filter__item .filter__header .filter__header-content {
+.buy__screen .buy__container .filters__bar .filter__item .filter__header .filter__header-content, .buy__screen .sell__container .filters__bar .filter__item .filter__header .filter__header-content, .sell__screen .buy__container .filters__bar .filter__item .filter__header .filter__header-content, .sell__screen .sell__container .filters__bar .filter__item .filter__header .filter__header-content {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
-.buy__screen .buy__container .filters__bar .filter__item .filter__header .filter__header-content .filter__label {
+.buy__screen .buy__container .filters__bar .filter__item .filter__header .filter__header-content .filter__label, .buy__screen .sell__container .filters__bar .filter__item .filter__header .filter__header-content .filter__label, .sell__screen .buy__container .filters__bar .filter__item .filter__header .filter__header-content .filter__label, .sell__screen .sell__container .filters__bar .filter__item .filter__header .filter__header-content .filter__label {
   color: grey;
   font-size: 12px;
 }
-.buy__screen .buy__container .filters__bar .filter__item .filter__header .filter__header-content .filter__value {
+.buy__screen .buy__container .filters__bar .filter__item .filter__header .filter__header-content .filter__value, .buy__screen .sell__container .filters__bar .filter__item .filter__header .filter__header-content .filter__value, .sell__screen .buy__container .filters__bar .filter__item .filter__header .filter__header-content .filter__value, .sell__screen .sell__container .filters__bar .filter__item .filter__header .filter__header-content .filter__value {
   color: white;
   font-weight: 500;
   font-size: 16px;
 }
-.buy__screen .buy__container .filters__bar .filter__item .filter__header .filter__arrow-icon {
+.buy__screen .buy__container .filters__bar .filter__item .filter__header .filter__arrow-icon, .buy__screen .sell__container .filters__bar .filter__item .filter__header .filter__arrow-icon, .sell__screen .buy__container .filters__bar .filter__item .filter__header .filter__arrow-icon, .sell__screen .sell__container .filters__bar .filter__item .filter__header .filter__arrow-icon {
   color: white;
   font-size: 14px;
   margin-left: 12px;
 }
-.buy__screen .buy__container .filters__bar .filter__item .filter__dropdown {
+.buy__screen .buy__container .filters__bar .filter__item .filter__dropdown, .buy__screen .sell__container .filters__bar .filter__item .filter__dropdown, .sell__screen .buy__container .filters__bar .filter__item .filter__dropdown, .sell__screen .sell__container .filters__bar .filter__item .filter__dropdown {
   display: none;
   position: absolute;
   top: calc(100% + 8px);
@@ -817,7 +852,7 @@ body {
   -webkit-backdrop-filter: blur(10px);
           backdrop-filter: blur(10px);
 }
-.buy__screen .buy__container .filters__bar .filter__item .filter__dropdown .dropdown__item {
+.buy__screen .buy__container .filters__bar .filter__item .filter__dropdown .dropdown__item, .buy__screen .sell__container .filters__bar .filter__item .filter__dropdown .dropdown__item, .sell__screen .buy__container .filters__bar .filter__item .filter__dropdown .dropdown__item, .sell__screen .sell__container .filters__bar .filter__item .filter__dropdown .dropdown__item {
   display: flex;
   align-items: center;
   padding: 14px 18px;
@@ -828,14 +863,14 @@ body {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
-.buy__screen .buy__container .filters__bar .filter__item .filter__dropdown .dropdown__item:last-child {
+.buy__screen .buy__container .filters__bar .filter__item .filter__dropdown .dropdown__item:last-child, .buy__screen .sell__container .filters__bar .filter__item .filter__dropdown .dropdown__item:last-child, .sell__screen .buy__container .filters__bar .filter__item .filter__dropdown .dropdown__item:last-child, .sell__screen .sell__container .filters__bar .filter__item .filter__dropdown .dropdown__item:last-child {
   border-bottom: none;
 }
-.buy__screen .buy__container .filters__bar .filter__item .filter__dropdown .dropdown__item:hover {
+.buy__screen .buy__container .filters__bar .filter__item .filter__dropdown .dropdown__item:hover, .buy__screen .sell__container .filters__bar .filter__item .filter__dropdown .dropdown__item:hover, .sell__screen .buy__container .filters__bar .filter__item .filter__dropdown .dropdown__item:hover, .sell__screen .sell__container .filters__bar .filter__item .filter__dropdown .dropdown__item:hover {
   background: rgba(0, 128, 255, 0.1);
   padding-left: 22px;
 }
-.buy__screen .buy__container .filters__bar .filter__item .filter__dropdown .dropdown__item .checkmark {
+.buy__screen .buy__container .filters__bar .filter__item .filter__dropdown .dropdown__item .checkmark, .buy__screen .sell__container .filters__bar .filter__item .filter__dropdown .dropdown__item .checkmark, .sell__screen .buy__container .filters__bar .filter__item .filter__dropdown .dropdown__item .checkmark, .sell__screen .sell__container .filters__bar .filter__item .filter__dropdown .dropdown__item .checkmark {
   margin-right: 12px;
   color: #0080ff;
   font-weight: bold;
@@ -843,20 +878,20 @@ body {
   display: none;
   transition: transform 0.2s;
 }
-.buy__screen .buy__container .filters__bar .filter__item .filter__dropdown .dropdown__item.dropdown__item--selected {
+.buy__screen .buy__container .filters__bar .filter__item .filter__dropdown .dropdown__item.dropdown__item--selected, .buy__screen .sell__container .filters__bar .filter__item .filter__dropdown .dropdown__item.dropdown__item--selected, .sell__screen .buy__container .filters__bar .filter__item .filter__dropdown .dropdown__item.dropdown__item--selected, .sell__screen .sell__container .filters__bar .filter__item .filter__dropdown .dropdown__item.dropdown__item--selected {
   background: rgba(0, 128, 255, 0.15);
 }
-.buy__screen .buy__container .filters__bar .filter__item .filter__dropdown .dropdown__item.dropdown__item--selected .checkmark {
+.buy__screen .buy__container .filters__bar .filter__item .filter__dropdown .dropdown__item .checkmark, .buy__screen .sell__container .filters__bar .filter__item .filter__dropdown .dropdown__item .checkmark, .sell__screen .buy__container .filters__bar .filter__item .filter__dropdown .dropdown__item .checkmark, .sell__screen .sell__container .filters__bar .filter__item .filter__dropdown .dropdown__item .checkmark {
   display: inline-block;
-  transform: scale(1.2);
+  display-transform: scale(1.2);
 }
-.buy__screen .buy__container .filters__bar .filter__item.filter__crypto.filter__open .filter__dropdown {
+.buy__screen .buy__container .filters__bar .filter__item.filter__crypto.filter__open .filter__dropdown, .buy__screen .sell__container .filters__bar .filter__item.filter__crypto.filter__open .filter__dropdown, .sell__screen .buy__container .filters__bar .filter__item.filter__crypto.filter__open .filter__dropdown, .sell__screen .sell__container .filters__bar .filter__item.filter__crypto.filter__open .filter__dropdown {
   display: block;
 }
-.buy__screen .buy__container .amount__input {
+.buy__screen .buy__container .amount__input, .buy__screen .sell__container .amount__input, .sell__screen .buy__container .amount__input, .sell__screen .sell__container .amount__input {
   margin-bottom: 24px;
 }
-.buy__screen .buy__container .amount__input label {
+.buy__screen .buy__container .amount__input label, .buy__screen .sell__container .amount__input label, .sell__screen .buy__container .amount__input label, .sell__screen .sell__container .amount__input label {
   display: block;
   color: rgba(255, 255, 255, 0.7);
   font-size: 13px;
@@ -865,7 +900,7 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
-.buy__screen .buy__container .amount__input .amount__field {
+.buy__screen .buy__container .amount__input .amount__field, .buy__screen .sell__container .amount__input .amount__field, .sell__screen .buy__container .amount__input .amount__field, .sell__screen .sell__container .amount__input .amount__field {
   width: 100%;
   padding: 16px 18px;
   background: linear-gradient(135deg, rgba(27, 27, 29, 0.95) 0%, rgba(42, 42, 43, 0.9) 100%);
@@ -877,26 +912,26 @@ body {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
-.buy__screen .buy__container .amount__input .amount__field:focus {
+.buy__screen .buy__container .amount__input .amount__field:focus, .buy__screen .sell__container .amount__input .amount__field:focus, .sell__screen .buy__container .amount__input .amount__field:focus, .sell__screen .sell__container .amount__input .amount__field:focus {
   outline: none;
   border-color: rgba(0, 128, 255, 0.5);
   box-shadow: 0 6px 20px rgba(0, 128, 255, 0.2), 0 0 0 3px rgba(0, 128, 255, 0.1);
   transform: translateY(-1px);
 }
-.buy__screen .buy__container .amount__input .amount__field::-moz-placeholder {
+.buy__screen .buy__container .amount__input .amount__field::-moz-placeholder, .buy__screen .sell__container .amount__input .amount__field::-moz-placeholder, .sell__screen .buy__container .amount__input .amount__field::-moz-placeholder, .sell__screen .sell__container .amount__input .amount__field::-moz-placeholder {
   color: rgba(255, 255, 255, 0.4);
   font-size: 14px;
 }
-.buy__screen .buy__container .amount__input .amount__field::placeholder {
+.buy__screen .buy__container .amount__input .amount__field::placeholder, .buy__screen .sell__container .amount__input .amount__field::placeholder, .sell__screen .buy__container .amount__input .amount__field::placeholder, .sell__screen .sell__container .amount__input .amount__field::placeholder {
   color: rgba(255, 255, 255, 0.4);
   font-size: 14px;
 }
-.buy__screen .buy__container .listings__container {
+.buy__screen .buy__container .listings__container, .buy__screen .sell__container .listings__container, .sell__screen .buy__container .listings__container, .sell__screen .sell__container .listings__container {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
-.buy__screen .buy__container .listings__container .listing__card {
+.buy__screen .buy__container .listings__container .listing__card, .buy__screen .sell__container .listings__container .listing__card, .sell__screen .buy__container .listings__container .listing__card, .sell__screen .sell__container .listings__container .listing__card {
   background: linear-gradient(135deg, rgba(27, 27, 29, 0.95) 0%, rgba(42, 42, 43, 0.9) 100%);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 20px;
@@ -906,7 +941,7 @@ body {
   position: relative;
   overflow: hidden;
 }
-.buy__screen .buy__container .listings__container .listing__card::before {
+.buy__screen .buy__container .listings__container .listing__card::before, .buy__screen .sell__container .listings__container .listing__card::before, .sell__screen .buy__container .listings__container .listing__card::before, .sell__screen .sell__container .listings__container .listing__card::before {
   content: "";
   position: absolute;
   top: 0;
@@ -917,21 +952,21 @@ body {
   opacity: 0;
   transition: opacity 0.3s;
 }
-.buy__screen .buy__container .listings__container .listing__card:hover {
+.buy__screen .buy__container .listings__container .listing__card:hover, .buy__screen .sell__container .listings__container .listing__card:hover, .sell__screen .buy__container .listings__container .listing__card:hover, .sell__screen .sell__container .listings__container .listing__card:hover {
   transform: translateY(-4px);
   border-color: rgba(255, 255, 255, 0.2);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
 }
-.buy__screen .buy__container .listings__container .listing__card:hover::before {
+.buy__screen .buy__container .listings__container .listing__card:hover::before, .buy__screen .sell__container .listings__container .listing__card:hover::before, .sell__screen .buy__container .listings__container .listing__card:hover::before, .sell__screen .sell__container .listings__container .listing__card:hover::before {
   opacity: 1;
 }
-.buy__screen .buy__container .listings__container .listing__card:hover .listing__header {
+.buy__screen .buy__container .listings__container .listing__card .listing__header, .buy__screen .sell__container .listings__container .listing__card .listing__header, .sell__screen .buy__container .listings__container .listing__card .listing__header, .sell__screen .sell__container .listings__container .listing__card .listing__header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 20px;
+  align-items-margin-bottom: 20px;
 }
-.buy__screen .buy__container .listings__container .listing__card:hover .listing__header .listing__price .price__main {
+.buy__screen .buy__container .listings__container .listing__card .listing__header .listing__price .price__main, .buy__screen .sell__container .listings__container .listing__card .listing__header .listing__price .price__main, .sell__screen .buy__container .listings__container .listing__card .listing__header .listing__price .price__main, .sell__screen .sell__container .listings__container .listing__card .listing__header .listing__price .price__main {
   font-size: 28px;
   font-weight: 700;
   color: white;
@@ -942,43 +977,45 @@ body {
   -webkit-text-fill-color: transparent;
 }
 @supports not (-webkit-background-clip: text) {
-  .buy__screen .buy__container .listings__container .listing__card:hover .listing__header .listing__price .price__main {
+  .buy__screen .buy__container .listings__container .listing__card .listing__header .listing__price .price__main, .buy__screen .sell__container .listings__container .listing__card .listing__header .listing__price .price__main, .sell__screen .buy__container .listings__container .listing__card .listing__header .listing__price .price__main, .sell__screen .sell__container .listings__container .listing__card .listing__header .listing__price .price__main {
     color: white;
   }
 }
-.buy__screen .buy__container .listings__container .listing__card:hover .listing__header .listing__price .price__subtitle {
+.buy__screen .buy__container .listings__container .listing__card .listing__header .listing__price .price__subtitle, .buy__screen .sell__container .listings__container .listing__card .listing__header .listing__price .price__subtitle, .sell__screen .buy__container .listings__container .listing__card .listing__header .listing__price .price__subtitle, .sell__screen .sell__container .listings__container .listing__card .listing__header .listing__price .price__subtitle {
   font-size: 13px;
   color: rgba(255, 255, 255, 0.6);
   font-weight: 500;
 }
-.buy__screen .buy__container .listings__container .listing__card:hover .listing__header .listing__actions {
+.buy__screen .buy__container .listings__container .listing__card .listing__header .listing__actions, .buy__screen .sell__container .listings__container .listing__card .listing__header .listing__actions, .sell__screen .buy__container .listings__container .listing__card .listing__header .listing__actions, .sell__screen .sell__container .listings__container .listing__card .listing__header .listing__actions {
   display: flex;
   align-items: center;
   gap: 12px;
 }
-.buy__screen .buy__container .listings__container .listing__card:hover .listing__header .listing__actions .buy__btn {
+.buy__screen .buy__container .listings__container .listing__card .listing__header .listing__actions .buy__btn, .buy__screen .buy__container .listings__container .listing__card .listing__header .listing__actions .sell__btn, .buy__screen .sell__container .listings__container .listing__card .listing__header .listing__actions .buy__btn, .buy__screen .sell__container .listings__container .listing__card .listing__header .listing__actions .sell__btn, .sell__screen .buy__container .listings__container .listing__card .listing__header .listing__actions .buy__btn, .sell__screen .buy__container .listings__container .listing__card .listing__header .listing__actions .sell__btn, .sell__screen .sell__container .listings__container .listing__card .listing__header .listing__actions .buy__btn, .sell__screen .sell__container .listings__container .listing__card .listing__header .listing__actions .sell__btn {
   padding: 14px 28px;
   background: linear-gradient(135deg, #0080ff 0%, #0066cc 100%);
   color: white;
   border: none;
   border-radius: 12px;
-  font-weight: 700;
-  font-size: 15px;
+  font-weight: 600;
   cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 16px rgba(0, 128, 255, 0.4);
+  transition: all 0.3s;
 }
-.buy__screen .buy__container .listings__container .listing__card:hover .listing__header .listing__actions .buy__btn:hover {
+.buy__screen .buy__container .listings__container .listing__card .listing__header .listing__actions .buy__btn:hover, .buy__screen .buy__container .listings__container .listing__card .listing__header .listing__actions .sell__btn:hover, .buy__screen .sell__container .listings__container .listing__card .listing__header .listing__actions .buy__btn:hover, .buy__screen .sell__container .listings__container .listing__card .listing__header .listing__actions .sell__btn:hover, .sell__screen .buy__container .listings__container .listing__card .listing__header .listing__actions .buy__btn:hover, .sell__screen .buy__container .listings__container .listing__card .listing__header .listing__actions .sell__btn:hover, .sell__screen .sell__container .listings__container .listing__card .listing__header .listing__actions .buy__btn:hover, .sell__screen .sell__container .listings__container .listing__card .listing__header .listing__actions .sell__btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 128, 255, 0.5);
-  background: linear-gradient(135deg, #0090ff 0%, #0077dd 100%);
+  box-shadow: 0 8px 20px rgba(0, 128, 255, 0.4);
 }
-.buy__screen .buy__container .listings__container .listing__card:hover .listing__header .listing__actions .buy__btn:active {
+.buy__screen .buy__container .listings__container .listing__card .listing__header .listing__actions .buy__btn.sell__btn, .buy__screen .buy__container .listings__container .listing__card .listing__header .listing__actions .sell__btn.sell__btn, .buy__screen .sell__container .listings__container .listing__card .listing__header .listing__actions .buy__btn.sell__btn, .buy__screen .sell__container .listings__container .listing__card .listing__header .listing__actions .sell__btn.sell__btn, .sell__screen .buy__container .listings__container .listing__card .listing__header .listing__actions .buy__btn.sell__btn, .sell__screen .buy__container .listings__container .listing__card .listing__header .listing__actions .sell__btn.sell__btn, .sell__screen .sell__container .listings__container .listing__card .listing__header .listing__actions .buy__btn.sell__btn, .sell__screen .sell__container .listings__container .listing__card .listing__header .listing__actions .sell__btn.sell__btn {
+  background: linear-gradient(135deg, #00c864 0%, #00a854 100%);
+}
+.buy__screen .buy__container .listings__container .listing__card .listing__header .listing__actions .buy__btn.sell__btn:hover, .buy__screen .buy__container .listings__container .listing__card .listing__header .listing__actions .sell__btn.sell__btn:hover, .buy__screen .sell__container .listings__container .listing__card .listing__header .listing__actions .buy__btn.sell__btn:hover, .buy__screen .sell__container .listings__container .listing__card .listing__header .listing__actions .sell__btn.sell__btn:hover, .sell__screen .buy__container .listings__container .listing__card .listing__header .listing__actions .buy__btn.sell__btn:hover, .sell__screen .buy__container .listings__container .listing__card .listing__header .listing__actions .sell__btn.sell__btn:hover, .sell__screen .sell__container .listings__container .listing__card .listing__header .listing__actions .buy__btn.sell__btn:hover, .sell__screen .sell__container .listings__container .listing__card .listing__header .listing__actions .sell__btn.sell__btn:hover {
+  box-shadow: 0 8px 20px rgba(0, 200, 100, 0.4);
+}
+.buy__screen .buy__container .listings__container .listing__card .listing__header .listing__actions .buy__btn.sell__btn:active, .buy__screen .buy__container .listings__container .listing__card .listing__header .listing__actions .sell__btn.sell__btn:active, .buy__screen .sell__container .listings__container .listing__card .listing__header .listing__actions .buy__btn.sell__btn:active, .buy__screen .sell__container .listings__container .listing__card .listing__header .listing__actions .sell__btn.sell__btn:active, .sell__screen .buy__container .listings__container .listing__card .listing__header .listing__actions .buy__btn.sell__btn:active, .sell__screen .buy__container .listings__container .listing__card .listing__header .listing__actions .sell__btn.sell__btn:active, .sell__screen .sell__container .listings__container .listing__card .listing__header .listing__actions .buy__btn.sell__btn:active, .sell__screen .sell__container .listings__container .listing__card .listing__header .listing__actions .sell__btn.sell__btn:active {
   transform: translateY(0);
-  box-shadow: 0 4px 16px rgba(0, 128, 255, 0.4);
+  box-shadow: 0 4px 16px rgba(0, 200, 100, 0.3);
 }
-.buy__screen .buy__container .listings__container .listing__card .listing__seller {
+.buy__screen .buy__container .listings__container .listing__card .listing__seller, .buy__screen .sell__container .listings__container .listing__card .listing__seller, .sell__screen .buy__container .listings__container .listing__card .listing__seller, .sell__screen .sell__container .listings__container .listing__card .listing__seller {
   display: flex;
   align-items: center;
   gap: 14px;
@@ -987,7 +1024,7 @@ body {
   background: rgba(0, 0, 0, 0.2);
   border-radius: 12px;
 }
-.buy__screen .buy__container .listings__container .listing__card .listing__seller .seller__avatar {
+.buy__screen .buy__container .listings__container .listing__card .listing__seller .seller__avatar, .buy__screen .sell__container .listings__container .listing__card .listing__seller .seller__avatar, .sell__screen .buy__container .listings__container .listing__card .listing__seller .seller__avatar, .sell__screen .sell__container .listings__container .listing__card .listing__seller .seller__avatar {
   width: 44px;
   height: 44px;
   border-radius: 50%;
@@ -995,11 +1032,11 @@ body {
   border: 2px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
-.buy__screen .buy__container .listings__container .listing__card .listing__seller .seller__info {
+.buy__screen .buy__container .listings__container .listing__card .listing__seller .seller__info, .buy__screen .sell__container .listings__container .listing__card .listing__seller .seller__info, .sell__screen .buy__container .listings__container .listing__card .listing__seller .seller__info, .sell__screen .sell__container .listings__container .listing__card .listing__seller .seller__info {
   flex: 1;
   min-width: 0;
 }
-.buy__screen .buy__container .listings__container .listing__card .listing__seller .seller__info .seller__name {
+.buy__screen .buy__container .listings__container .listing__card .listing__seller .seller__info .seller__name, .buy__screen .sell__container .listings__container .listing__card .listing__seller .seller__info .seller__name, .sell__screen .buy__container .listings__container .listing__card .listing__seller .seller__info .seller__name, .sell__screen .sell__container .listings__container .listing__card .listing__seller .seller__info .seller__name {
   font-size: 16px;
   font-weight: 600;
   color: white;
@@ -1008,30 +1045,30 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.buy__screen .buy__container .listings__container .listing__card .listing__seller .seller__info .seller__stats {
+.buy__screen .buy__container .listings__container .listing__card .listing__seller .seller__info .seller__stats, .buy__screen .sell__container .listings__container .listing__card .listing__seller .seller__info .seller__stats, .sell__screen .buy__container .listings__container .listing__card .listing__seller .seller__info .seller__stats, .sell__screen .sell__container .listings__container .listing__card .listing__seller .seller__info .seller__stats {
   font-size: 13px;
   color: rgba(255, 255, 255, 0.6);
   font-weight: 500;
 }
-.buy__screen .buy__container .listings__container .listing__card .listing__details {
+.buy__screen .buy__container .listings__container .listing__card .listing__details, .buy__screen .sell__container .listings__container .listing__card .listing__details, .sell__screen .buy__container .listings__container .listing__card .listing__details, .sell__screen .sell__container .listings__container .listing__card .listing__details {
   display: flex;
   flex-direction: column;
   gap: 12px;
   padding-top: 16px;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
-.buy__screen .buy__container .listings__container .listing__card .listing__details .detail__row {
+.buy__screen .buy__container .listings__container .listing__card .listing__details .detail__row, .buy__screen .sell__container .listings__container .listing__card .listing__details .detail__row, .sell__screen .buy__container .listings__container .listing__card .listing__details .detail__row, .sell__screen .sell__container .listings__container .listing__card .listing__details .detail__row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   font-size: 14px;
   padding: 8px 0;
 }
-.buy__screen .buy__container .listings__container .listing__card .listing__details .detail__row .detail__label {
+.buy__screen .buy__container .listings__container .listing__card .listing__details .detail__row .detail__label, .buy__screen .sell__container .listings__container .listing__card .listing__details .detail__row .detail__label, .sell__screen .buy__container .listings__container .listing__card .listing__details .detail__row .detail__label, .sell__screen .sell__container .listings__container .listing__card .listing__details .detail__row .detail__label {
   color: rgba(255, 255, 255, 0.6);
   font-weight: 500;
 }
-.buy__screen .buy__container .listings__container .listing__card .listing__details .detail__row .detail__value {
+.buy__screen .buy__container .listings__container .listing__card .listing__details .detail__row .detail__value, .buy__screen .sell__container .listings__container .listing__card .listing__details .detail__row .detail__value, .sell__screen .buy__container .listings__container .listing__card .listing__details .detail__row .detail__value, .sell__screen .sell__container .listings__container .listing__card .listing__details .detail__row .detail__value {
   color: white;
   font-weight: 600;
   text-align: right;
@@ -1050,22 +1087,32 @@ body {
 }
 .create_ads_screen .create_ads_container .create_ads_header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 40px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.create_ads_screen .create_ads_container .create_ads_header .back_btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(27, 27, 29, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+}
+.create_ads_screen .create_ads_container .create_ads_header .back_btn:hover {
+  background: rgb(27, 27, 29);
+  transform: translateX(-2px);
 }
 .create_ads_screen .create_ads_container .create_ads_header .create_ads_title {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 700;
   color: white;
   margin: 0;
-  letter-spacing: -0.5px;
-  background: linear-gradient(135deg, #ffffff 0%, rgba(255, 255, 255, 0.9) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
 }
 @supports not (-webkit-background-clip: text) {
   .create_ads_screen .create_ads_container .create_ads_header .create_ads_title {
@@ -1808,11 +1855,11 @@ body {
   transition: all 0.3s;
   box-shadow: 0 8px 24px rgba(0, 128, 255, 0.4);
 }
-.ad_details_screen .ad_details_container .purchase_footer .purchase_btn:hover {
+.ad_details_screen .ad_details_container .purchase_footer:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 32px rgba(0, 128, 255, 0.5);
+  transform-box-shadow: 0 12px 32px rgba(0, 128, 255, 0.5);
 }
-.ad_details_screen .ad_details_container .purchase_footer .purchase_btn:active {
+.ad_details_screen .ad_details_container .purchase_footer:active {
   transform: translateY(0);
 }
 
@@ -2352,6 +2399,39 @@ body {
   padding-bottom: 120px;
   background: linear-gradient(180deg, rgb(15, 15, 16) 0%, rgb(20, 20, 21) 100%);
   animation: fadeIn 0.3s ease-out;
+}
+.preview_screen .preview_container {
+  max-width: 100%;
+  margin: 0 auto;
+}
+.preview_screen .preview_container .preview_header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.preview_screen .preview_container .preview_header .back_btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(27, 27, 29, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+}
+.preview_screen .preview_container .preview_header .back_btn:hover {
+  background: rgb(27, 27, 29);
+  transform: translateX(-2px);
+}
+.preview_screen .preview_container .preview_header .preview_title {
+  font-size: 24px;
+  font-weight: 700;
+  color: white;
+  margin: 0;
 }
 .preview_screen .preview_container {
   max-width: 100%;
