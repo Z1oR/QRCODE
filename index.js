@@ -2416,9 +2416,19 @@ function openPaymentScreen(ad, usdtAmount, userAction = 'buy') {
             }
         }
     } else {
-        // Продажа: показываем реквизиты покупателя из объявления
-        bankName = ad.bank_name || 'Не указан';
-        paymentDetails = ad.payment_details || 'Не указаны';
+        // Продажа (userAction === 'sell'): показываем реквизиты покупателя
+        // Когда пользователь продает, объявление должно быть на покупку (ad.type === 'buy')
+        // В этом случае владелец объявления - покупатель, его реквизиты в ad.bank_name и ad.payment_details
+        // Но также нужно проверить реквизиты из транзакции, если они там есть
+        if (currentTransaction && currentTransaction.buyer_bank_name && currentTransaction.buyer_payment_details) {
+            // Используем реквизиты покупателя из транзакции
+            bankName = currentTransaction.buyer_bank_name;
+            paymentDetails = currentTransaction.buyer_payment_details;
+        } else {
+            // Fallback на реквизиты из объявления
+            bankName = ad.bank_name || 'Не указан';
+            paymentDetails = ad.payment_details || 'Не указаны';
+        }
     }
     
     console.log('Заполнение реквизитов:', {
@@ -3095,21 +3105,55 @@ async function displayTransactionDetails(transaction, ad) {
             </div>
     `;
     
-    // Добавляем реквизиты из объявления
-    if (ad && ad.bank_name && ad.payment_details) {
-        detailsHTML += `
-            <div class="transaction_details_section">
-                <div class="transaction_details_section_title">Реквизиты для перевода:</div>
-                <div class="transaction_details_row">
-                    <span class="transaction_details_label">Банк:</span>
-                    <span class="transaction_details_value">${escapeHtml(ad.bank_name)}</span>
+    // Добавляем реквизиты в зависимости от роли пользователя
+    if (isBuyer) {
+        // Покупатель видит реквизиты продавца для перевода денег
+        let sellerBankName = null;
+        let sellerPaymentDetails = null;
+        
+        // Сначала проверяем реквизиты продавца из транзакции
+        if (transaction.seller_bank_name && transaction.seller_payment_details) {
+            sellerBankName = transaction.seller_bank_name;
+            sellerPaymentDetails = transaction.seller_payment_details;
+        } 
+        // Если объявление на продажу, реквизиты продавца из объявления
+        else if (ad && ad.type === 'sell' && ad.bank_name && ad.payment_details) {
+            sellerBankName = ad.bank_name;
+            sellerPaymentDetails = ad.payment_details;
+        }
+        
+        if (sellerBankName && sellerPaymentDetails) {
+            detailsHTML += `
+                <div class="transaction_details_section">
+                    <div class="transaction_details_section_title">Реквизиты для перевода:</div>
+                    <div class="transaction_details_row">
+                        <span class="transaction_details_label">Банк:</span>
+                        <span class="transaction_details_value">${escapeHtml(sellerBankName)}</span>
+                    </div>
+                    <div class="transaction_details_row">
+                        <span class="transaction_details_label">Реквизиты:</span>
+                        <span class="transaction_details_value">${escapeHtml(sellerPaymentDetails)}</span>
+                    </div>
                 </div>
-                <div class="transaction_details_row">
-                    <span class="transaction_details_label">Реквизиты:</span>
-                    <span class="transaction_details_value">${escapeHtml(ad.payment_details)}</span>
+            `;
+        }
+    } else if (isSeller) {
+        // Продавец видит реквизиты покупателя (из объявления на покупку)
+        if (ad && ad.type === 'buy' && ad.bank_name && ad.payment_details) {
+            detailsHTML += `
+                <div class="transaction_details_section">
+                    <div class="transaction_details_section_title">Реквизиты покупателя:</div>
+                    <div class="transaction_details_row">
+                        <span class="transaction_details_label">Банк:</span>
+                        <span class="transaction_details_value">${escapeHtml(ad.bank_name)}</span>
+                    </div>
+                    <div class="transaction_details_row">
+                        <span class="transaction_details_label">Реквизиты:</span>
+                        <span class="transaction_details_value">${escapeHtml(ad.payment_details)}</span>
+                    </div>
                 </div>
-            </div>
-        `;
+            `;
+        }
     }
     
     // Если покупатель перевел деньги, показываем дату
