@@ -235,7 +235,6 @@ async function authenticateWithTelegram() {
                     userData.id = meData.id;
                     userData.username = userData.username || meData.username;
                     userData.balance = userData.balance !== undefined ? userData.balance : meData.balance;
-                    userData.terms_accepted = meData.terms_accepted !== undefined ? meData.terms_accepted : false;
                 }
             } catch (error) {
                 console.error('Ошибка при получении ID пользователя:', error);
@@ -248,12 +247,6 @@ async function authenticateWithTelegram() {
         
         // Обновляем информацию о пользователе на главном экране
         updateUserInfo(data);
-        
-        // Проверяем, принял ли пользователь соглашение
-        if (userData && !userData.terms_accepted) {
-            // Показываем экран соглашения
-            showTermsScreen();
-        }
         
         console.log('Токены сохранены в память:', {
             hasAccessToken: !!accessToken,
@@ -620,16 +613,10 @@ async function refreshUserBalance() {
             if (userInfo && userInfo.balance !== undefined) {
                 if (userData) {
                     userData.balance = userInfo.balance;
-                    userData.terms_accepted = userInfo.terms_accepted !== undefined ? userInfo.terms_accepted : false;
                 } else {
                     userData = userInfo;
                 }
                 updateUserInfo(userData || userInfo);
-                
-                // Проверяем, принял ли пользователь соглашение
-                if (userData && !userData.terms_accepted) {
-                    showTermsScreen();
-                }
                 
                 // Обновляем баланс на экране создания объявления, если он открыт
                 const createAdsScreen = document.querySelector('.create_ads_screen');
@@ -3273,71 +3260,8 @@ async function markTransactionPaid(transactionId) {
     }
 }
 
-// ========== ФУНКЦИОНАЛ ПОЛЬЗОВАТЕЛЬСКОГО СОГЛАШЕНИЯ ==========
-
-// Функция показа экрана соглашения
-function showTermsScreen() {
-    const termsScreen = document.getElementById('terms-screen');
-    const mainScreen = document.getElementById('main__screen');
-    
-    if (termsScreen && mainScreen) {
-        mainScreen.style.display = 'none';
-        termsScreen.style.display = 'block';
-        
-        // Прокручиваем в начало
-        window.scrollTo(0, 0);
-    }
-}
-
-// Инициализация обработчиков для экрана соглашения
+// Инициализация обработчиков для экрана "О нас"
 document.addEventListener('DOMContentLoaded', () => {
-    const termsCheckbox = document.getElementById('terms-checkbox');
-    const termsAcceptBtn = document.getElementById('terms-accept-btn');
-    
-    // Обработчик изменения чекбокса
-    if (termsCheckbox && termsAcceptBtn) {
-        termsCheckbox.addEventListener('change', (e) => {
-            termsAcceptBtn.disabled = !e.target.checked;
-        });
-    }
-    
-    // Обработчик кнопки принятия соглашения
-    if (termsAcceptBtn) {
-        termsAcceptBtn.addEventListener('click', async () => {
-            if (!termsCheckbox || !termsCheckbox.checked) {
-                alert('Пожалуйста, подтвердите согласие с условиями');
-                return;
-            }
-            
-            try {
-                const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/auth/accept-terms`, {
-                    method: 'POST'
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Ошибка при принятии соглашения');
-                }
-                
-                // Обновляем userData
-                if (userData) {
-                    userData.terms_accepted = true;
-                }
-                
-                // Скрываем экран соглашения и показываем главный экран
-                const termsScreen = document.getElementById('terms-screen');
-                const mainScreen = document.getElementById('main__screen');
-                
-                if (termsScreen && mainScreen) {
-                    termsScreen.style.display = 'none';
-                    mainScreen.style.display = 'block';
-                }
-            } catch (error) {
-                console.error('Ошибка при принятии соглашения:', error);
-                alert('Ошибка при принятии соглашения: ' + error.message);
-            }
-        });
-    }
-    
     // Обработчик кнопки "Назад" на экране "О нас"
     const backFromAboutBtn = document.getElementById('back-from-about');
     if (backFromAboutBtn) {
@@ -3348,21 +3272,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (aboutScreen && mainScreen) {
                 aboutScreen.style.display = 'none';
                 mainScreen.style.display = 'block';
-            }
-        });
-    }
-    
-    // Обработчик кнопки "Пользовательское соглашение" в разделе "О нас"
-    const termsLinkBtn = document.getElementById('terms-link-btn');
-    if (termsLinkBtn) {
-        termsLinkBtn.addEventListener('click', () => {
-            const aboutScreen = document.getElementById('about-screen');
-            const termsScreen = document.getElementById('terms-screen');
-            
-            if (aboutScreen && termsScreen) {
-                aboutScreen.style.display = 'none';
-                termsScreen.style.display = 'block';
-                window.scrollTo(0, 0);
             }
         });
     }
