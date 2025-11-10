@@ -1838,7 +1838,7 @@ function openAdDetailsScreen(ad, userAction = 'buy') {
     const buyerBankNameInput = document.getElementById('buyer-bank-name');
     const buyerPaymentDetailsInput = document.getElementById('buyer-payment-details');
     
-    // Очищаем поля реквизитов
+    // Очищаем поля реквизитов покупателя
     if (buyerBankNameInput) {
         buyerBankNameInput.value = '';
         buyerBankNameInput.classList.remove('error');
@@ -1856,9 +1856,40 @@ function openAdDetailsScreen(ad, userAction = 'buy') {
         });
     }
     
-    // Форма реквизитов больше не нужна - реквизиты берутся из объявления
+    // Форма реквизитов покупателя больше не нужна - реквизиты берутся из объявления
     if (buyerPaymentDetailsSection) {
         buyerPaymentDetailsSection.style.display = 'none';
+    }
+    
+    // Показываем/скрываем форму реквизитов продавца при продаже
+    const sellerPaymentDetailsSection = document.getElementById('seller-payment-details-section');
+    const sellerBankNameInput = document.getElementById('seller-bank-name');
+    const sellerPaymentDetailsInput = document.getElementById('seller-payment-details');
+    
+    if (sellerPaymentDetailsSection) {
+        if (userAction === 'sell') {
+            // Показываем поля реквизитов для продавца
+            sellerPaymentDetailsSection.style.display = 'block';
+        } else {
+            // Скрываем при покупке
+            sellerPaymentDetailsSection.style.display = 'none';
+        }
+    }
+    
+    // Очищаем поля реквизитов продавца
+    if (sellerBankNameInput) {
+        sellerBankNameInput.value = '';
+        sellerBankNameInput.classList.remove('error');
+        sellerBankNameInput.addEventListener('input', () => {
+            sellerBankNameInput.classList.remove('error');
+        });
+    }
+    if (sellerPaymentDetailsInput) {
+        sellerPaymentDetailsInput.value = '';
+        sellerPaymentDetailsInput.classList.remove('error');
+        sellerPaymentDetailsInput.addEventListener('input', () => {
+            sellerPaymentDetailsInput.classList.remove('error');
+        });
     }
     
     // Заполняем данные объявления
@@ -2120,16 +2151,43 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     
                     cryptoAmount = purchaseAmount;
+                    
+                    // Проверяем, что продавец ввел реквизиты для получения денег
+                    const sellerBankName = document.getElementById('seller-bank-name')?.value.trim();
+                    const sellerPaymentDetails = document.getElementById('seller-payment-details')?.value.trim();
+                    
+                    if (!sellerBankName || !sellerPaymentDetails) {
+                        alert('Пожалуйста, укажите реквизиты для получения денег (банк и номер карты/телефона)');
+                        
+                        // Подсвечиваем незаполненные поля
+                        const sellerBankNameInput = document.getElementById('seller-bank-name');
+                        const sellerPaymentDetailsInput = document.getElementById('seller-payment-details');
+                        if (sellerBankNameInput && !sellerBankName) {
+                            sellerBankNameInput.classList.add('error');
+                        }
+                        if (sellerPaymentDetailsInput && !sellerPaymentDetails) {
+                            sellerPaymentDetailsInput.classList.add('error');
+                        }
+                        return;
+                    }
                 }
                 
-                // Реквизиты больше не требуются при создании транзакции
-                // Они берутся из объявления (bank_name, payment_details)
+                // Формируем данные транзакции
                 const transactionData = {
                     ad_id: selectedAd.Id,
                     crypto_currency: selectedAd.crypto_currency,
                     crypto_amount: cryptoAmount,
                     fiat_amount: fiatAmount
                 };
+                
+                // Если это продажа, добавляем реквизиты продавца
+                if (userAction === 'sell') {
+                    const sellerBankName = document.getElementById('seller-bank-name')?.value.trim();
+                    const sellerPaymentDetails = document.getElementById('seller-payment-details')?.value.trim();
+                    
+                    transactionData.seller_bank_name = sellerBankName;
+                    transactionData.seller_payment_details = sellerPaymentDetails;
+                }
                 
                 console.log('Создание транзакции:', {
                     userAction,
@@ -2161,6 +2219,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 
                 currentTransaction = await response.json();
+                
+                // Проверяем, что транзакция была успешно создана
+                if (!currentTransaction || !currentTransaction.id) {
+                    throw new Error('Не удалось создать транзакцию: сервер не вернул данные транзакции');
+                }
                 
                 // Сохраняем ID транзакции в selectedAd для восстановления при необходимости
                 if (selectedAd && currentTransaction) {
@@ -2322,7 +2385,7 @@ function openPaymentScreen(ad, usdtAmount, userAction = 'buy') {
         }
     }
     
-    // Заполняем реквизиты из объявления
+    // Заполняем реквизиты
     const paymentDetailsEl = document.getElementById('payment-details');
     
     if (!paymentDetailsEl) {
@@ -2330,20 +2393,42 @@ function openPaymentScreen(ad, usdtAmount, userAction = 'buy') {
         return;
     }
     
-    console.log('Заполнение реквизитов из объявления:', {
+    let bankName, paymentDetails;
+    
+    // Определяем, откуда брать реквизиты
+    if (userAction === 'buy') {
+        // Покупка: показываем реквизиты продавца
+        // Если объявление на продажу (ad.type === 'sell'), реквизиты продавца из объявления
+        // Если объявление на покупку (ad.type === 'buy'), реквизиты продавца из транзакции (введенные при создании сделки)
+        if (ad.type === 'sell') {
+            // Объявление на продажу: реквизиты продавца из объявления
+            bankName = ad.bank_name || 'Не указан';
+            paymentDetails = ad.payment_details || 'Не указаны';
+        } else {
+            // Объявление на покупку: реквизиты продавца из транзакции (введенные при создании сделки)
+            if (currentTransaction && currentTransaction.seller_bank_name && currentTransaction.seller_payment_details) {
+                bankName = currentTransaction.seller_bank_name;
+                paymentDetails = currentTransaction.seller_payment_details;
+            } else {
+                // Fallback на реквизиты из объявления (на случай, если они там есть)
+                bankName = ad.bank_name || 'Не указан';
+                paymentDetails = ad.payment_details || 'Не указаны';
+            }
+        }
+    } else {
+        // Продажа: показываем реквизиты покупателя из объявления
+        bankName = ad.bank_name || 'Не указан';
+        paymentDetails = ad.payment_details || 'Не указаны';
+    }
+    
+    console.log('Заполнение реквизитов:', {
         element: !!paymentDetailsEl,
         userAction,
         adType: ad.type,
-        bank_name: ad.bank_name,
-        payment_details: ad.payment_details,
-        ad: ad
+        bankName,
+        paymentDetails,
+        transaction: currentTransaction
     });
-    
-    // Реквизиты всегда берутся из объявления
-    // При покупке (userAction='buy', ad.type='sell'): показываем реквизиты продавца
-    // При продаже (userAction='sell', ad.type='buy'): показываем реквизиты покупателя (из объявления)
-    const bankName = ad.bank_name || 'Не указан';
-    const paymentDetails = ad.payment_details || 'Не указаны';
     
     // Очищаем содержимое перед заполнением
     paymentDetailsEl.innerHTML = '';
