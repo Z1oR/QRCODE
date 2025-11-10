@@ -223,7 +223,23 @@ async function authenticateWithTelegram() {
         }
         
         // Сохраняем данные пользователя в глобальную переменную
+        // Если в ответе нет id, получаем его из /api/auth/me
         userData = data;
+        if (!userData.id) {
+            try {
+                const meResponse = await makeAuthenticatedRequest(`${API_BASE_URL}/api/auth/me`, {
+                    method: 'GET'
+                });
+                if (meResponse.ok) {
+                    const meData = await meResponse.json();
+                    userData.id = meData.id;
+                    userData.username = userData.username || meData.username;
+                    userData.balance = userData.balance !== undefined ? userData.balance : meData.balance;
+                }
+            } catch (error) {
+                console.error('Ошибка при получении ID пользователя:', error);
+            }
+        }
         
         // Сохраняем токены
         accessToken = data.access_token;
@@ -2146,13 +2162,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 currentTransaction = await response.json();
                 
+                // Сохраняем ID транзакции в selectedAd для восстановления при необходимости
+                if (selectedAd && currentTransaction) {
+                    selectedAd.transactionId = currentTransaction.id;
+                }
+                
                 // Логируем данные перед открытием экрана оплаты
                 console.log('Открытие экрана оплаты:', {
                     selectedAd,
+                    currentTransaction,
                     purchaseAmount,
                     userAction,
                     bank_name: selectedAd.bank_name,
-                    payment_details: selectedAd.payment_details
+                    payment_details: selectedAd.payment_details,
+                    transactionId: currentTransaction.id
                 });
                 
                 // Открываем экран оплаты
@@ -2177,6 +2200,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 document.querySelector('.sell__screen').style.display = 'block';
             }
+            // НЕ очищаем selectedAd и currentTransaction при возврате назад
         });
     }
     
@@ -2186,6 +2210,7 @@ document.addEventListener('DOMContentLoaded', () => {
         backFromPaymentBtn.addEventListener('click', () => {
             document.getElementById('payment-screen').style.display = 'none';
             document.getElementById('ad-details-screen').style.display = 'block';
+            // НЕ очищаем selectedAd и currentTransaction при возврате назад
         });
     }
     
@@ -2193,8 +2218,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const paymentConfirmedBtn = document.getElementById('payment-confirmed-btn');
     if (paymentConfirmedBtn) {
         paymentConfirmedBtn.addEventListener('click', async () => {
-            if (!selectedAd || !currentTransaction) {
-                alert('Ошибка: данные сделки не найдены');
+            // Если currentTransaction не установлен, пытаемся получить его из selectedAd
+            if (!currentTransaction && selectedAd && selectedAd.transactionId) {
+                try {
+                    const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/transactions/${selectedAd.transactionId}`, {
+                        method: 'GET'
+                    });
+                    if (response.ok) {
+                        currentTransaction = await response.json();
+                    }
+                } catch (error) {
+                    console.error('Ошибка при получении сделки:', error);
+                }
+            }
+            
+            if (!currentTransaction) {
+                console.error('Ошибка: currentTransaction не найден', {
+                    selectedAd: !!selectedAd,
+                    currentTransaction: !!currentTransaction,
+                    transactionId: selectedAd?.transactionId
+                });
+                alert('Ошибка: данные сделки не найдены. Пожалуйста, попробуйте снова.');
                 return;
             }
             
@@ -2205,13 +2249,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 
                 if (!response.ok) {
-                    throw new Error('Ошибка подтверждения оплаты');
+                    const errorText = await response.text().catch(() => 'Неизвестная ошибка');
+                    throw new Error(`Ошибка подтверждения оплаты: ${errorText}`);
                 }
                 
                 alert('Оплата подтверждена! Продавец получит уведомление.');
                 // Закрываем экран оплаты и возвращаемся на главный
                 document.getElementById('payment-screen').style.display = 'none';
                 document.getElementById('main__screen').style.display = 'block';
+                
+                // Обновляем баланс
+                if (userData) {
+                    await refreshUserBalance();
+                }
                 
                 // Очищаем переменные
                 selectedAd = null;
@@ -2742,7 +2792,7 @@ async function loadMyTransactions() {
 }
 
 // Функция отображения моих сделок
-function displayMyTransactions(transactions) {
+async function displayMyTransactions(transactions) {
     const transactionsList = document.getElementById('transactions-list');
     if (!transactionsList) return;
     
@@ -2753,15 +2803,40 @@ function displayMyTransactions(transactions) {
         return;
     }
     
+    // Получаем ID пользователя один раз для всех транзакций
+    let currentUserId = null;
+    if (userData && userData.id) {
+        currentUserId = userData.id;
+    } else {
+        // Пытаемся получить ID из /api/auth/me
+        console.warn('userData.id не найден, пытаемся получить ID пользователя...');
+        try {
+            const meResponse = await makeAuthenticatedRequest(`${API_BASE_URL}/api/auth/me`, {
+                method: 'GET'
+            });
+            if (meResponse.ok) {
+                const meData = await meResponse.json();
+                currentUserId = meData.id;
+                if (userData) {
+                    userData.id = currentUserId;
+                } else {
+                    userData = meData;
+                }
+            }
+        } catch (error) {
+            console.error('Ошибка при получении ID пользователя:', error);
+        }
+    }
+    
     transactions.forEach(transaction => {
         const transactionCard = document.createElement('div');
         transactionCard.className = 'transaction_card';
         transactionCard.setAttribute('data-transaction-id', transaction.id);
         
         // Определяем роль пользователя в сделке
-        const isBuyer = transaction.buyer_id === (userData?.id || 0);
-        const isSeller = transaction.seller_id === (userData?.id || 0);
-        const role = isBuyer ? 'Покупатель' : 'Продавец';
+        const isBuyer = currentUserId && transaction.buyer_id === currentUserId;
+        const isSeller = currentUserId && transaction.seller_id === currentUserId;
+        const role = isBuyer ? 'Покупатель' : (isSeller ? 'Продавец' : 'Неизвестно');
         
         // Определяем статус
         const statusText = {
@@ -2845,7 +2920,7 @@ async function openTransactionDetails(transactionId) {
             console.error('Ошибка при получении объявления:', error);
         }
         
-        displayTransactionDetails(transaction, ad);
+        await displayTransactionDetails(transaction, ad);
         
         // Показываем экран деталей
         const myTransactionsScreen = document.getElementById('my-transactions-screen');
@@ -2863,15 +2938,40 @@ async function openTransactionDetails(transactionId) {
 }
 
 // Функция отображения деталей сделки
-function displayTransactionDetails(transaction, ad) {
+async function displayTransactionDetails(transaction, ad) {
     const detailsCard = document.getElementById('transaction-details-card');
     const actionsDiv = document.getElementById('transaction-actions');
     
     if (!detailsCard || !actionsDiv) return;
     
     // Определяем роль пользователя
-    const isBuyer = transaction.buyer_id === (userData?.id || 0);
-    const isSeller = transaction.seller_id === (userData?.id || 0);
+    // Получаем ID пользователя из userData или из токена
+    let currentUserId = null;
+    if (userData && userData.id) {
+        currentUserId = userData.id;
+    } else {
+        // Пытаемся получить ID из токена или из /api/auth/me
+        console.warn('userData.id не найден в displayTransactionDetails, пытаемся получить ID пользователя...');
+        try {
+            const meResponse = await makeAuthenticatedRequest(`${API_BASE_URL}/api/auth/me`, {
+                method: 'GET'
+            });
+            if (meResponse.ok) {
+                const meData = await meResponse.json();
+                currentUserId = meData.id;
+                if (userData) {
+                    userData.id = currentUserId;
+                } else {
+                    userData = meData;
+                }
+            }
+        } catch (error) {
+            console.error('Ошибка при получении ID пользователя:', error);
+        }
+    }
+    
+    const isBuyer = currentUserId && transaction.buyer_id === currentUserId;
+    const isSeller = currentUserId && transaction.seller_id === currentUserId;
     
     // Формируем информацию о сделке
     let detailsHTML = `
@@ -2890,7 +2990,7 @@ function displayTransactionDetails(transaction, ad) {
             </div>
             <div class="transaction_details_row">
                 <span class="transaction_details_label">Ваша роль:</span>
-                <span class="transaction_details_value">${isBuyer ? 'Покупатель' : 'Продавец'}</span>
+                <span class="transaction_details_value">${isBuyer ? 'Покупатель' : (isSeller ? 'Продавец' : 'Неизвестно')}</span>
             </div>
             <div class="transaction_details_row">
                 <span class="transaction_details_label">Криптовалюта:</span>
