@@ -2115,7 +2115,7 @@ function updatePurchaseInfo(ad, amount, currencyMode = 'RUB') {
         
         const fiatReceived = amount * ad.price;
         document.getElementById('purchase-info').innerHTML = 
-            `<span class="purchase_info_text">Вы получите: <span id="fiat-amount">${fiatReceived.toFixed(2)}</span> RUB</span>`;
+            `<span class="purchase_info_text">Вы123123 получите: <span id="fiat-amount">${fiatReceived.toFixed(2)}</span> RUB</span>`;
     }
 }
 
