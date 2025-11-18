@@ -1793,11 +1793,12 @@ function openAdDetailsScreen(ad, userAction = 'buy') {
     if (toggleCryptoText) {
         toggleCryptoText.textContent = ad.crypto_currency;
     }
-    
+    console.log(toggleRub)
+    console.log(toggleCrypto)
+    console.log(toggleCryptoText)
+    console.log(purchaseCurrency)
     // Сохраняем текущий режим валюты (RUB или CRYPTO)
     // let currentCurrencyMode = 'RUB';
-
-
 
     // let currentCurrencyMode = toggleCryptoText.textContent
 
