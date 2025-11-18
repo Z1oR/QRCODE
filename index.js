@@ -2133,7 +2133,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (userAction === 'buy') {
                     // Покупка: используем режим валюты из selectedAd
                     const currencyMode = selectedAd.currencyMode || 'RUB';
-                    
+                    console.log(currencyMode, selectedAd, "000000000000000000000000000000000000000000000000000000000000000000000000000000")
                     if (currencyMode === 'RUB') {
                         // Введена сумма в рублях
                         fiatAmount = purchaseAmount;
@@ -2145,18 +2145,31 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     
                     // Проверяем лимиты в рублях
-                    if (fiatAmount < selectedAd.min_limit) {
-                        const minCrypto = selectedAd.min_limit / selectedAd.price;
-                        alert(`Минимальная сумма: ${selectedAd.min_limit.toFixed(2)} RUB (${minCrypto.toFixed(1)} ${selectedAd.crypto_currency})`);
-                        return;
+                    if(currencyMode === "RUB"){
+                        if (fiatAmount < selectedAd.min_limit) {
+                            const minCrypto = selectedAd.min_limit / selectedAd.price;
+                            alert(`Минимальная сумма: ${selectedAd.min_limit.toFixed(2)} RUB (${minCrypto.toFixed(1)} ${selectedAd.crypto_currency})`);
+                            return;
+                        }
+                        if (selectedAd.max_limit && fiatAmount > selectedAd.max_limit) {
+                            const maxCrypto = selectedAd.max_limit / selectedAd.price;
+                            alert(`Максимальная сумма: ${selectedAd.max_limit.toFixed(2)} RUB (${maxCrypto.toFixed(1)} ${selectedAd.crypto_currency})`);
+                            return;
+                        }
+                    }else{
+                        if (fiatAmount < selectedAd.min_limit) {
+                            
+                            // const minCrypto = selectedAd.min_limit / selectedAd.price;
+                            alert(`Минимальная сумма: ${selectedAd.min_limit.toFixed(2)} RUB (${minCrypto.toFixed(1)} ${selectedAd.crypto_currency})`);
+                            return;
+                        }
+                        if (selectedAd.max_limit && fiatAmount > selectedAd.max_limit) {
+                            const maxCrypto = selectedAd.max_limit / selectedAd.price;
+                            alert(`Максимальная сумма: ${selectedAd.max_limit.toFixed(2)} RUB (${maxCrypto.toFixed(1)} ${selectedAd.crypto_currency})`);
+                            return;
+                        }
                     }
-                    
-                    if (selectedAd.max_limit && fiatAmount > selectedAd.max_limit) {
-                        const maxCrypto = selectedAd.max_limit / selectedAd.price;
-                        alert(`Максимальная сумма: ${selectedAd.max_limit.toFixed(2)} RUB (${maxCrypto.toFixed(1)} ${selectedAd.crypto_currency})`);
-                        return;
-                    }
-                    
+
                     const availableCrypto = selectedAd.crypto_amount || 0;
                     if (cryptoAmount > availableCrypto) {
                         alert(`Доступно только ${availableCrypto.toFixed(1)} ${selectedAd.crypto_currency}`);
@@ -3284,21 +3297,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // Обработчик кнопки "Правила сервиса" в разделе "О нас"
-    const rulesLinkBtn = document.getElementById('rules-link-btn');
-    if (rulesLinkBtn) {
-        rulesLinkBtn.addEventListener('click', () => {
-            // Можно открыть отдельный экран с правилами или показать alert
-            alert('Правила сервиса:\n\n' +
-                  '1. Всегда проверяйте реквизиты перед переводом\n' +
-                  '2. Не переводите средства до подтверждения сделки\n' +
-                  '3. Сохраняйте скриншоты всех переводов\n' +
-                  '4. Связывайтесь с поддержкой при возникновении проблем\n' +
-                  '5. Не передавайте доступ к аккаунту третьим лицам\n' +
-                  '6. Соблюдайте лимиты сделок\n' +
-                  '7. Будьте вежливы в общении с другими пользователями');
-        });
-    }
+
+    
     
     // ========== АДМИН ПАНЕЛЬ ==========
     
