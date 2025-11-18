@@ -1793,8 +1793,16 @@ function openAdDetailsScreen(ad, userAction = 'buy') {
     }
     
     // Сохраняем текущий режим валюты (RUB или CRYPTO)
-    let currentCurrencyMode = 'RUB';
+    // let currentCurrencyMode = 'RUB';
+
+
     
+    let currentCurrencyMode = toggleCryptoText.textContent
+
+
+
+
+
     // Обработчики переключателя валюты
     if (toggleRub && toggleCrypto) {
         // Удаляем старые обработчики
