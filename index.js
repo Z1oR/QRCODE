@@ -1223,7 +1223,7 @@ function initPreviewScreen() {
                 paymentMethod = methodName
                 }
             }
-            paymentDetails = document.querySelector('#payment-details')?.value || ''
+            paymentDetails = document.querySelector('#payment-details2')?.value || ''
         }
         
         // Обновляем предпросмотр
@@ -1303,7 +1303,7 @@ function initPreviewScreen() {
                         bankName = selectedMethod.querySelector('.payment_method_name')?.textContent || ''
                     }
                 }
-                paymentDetails = document.querySelector('#payment-details')?.value || ''
+                paymentDetails = document.querySelector('#payment-details2')?.value || ''
             }
             
             // Валидация данных
@@ -1389,7 +1389,7 @@ function initPreviewScreen() {
                 document.querySelector('#amount-range').value = ''
                 document.querySelector('#min-limit').value = ''
                 document.querySelector('#max-limit').value = ''
-                document.querySelector('#payment-details').value = ''
+                document.querySelector('#payment-details2').value = ''
                 
                 // Обновляем баланс после создания объявления
                 await refreshUserBalance()
