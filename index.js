@@ -1788,6 +1788,8 @@ function openAdDetailsScreen(ad, userAction = 'buy') {
     const toggleCryptoText = document.getElementById('toggle-crypto-text');
     const purchaseCurrency = document.getElementById('purchase-currency');
     
+    let currentCurrencyMode = 'RUB';
+
     if (toggleCryptoText) {
         toggleCryptoText.textContent = ad.crypto_currency;
     }
@@ -1796,8 +1798,8 @@ function openAdDetailsScreen(ad, userAction = 'buy') {
     // let currentCurrencyMode = 'RUB';
 
 
-    
-    let currentCurrencyMode = toggleCryptoText.textContent
+
+    // let currentCurrencyMode = toggleCryptoText.textContent
 
 
 
