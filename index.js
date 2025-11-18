@@ -2113,15 +2113,9 @@ function updatePurchaseInfo(ad, amount, currencyMode = 'RUB') {
             return;
         }
         console.log(userAction, "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000")
-        if (userAction.currencyMode === "RUB"){
-            const fiatReceived = amount * ad.price;
-            document.getElementById('purchase-info').innerHTML = 
-                `<span class="purchase_info_text">Вы123 получите: <span id="fiat-amount">${fiatReceived.toFixed(2)}</span> RUB</span>`;
-        }else{
-            const fiatReceived = amount;
-            document.getElementById('purchase-info').innerHTML = 
-                `<span class="purchase_info_text">Вы321 получите: <span id="fiat-amount">${fiatReceived.toFixed(2)}</span> RUB</span>`;
-        }
+        const fiatReceived = amount * ad.price;
+        document.getElementById('purchase-info').innerHTML = 
+            `<span class="purchase_info_text">Вы получите: <span id="fiat-amount">${fiatReceived.toFixed(2)}</span> RUB</span>`;
         
     }
 }
