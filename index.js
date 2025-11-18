@@ -2039,7 +2039,7 @@ function updatePurchaseInfo(ad, amount, currencyMode = 'RUB') {
         if (fiatAmountEl) fiatAmountEl.textContent = '0.00';
         return;
     }
-    
+    console.log(ad, currencyMode)
     const userAction = ad.userAction || 'buy';
     
     if (userAction === 'buy') {
@@ -2112,11 +2112,10 @@ function updatePurchaseInfo(ad, amount, currencyMode = 'RUB') {
                 `<span class="purchase_info_text error">Доступно только ${availableCrypto.toFixed(1)} ${ad.crypto_currency}</span>`;
             return;
         }
-        console.log(userAction, "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000")
+        
         const fiatReceived = amount * ad.price;
         document.getElementById('purchase-info').innerHTML = 
             `<span class="purchase_info_text">Вы получите: <span id="fiat-amount">${fiatReceived.toFixed(2)}</span> RUB</span>`;
-        
     }
 }
 
