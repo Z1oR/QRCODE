@@ -2169,48 +2169,42 @@ document.addEventListener('DOMContentLoaded', () => {
                 let cryptoAmount, fiatAmount;
                 
                 if (userAction === 'buy') {
-                    // Покупка: используем режим валюты из selectedAd
+                    // Режим ввода: RUB или CRYPTO
                     const currencyMode = selectedAd.currencyMode || 'RUB';
-                    console.log(currencyMode, selectedAd, "000000000000000000000000000000000000000000000000000000000000000000000000000000")
+                
+                    let fiatAmount, cryptoAmount;
+                
                     if (currencyMode === 'RUB') {
-                        // Введена сумма в рублях
+                        // Пользователь вводит сумму ФИАТА
                         fiatAmount = purchaseAmount;
-                        cryptoAmount = purchaseAmount / selectedAd.price;
+                        cryptoAmount = fiatAmount / selectedAd.price;
                     } else {
-                        // Введена сумма в криптовалюте
+                        // Пользователь вводит сумму КРИПТЫ
                         cryptoAmount = purchaseAmount;
-                        fiatAmount = purchaseAmount * selectedAd.price;
+                        fiatAmount = cryptoAmount * selectedAd.price;
                     }
-                    
-                    // Проверяем лимиты в рублях
-                    if(currencyMode === "RUB"){
-                        if (fiatAmount < selectedAd.min_limit) {
-                            const minCrypto = selectedAd.min_limit / selectedAd.price;
-                            alert(`Минимальная сумма: ${selectedAd.min_limit.toFixed(2)} RUB (${minCrypto.toFixed(1)} ${selectedAd.crypto_currency})`);
-                            return;
-                        }
-                        if (selectedAd.max_limit && fiatAmount > selectedAd.max_limit) {
-                            const maxCrypto = selectedAd.max_limit / selectedAd.price;
-                            alert(`Максимальная сумма: ${selectedAd.max_limit.toFixed(2)} RUB (${maxCrypto.toFixed(1)} ${selectedAd.crypto_currency})`);
-                            return;
-                        }
-                    }else{
-                        if (fiatAmount < selectedAd.min_limit) {
-                            
-                            // const minCrypto = selectedAd.min_limit / selectedAd.price;
-                            alert(`Минимальная сумма: ${selectedAd.min_limit.toFixed(2)} RUB (${minCrypto.toFixed(1)} ${selectedAd.crypto_currency})`);
-                            return;
-                        }
-                        if (selectedAd.max_limit && fiatAmount > selectedAd.max_limit) {
-                            const maxCrypto = selectedAd.max_limit / selectedAd.price;
-                            alert(`Максимальная сумма: ${selectedAd.max_limit.toFixed(2)} RUB (${maxCrypto.toFixed(1)} ${selectedAd.crypto_currency})`);
-                            return;
-                        }
+                
+                    // === Проверка лимитов ===
+                    // Всегда проверяем в ФИАТЕ (min_limit / max_limit — всегда RUB)
+                    if (fiatAmount < selectedAd.min_limit) {
+                        const minCrypto = selectedAd.min_limit / selectedAd.price;
+                
+                        alert(`Минимальная сумма: ${selectedAd.min_limit.toFixed(2)} RUB (${minCrypto.toFixed(6)} ${selectedAd.crypto_currency})`);
+                        return;
                     }
-
+                
+                    if (selectedAd.max_limit && fiatAmount > selectedAd.max_limit) {
+                        const maxCrypto = selectedAd.max_limit / selectedAd.price;
+                
+                        alert(`Максимальная сумма: ${selectedAd.max_limit.toFixed(2)} RUB (${maxCrypto.toFixed(6)} ${selectedAd.crypto_currency})`);
+                        return;
+                    }
+                
+                    // === Проверка доступной крипты на обменнике ===
                     const availableCrypto = selectedAd.crypto_amount || 0;
+                
                     if (cryptoAmount > availableCrypto) {
-                        alert(`Доступно только ${availableCrypto.toFixed(1)} ${selectedAd.crypto_currency}`);
+                        alert(`Доступно только ${availableCrypto.toFixed(6)} ${selectedAd.crypto_currency}`);
                         return;
                     }
                 } else {
