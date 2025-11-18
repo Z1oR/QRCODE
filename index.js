@@ -2032,20 +2032,22 @@ function openAdDetailsScreen(ad, userAction = 'buy') {
 // amount - введенная сумма
 // currencyMode - 'RUB' или 'CRYPTO' (только для покупки)
 function updatePurchaseInfo(ad, amount, currencyMode = 'RUB') {
+    const out = document.getElementById('purchase-info');
+
+    // Если нет данных или сумма <= 0 — очистка
     if (!ad || amount <= 0) {
-        const cryptoAmountEl = document.getElementById('crypto-amount');
-        if (cryptoAmountEl) cryptoAmountEl.textContent = '0.0';
-        const fiatAmountEl = document.getElementById('fiat-amount');
-        if (fiatAmountEl) fiatAmountEl.textContent = '0.00';
+        out.innerHTML = `<span class="purchase_info_text">Введите сумму</span>`;
         return;
     }
 
-    const userAction = ad.userAction || 'buy';
+    const userAction = ad.userAction; // 'buy' или 'sell'
 
+    //
+    // === КОНВЕРТАЦИЯ СУММЫ ===
+    //
     let rubAmount;
     let cryptoAmount;
 
-    // Унифицированная конвертация
     if (currencyMode === 'RUB') {
         rubAmount = amount;
         cryptoAmount = amount / ad.price;
@@ -2054,73 +2056,94 @@ function updatePurchaseInfo(ad, amount, currencyMode = 'RUB') {
         rubAmount = amount * ad.price;
     }
 
-    const availableCrypto = ad.crypto_amount || 0;
+    //
+    // === ЗНАЧЕНИЯ ДЛЯ BUY И SELL РАЗНЫЕ ===
+    //
 
-    //
-    // --- ПОКУПКА ---
-    //
+    // 🔵 ПОКУПКА
     if (userAction === 'buy') {
-        
-        if (rubAmount < ad.min_limit) {
-            const minCrypto = ad.min_limit / ad.price;
-            document.getElementById('purchase-info').innerHTML = 
-                `<span class="purchase_info_text error">Минимальная сумма: ${ad.min_limit.toFixed(2)} RUB (${minCrypto.toFixed(1)} ${ad.crypto_currency})</span>`;
-            return;
+
+        const minLimit = ad.min_limit;  // лимиты объявления продавца
+        const maxLimit = ad.max_limit;
+        const availableCrypto = ad.crypto_amount; // крипта продавца
+
+        // --- проверки ---
+        if (rubAmount < minLimit) {
+            return out.innerHTML =
+                `<span class="purchase_info_text error">
+                    Минимальная сумма: ${minLimit} RUB (${(minLimit / ad.price).toFixed(2)} ${ad.crypto_currency})
+                </span>`;
         }
-        
-        if (ad.max_limit && rubAmount > ad.max_limit) {
-            const maxCrypto = ad.max_limit / ad.price;
-            document.getElementById('purchase-info').innerHTML = 
-                `<span class="purchase_info_text error">Максимальная сумма: ${ad.max_limit.toFixed(2)} RUB (${maxCrypto.toFixed(1)} ${ad.crypto_currency})</span>`;
-            return;
+
+        if (maxLimit && rubAmount > maxLimit) {
+            return out.innerHTML =
+                `<span class="purchase_info_text error">
+                    Максимальная сумма: ${maxLimit} RUB (${(maxLimit / ad.price).toFixed(2)} ${ad.crypto_currency})
+                </span>`;
         }
 
         if (cryptoAmount > availableCrypto) {
-            document.getElementById('purchase-info').innerHTML = 
-                `<span class="purchase_info_text error">Доступно только ${availableCrypto.toFixed(1)} ${ad.crypto_currency}</span>`;
-            return;
+            return out.innerHTML =
+                `<span class="purchase_info_text error">
+                    Доступно только ${availableCrypto} ${ad.crypto_currency}
+                </span>`;
         }
 
-        // Успешная покупка
+        // --- всё ок ---
         if (currencyMode === 'RUB') {
-            document.getElementById('purchase-info').innerHTML = 
-                `<span class="purchase_info_text">Вы получите: <span id="crypto-amount">${cryptoAmount.toFixed(1)}</span> ${ad.crypto_currency}</span>`;
+            out.innerHTML =
+                `<span class="purchase_info_text">
+                    Вы получите: <b>${cryptoAmount.toFixed(4)}</b> ${ad.crypto_currency}
+                </span>`;
         } else {
-            document.getElementById('purchase-info').innerHTML = 
-                `<span class="purchase_info_text">Вы заплатите: <span id="fiat-amount">${rubAmount.toFixed(2)}</span> RUB</span>`;
+            out.innerHTML =
+                `<span class="purchase_info_text">
+                    Вы заплатите: <b>${rubAmount.toFixed(2)}</b> RUB
+                </span>`;
         }
 
         return;
     }
 
-    //
-    // --- ПРОДАЖА ---
-    //
-    
-    // Проверяем лимиты (тут rubAmount — сумма, которую пользователь получит)
-    if (rubAmount < ad.min_limit) {
-        document.getElementById('purchase-info').innerHTML = 
-            `<span class="purchase_info_text error">Минимальная сумма: ${ad.min_limit.toFixed(2)} RUB (${(ad.min_limit / ad.price).toFixed(1)} ${ad.crypto_currency})</span>`;
+    // 🔴 ПРОДАЖА
+    else if (userAction === 'sell') {
+
+        const minLimit = ad.sell_min_limit;  // 🔥 ВАЖНО: отдельные лимиты для продажи
+        const maxLimit = ad.sell_max_limit;
+        const userCrypto = ad.user_crypto; // 🔥 крипта пользователя
+
+        // --- проверки ---
+        if (rubAmount < minLimit) {
+            return out.innerHTML =
+                `<span class="purchase_info_text error">
+                    Минимальная сумма: ${minLimit} RUB (${(minLimit / ad.price).toFixed(2)} ${ad.crypto_currency})
+                </span>`;
+        }
+
+        if (maxLimit && rubAmount > maxLimit) {
+            return out.innerHTML =
+                `<span class="purchase_info_text error">
+                    Максимальная сумма: ${maxLimit} RUB (${(maxLimit / ad.price).toFixed(2)} ${ad.crypto_currency})
+                </span>`;
+        }
+
+        if (cryptoAmount > userCrypto) {
+            return out.innerHTML =
+                `<span class="purchase_info_text error">
+                    У вас доступно только ${userCrypto} ${ad.crypto_currency}
+                </span>`;
+        }
+
+        // --- всё ок ---
+        out.innerHTML =
+            `<span class="purchase_info_text">
+                Вы получите: <b>${rubAmount.toFixed(2)}</b> RUB
+            </span>`;
+
         return;
     }
-
-    if (ad.max_limit && rubAmount > ad.max_limit) {
-        document.getElementById('purchase-info').innerHTML = 
-            `<span class="purchase_info_text error">Максимальная сумма: ${ad.max_limit.toFixed(2)} RUB (${(ad.max_limit / ad.price).toFixed(1)} ${ad.crypto_currency})</span>`;
-        return;
-    }
-
-    // Проверка крипты при продаже
-    if (cryptoAmount > availableCrypto) {
-        document.getElementById('purchase-info').innerHTML = 
-            `<span class="purchase_info_text error">Доступно только ${availableCrypto.toFixed(1)} ${ad.crypto_currency}</span>`;
-        return;
-    }
-
-    // Успешная продажа
-    document.getElementById('purchase-info').innerHTML =
-        `<span class="purchase_info_text">Вы получите: <span id="fiat-amount">${rubAmount.toFixed(2)}</span> RUB</span>`;
 }
+
 
 
 // Обработчик кнопки "Купить" на экране деталей
