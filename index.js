@@ -1805,128 +1805,176 @@ async function openAdDetailsScreen(ad, userAction = 'buy') {
     }
 
     // Обработчики переключателя валюты (только для покупки)
+    // Используем делегирование событий для избежания конфликтов с внутренними библиотеками Telegram
     if (toggleRub && toggleCrypto && userAction === 'buy') {
-        // Удаляем старые обработчики
-        const newToggleRub = toggleRub.cloneNode(true);
-        const newToggleCrypto = toggleCrypto.cloneNode(true);
-        toggleRub.parentNode.replaceChild(newToggleRub, toggleRub);
-        toggleCrypto.parentNode.replaceChild(newToggleCrypto, toggleCrypto);
-        
-        newToggleRub.addEventListener('click', () => {
-            currentCurrencyMode = 'RUB';
-            ad.currencyMode = 'RUB';
-            newToggleRub.classList.add('active');
-            newToggleCrypto.classList.remove('active');
-            if (purchaseCurrency) purchaseCurrency.textContent = 'RUB';
-            
-            const purchaseAmountInput = document.getElementById('purchase-amount');
-            if (purchaseAmountInput) {
-                const currentValue = parseFloat(purchaseAmountInput.value) || 0;
-                if (currentValue > 0) {
-                    const rubValue = currentValue * ad.price;
-                    purchaseAmountInput.value = rubValue.toFixed(2);
-                    purchaseAmountInput.min = ad.min_limit || 0;
-                    purchaseAmountInput.max = ad.max_limit || 999999;
-                    updatePurchaseInfo(ad, rubValue, 'RUB');
-                } else {
-                    purchaseAmountInput.min = ad.min_limit || 0;
-                    purchaseAmountInput.max = ad.max_limit || 999999;
+        try {
+            // Удаляем старый обработчик, если был
+            if (window.currencyToggleHandler) {
+                const container = toggleRub.parentElement;
+                if (container) {
+                    container.removeEventListener('click', window.currencyToggleHandler);
                 }
             }
-        });
-        
-        newToggleCrypto.addEventListener('click', () => {
-            currentCurrencyMode = 'CRYPTO';
-            ad.currencyMode = 'CRYPTO';
-            newToggleCrypto.classList.add('active');
-            newToggleRub.classList.remove('active');
-            if (purchaseCurrency) purchaseCurrency.textContent = ad.crypto_currency;
             
-            const purchaseAmountInput = document.getElementById('purchase-amount');
-            if (purchaseAmountInput) {
-                const currentValue = parseFloat(purchaseAmountInput.value) || 0;
-                if (currentValue > 0) {
-                    const cryptoValue = currentValue / ad.price;
-                    purchaseAmountInput.value = cryptoValue.toFixed(6);
-                    const minLimit = ad.min_limit || 0;
-                    const maxLimit = ad.max_limit;
-                    purchaseAmountInput.min = minLimit / ad.price;
-                    purchaseAmountInput.max = maxLimit ? maxLimit / ad.price : 999999;
-                    updatePurchaseInfo(ad, cryptoValue, 'CRYPTO');
-                } else {
-                    const minLimit = ad.min_limit || 0;
-                    const maxLimit = ad.max_limit;
-                    purchaseAmountInput.min = minLimit / ad.price;
-                    purchaseAmountInput.max = maxLimit ? maxLimit / ad.price : 999999;
+            // Создаем новый обработчик с делегированием
+            window.currencyToggleHandler = (e) => {
+                const target = e.target.closest('#toggle-rub, #toggle-crypto');
+                if (!target) return;
+                
+                e.stopPropagation();
+                
+                const currentToggleRub = document.getElementById('toggle-rub');
+                const currentToggleCrypto = document.getElementById('toggle-crypto');
+                const currentPurchaseCurrency = document.getElementById('purchase-currency');
+                
+                if (!currentToggleRub || !currentToggleCrypto) return;
+                
+                if (target.id === 'toggle-rub') {
+                    currentCurrencyMode = 'RUB';
+                    ad.currencyMode = 'RUB';
+                    currentToggleRub.classList.add('active');
+                    currentToggleCrypto.classList.remove('active');
+                    if (currentPurchaseCurrency) currentPurchaseCurrency.textContent = 'RUB';
+                    
+                    const purchaseAmountInput = document.getElementById('purchase-amount');
+                    if (purchaseAmountInput) {
+                        const currentValue = parseFloat(purchaseAmountInput.value) || 0;
+                        if (currentValue > 0) {
+                            const rubValue = currentValue * ad.price;
+                            purchaseAmountInput.value = rubValue.toFixed(2);
+                            purchaseAmountInput.min = ad.min_limit || 0;
+                            purchaseAmountInput.max = ad.max_limit || 999999;
+                            updatePurchaseInfo(ad, rubValue, 'RUB');
+                        } else {
+                            purchaseAmountInput.min = ad.min_limit || 0;
+                            purchaseAmountInput.max = ad.max_limit || 999999;
+                        }
+                    }
+                } else if (target.id === 'toggle-crypto') {
+                    currentCurrencyMode = 'CRYPTO';
+                    ad.currencyMode = 'CRYPTO';
+                    currentToggleCrypto.classList.add('active');
+                    currentToggleRub.classList.remove('active');
+                    if (currentPurchaseCurrency) currentPurchaseCurrency.textContent = ad.crypto_currency;
+                    
+                    const purchaseAmountInput = document.getElementById('purchase-amount');
+                    if (purchaseAmountInput) {
+                        const currentValue = parseFloat(purchaseAmountInput.value) || 0;
+                        if (currentValue > 0) {
+                            const cryptoValue = currentValue / ad.price;
+                            purchaseAmountInput.value = cryptoValue.toFixed(6);
+                            const minLimit = ad.min_limit || 0;
+                            const maxLimit = ad.max_limit;
+                            purchaseAmountInput.min = minLimit / ad.price;
+                            purchaseAmountInput.max = maxLimit ? maxLimit / ad.price : 999999;
+                            updatePurchaseInfo(ad, cryptoValue, 'CRYPTO');
+                        } else {
+                            const minLimit = ad.min_limit || 0;
+                            const maxLimit = ad.max_limit;
+                            purchaseAmountInput.min = minLimit / ad.price;
+                            purchaseAmountInput.max = maxLimit ? maxLimit / ad.price : 999999;
+                        }
+                    }
                 }
+            };
+            
+            // Добавляем обработчик на родительский контейнер
+            const container = toggleRub.parentElement;
+            if (container) {
+                container.addEventListener('click', window.currencyToggleHandler);
             }
-        });
+        } catch (error) {
+            console.warn('Ошибка при добавлении обработчиков переключателя валют:', error);
+        }
     } else if (toggleRub && toggleCrypto && userAction === 'sell') {
-        // Для продажи тоже добавляем переключатель, но с другой логикой
-        const newToggleRub = toggleRub.cloneNode(true);
-        const newToggleCrypto = toggleCrypto.cloneNode(true);
-        toggleRub.parentNode.replaceChild(newToggleRub, toggleRub);
-        toggleCrypto.parentNode.replaceChild(newToggleCrypto, toggleCrypto);
-        
-        newToggleRub.addEventListener('click', () => {
-            currentCurrencyMode = 'RUB';
-            ad.currencyMode = 'RUB';
-            newToggleRub.classList.add('active');
-            newToggleCrypto.classList.remove('active');
-            if (purchaseCurrency) purchaseCurrency.textContent = 'RUB';
-            
-            const purchaseAmountInput = document.getElementById('purchase-amount');
-            if (purchaseAmountInput) {
-                const currentValue = parseFloat(purchaseAmountInput.value) || 0;
-                if (currentValue > 0) {
-                    // Конвертируем из криптовалюты в рубли (сколько рублей получим)
-                    const rubValue = currentValue * ad.price;
-                    purchaseAmountInput.value = rubValue.toFixed(2);
-                    const minLimit = ad.sell_min_limit || ad.min_limit || 0;
-                    const maxLimit = ad.sell_max_limit || ad.max_limit;
-                    purchaseAmountInput.min = minLimit;
-                    purchaseAmountInput.max = maxLimit || 999999;
-                    purchaseAmountInput.step = '0.01';
-                    updatePurchaseInfo(ad, rubValue, 'RUB');
-                } else {
-                    const minLimit = ad.sell_min_limit || ad.min_limit || 0;
-                    const maxLimit = ad.sell_max_limit || ad.max_limit;
-                    purchaseAmountInput.min = minLimit;
-                    purchaseAmountInput.max = maxLimit || 999999;
-                    purchaseAmountInput.step = '0.01';
+        // Для продажи тоже используем делегирование
+        try {
+            // Удаляем старый обработчик, если был
+            if (window.currencyToggleHandlerSell) {
+                const container = toggleRub.parentElement;
+                if (container) {
+                    container.removeEventListener('click', window.currencyToggleHandlerSell);
                 }
             }
-        });
-        
-        newToggleCrypto.addEventListener('click', () => {
-            currentCurrencyMode = 'CRYPTO';
-            ad.currencyMode = 'CRYPTO';
-            newToggleCrypto.classList.add('active');
-            newToggleRub.classList.remove('active');
-            if (purchaseCurrency) purchaseCurrency.textContent = ad.crypto_currency;
             
-            const purchaseAmountInput = document.getElementById('purchase-amount');
-            if (purchaseAmountInput) {
-                const currentValue = parseFloat(purchaseAmountInput.value) || 0;
-                if (currentValue > 0) {
-                    // Конвертируем из рублей в криптовалюту (сколько крипты продаем)
-                    const cryptoValue = currentValue / ad.price;
-                    purchaseAmountInput.value = cryptoValue.toFixed(6);
-                    const minLimit = ad.sell_min_limit || ad.min_limit || 0;
-                    const maxLimit = ad.sell_max_limit || ad.max_limit;
-                    purchaseAmountInput.min = minLimit / ad.price;
-                    purchaseAmountInput.max = maxLimit ? maxLimit / ad.price : 999999;
-                    purchaseAmountInput.step = '0.000001';
-                    updatePurchaseInfo(ad, cryptoValue, 'CRYPTO');
-                } else {
-                    const minLimit = ad.sell_min_limit || ad.min_limit || 0;
-                    const maxLimit = ad.sell_max_limit || ad.max_limit;
-                    purchaseAmountInput.min = minLimit / ad.price;
-                    purchaseAmountInput.max = maxLimit ? maxLimit / ad.price : 999999;
-                    purchaseAmountInput.step = '0.000001';
+            // Создаем новый обработчик с делегированием
+            window.currencyToggleHandlerSell = (e) => {
+                const target = e.target.closest('#toggle-rub, #toggle-crypto');
+                if (!target) return;
+                
+                e.stopPropagation();
+                
+                const currentToggleRub = document.getElementById('toggle-rub');
+                const currentToggleCrypto = document.getElementById('toggle-crypto');
+                const currentPurchaseCurrency = document.getElementById('purchase-currency');
+                
+                if (!currentToggleRub || !currentToggleCrypto) return;
+                
+                if (target.id === 'toggle-rub') {
+                    currentCurrencyMode = 'RUB';
+                    ad.currencyMode = 'RUB';
+                    currentToggleRub.classList.add('active');
+                    currentToggleCrypto.classList.remove('active');
+                    if (currentPurchaseCurrency) currentPurchaseCurrency.textContent = 'RUB';
+                    
+                    const purchaseAmountInput = document.getElementById('purchase-amount');
+                    if (purchaseAmountInput) {
+                        const currentValue = parseFloat(purchaseAmountInput.value) || 0;
+                        if (currentValue > 0) {
+                            const rubValue = currentValue * ad.price;
+                            purchaseAmountInput.value = rubValue.toFixed(2);
+                            const minLimit = ad.sell_min_limit || ad.min_limit || 0;
+                            const maxLimit = ad.sell_max_limit || ad.max_limit;
+                            purchaseAmountInput.min = minLimit;
+                            purchaseAmountInput.max = maxLimit || 999999;
+                            purchaseAmountInput.step = '0.01';
+                            updatePurchaseInfo(ad, rubValue, 'RUB');
+                        } else {
+                            const minLimit = ad.sell_min_limit || ad.min_limit || 0;
+                            const maxLimit = ad.sell_max_limit || ad.max_limit;
+                            purchaseAmountInput.min = minLimit;
+                            purchaseAmountInput.max = maxLimit || 999999;
+                            purchaseAmountInput.step = '0.01';
+                        }
+                    }
+                } else if (target.id === 'toggle-crypto') {
+                    currentCurrencyMode = 'CRYPTO';
+                    ad.currencyMode = 'CRYPTO';
+                    currentToggleCrypto.classList.add('active');
+                    currentToggleRub.classList.remove('active');
+                    if (currentPurchaseCurrency) currentPurchaseCurrency.textContent = ad.crypto_currency;
+                    
+                    const purchaseAmountInput = document.getElementById('purchase-amount');
+                    if (purchaseAmountInput) {
+                        const currentValue = parseFloat(purchaseAmountInput.value) || 0;
+                        if (currentValue > 0) {
+                            const cryptoValue = currentValue / ad.price;
+                            purchaseAmountInput.value = cryptoValue.toFixed(6);
+                            const minLimit = ad.sell_min_limit || ad.min_limit || 0;
+                            const maxLimit = ad.sell_max_limit || ad.max_limit;
+                            purchaseAmountInput.min = minLimit / ad.price;
+                            purchaseAmountInput.max = maxLimit ? maxLimit / ad.price : 999999;
+                            purchaseAmountInput.step = '0.000001';
+                            updatePurchaseInfo(ad, cryptoValue, 'CRYPTO');
+                        } else {
+                            const minLimit = ad.sell_min_limit || ad.min_limit || 0;
+                            const maxLimit = ad.sell_max_limit || ad.max_limit;
+                            purchaseAmountInput.min = minLimit / ad.price;
+                            purchaseAmountInput.max = maxLimit ? maxLimit / ad.price : 999999;
+                            purchaseAmountInput.step = '0.000001';
+                        }
+                    }
                 }
+            };
+            
+            // Добавляем обработчик на родительский контейнер
+            const container = toggleRub.parentElement;
+            if (container) {
+                container.addEventListener('click', window.currencyToggleHandlerSell);
             }
-        });
+        } catch (error) {
+            console.warn('Ошибка при добавлении обработчиков переключателя валют для продажи:', error);
+        }
     }
     
     const purchaseInfo = document.getElementById('purchase-info');
@@ -2109,38 +2157,48 @@ async function openAdDetailsScreen(ad, userAction = 'buy') {
     detailsScreen.style.display = 'block';
     
     // Обработчик изменения суммы покупки/продажи
+    // Используем проверку существования и делегирование для избежания конфликтов
     if (purchaseAmountInput) {
-        // Удаляем старые обработчики, если они есть
-        const newInput = purchaseAmountInput.cloneNode(true);
-        purchaseAmountInput.parentNode.replaceChild(newInput, purchaseAmountInput);
-        
-        newInput.addEventListener('input', (e) => {
-            const value = parseFloat(e.target.value) || 0;
-            if (userAction === 'buy') {
-                // Для покупки: используем текущий режим валюты (RUB или CRYPTO)
-                updatePurchaseInfo(ad, value, currentCurrencyMode);
-            } else {
-                // Для продажи: используем текущий режим валюты (RUB или CRYPTO)
-                // Нужно получить актуальный режим из DOM
-                const toggleRub = document.getElementById('toggle-rub');
-                const toggleCrypto = document.getElementById('toggle-crypto');
-                const purchaseCurrency = document.getElementById('purchase-currency');
-                
-                let sellCurrencyMode = 'CRYPTO';
-                if (toggleRub && toggleCrypto) {
-                    if (toggleRub.classList.contains('active')) {
-                        sellCurrencyMode = 'RUB';
-                    } else if (toggleCrypto.classList.contains('active')) {
-                        sellCurrencyMode = 'CRYPTO';
-                    }
-                } else if (purchaseCurrency) {
-                    const currencyText = purchaseCurrency.textContent.trim();
-                    sellCurrencyMode = (currencyText === 'RUB' || currencyText === '₽') ? 'RUB' : 'CRYPTO';
-                }
-                
-                updatePurchaseInfo(ad, value, sellCurrencyMode);
+        try {
+            // Удаляем старый обработчик, если был
+            if (window.purchaseAmountInputHandler) {
+                purchaseAmountInput.removeEventListener('input', window.purchaseAmountInputHandler);
             }
-        });
+            
+            // Создаем новый обработчик
+            window.purchaseAmountInputHandler = (e) => {
+                const value = parseFloat(e.target.value) || 0;
+                if (userAction === 'buy') {
+                    // Для покупки: используем текущий режим валюты (RUB или CRYPTO)
+                    updatePurchaseInfo(ad, value, currentCurrencyMode);
+                } else {
+                    // Для продажи: используем текущий режим валюты (RUB или CRYPTO)
+                    // Нужно получить актуальный режим из DOM
+                    const toggleRub = document.getElementById('toggle-rub');
+                    const toggleCrypto = document.getElementById('toggle-crypto');
+                    const purchaseCurrency = document.getElementById('purchase-currency');
+                    
+                    let sellCurrencyMode = 'CRYPTO';
+                    if (toggleRub && toggleCrypto) {
+                        if (toggleRub.classList.contains('active')) {
+                            sellCurrencyMode = 'RUB';
+                        } else if (toggleCrypto.classList.contains('active')) {
+                            sellCurrencyMode = 'CRYPTO';
+                        }
+                    } else if (purchaseCurrency) {
+                        const currencyText = purchaseCurrency.textContent.trim();
+                        sellCurrencyMode = (currencyText === 'RUB' || currencyText === '₽') ? 'RUB' : 'CRYPTO';
+                    }
+                    
+                    updatePurchaseInfo(ad, value, sellCurrencyMode);
+                }
+            };
+            
+            // Добавляем обработчик
+            purchaseAmountInput.addEventListener('input', window.purchaseAmountInputHandler);
+        } catch (error) {
+            console.warn('Ошибка при добавлении обработчика поля ввода суммы:', error);
+        }
     }
 }
 
