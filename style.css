@@ -2201,7 +2201,203 @@ body {
   transform: translateY(0);
   box-shadow: 0 4px 16px rgba(0, 128, 255, 0.4);
 }
+.payment_screen .payment_container .payment_footer .payment_paid_info {
+  margin-top: 16px;
+  padding: 16px;
+  background: rgba(0, 200, 100, 0.1);
+  border: 1px solid rgba(0, 200, 100, 0.3);
+  border-radius: 12px;
+  animation: fadeIn 0.3s ease-out;
+}
+.payment_screen .payment_container .payment_footer .payment_paid_info svg {
+  flex-shrink: 0;
+}
 
+.payment_received_screen {
+  width: 100%;
+  min-height: 100vh;
+  background: linear-gradient(180deg, #0a0a0b 0%, #141416 50%, #1a1a1c 100%);
+  padding: 20px;
+  padding-bottom: 100px;
+}
+.payment_received_screen .payment_received_container {
+  max-width: 100%;
+  margin: 0 auto;
+}
+.payment_received_screen .payment_received_container .payment_received_header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.payment_received_screen .payment_received_container .payment_received_header .back_btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(27, 27, 29, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+}
+.payment_received_screen .payment_received_container .payment_received_header .back_btn:hover {
+  background: rgb(27, 27, 29);
+  transform: translateX(-2px);
+}
+.payment_received_screen .payment_received_container .payment_received_header .payment_received_title {
+  font-size: 24px;
+  font-weight: 700;
+  color: white;
+  margin: 0;
+}
+.payment_received_screen .payment_received_container .payment_received_card {
+  background: linear-gradient(135deg, rgba(27, 27, 29, 0.95) 0%, rgba(42, 42, 43, 0.9) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  margin-bottom: 24px;
+}
+.payment_received_screen .payment_received_container .payment_received_card .payment_received_success_icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #00c864 0%, #00a854 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  color: white;
+  font-weight: 700;
+  margin: 0 auto 24px;
+  box-shadow: 0 8px 24px rgba(0, 200, 100, 0.4);
+  animation: scaleIn 0.3s ease-out;
+}
+.payment_received_screen .payment_received_container .payment_received_card .payment_received_amount_section {
+  text-align: center;
+  margin-bottom: 24px;
+}
+.payment_received_screen .payment_received_container .payment_received_card .payment_received_amount_section .payment_received_label {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+.payment_received_screen .payment_received_container .payment_received_card .payment_received_amount_section .payment_received_amount {
+  font-size: 36px;
+  font-weight: 800;
+  color: #00c864;
+  background: linear-gradient(135deg, #00c864 0%, #00a854 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+@supports not (-webkit-background-clip: text) {
+  .payment_received_screen .payment_received_container .payment_received_card .payment_received_amount_section .payment_received_amount {
+    color: #00c864;
+  }
+}
+.payment_received_screen .payment_received_container .payment_received_card .payment_received_details_section {
+  margin-bottom: 24px;
+}
+.payment_received_screen .payment_received_container .payment_received_card .payment_received_details_section .payment_received_details_label {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 600;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.payment_received_screen .payment_received_container .payment_received_card .payment_received_details_section .payment_received_details_content {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  padding: 16px;
+}
+.payment_received_screen .payment_received_container .payment_received_card .payment_received_details_section .payment_received_details_content .payment_received_detail_item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+.payment_received_screen .payment_received_container .payment_received_card .payment_received_details_section .payment_received_details_content .payment_received_detail_item:last-child {
+  border-bottom: none;
+}
+.payment_received_screen .payment_received_container .payment_received_card .payment_received_details_section .payment_received_details_content .payment_received_detail_item .payment_received_detail_label {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 500;
+}
+.payment_received_screen .payment_received_container .payment_received_card .payment_received_details_section .payment_received_details_content .payment_received_detail_item .payment_received_detail_value {
+  font-size: 15px;
+  color: white;
+  font-weight: 600;
+}
+.payment_received_screen .payment_received_container .payment_received_card .payment_received_warning {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: rgba(255, 193, 7, 0.1);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 193, 7, 0.2);
+}
+.payment_received_screen .payment_received_container .payment_received_card .payment_received_warning svg {
+  color: #ffc107;
+  flex-shrink: 0;
+}
+.payment_received_screen .payment_received_container .payment_received_card .payment_received_warning span {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+}
+.payment_received_screen .payment_received_container .payment_received_footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20px;
+  background: linear-gradient(180deg, rgba(15, 15, 16, 0) 0%, rgba(20, 20, 21, 0.95) 50%, rgb(20, 20, 21) 100%);
+  -webkit-backdrop-filter: blur(10px);
+          backdrop-filter: blur(10px);
+}
+.payment_received_screen .payment_received_container .payment_received_footer .payment_received_confirm_btn {
+  width: 100%;
+  padding: 18px 24px;
+  background: linear-gradient(135deg, #00c864 0%, #00a854 100%);
+  border: none;
+  border-radius: 18px;
+  color: white;
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 8px 24px rgba(0, 200, 100, 0.4);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+.payment_received_screen .payment_received_container .payment_received_footer .payment_received_confirm_btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(0, 200, 100, 0.5);
+  background: linear-gradient(135deg, #00d870 0%, #00b860 100%);
+}
+.payment_received_screen .payment_received_container .payment_received_footer .payment_received_confirm_btn:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 16px rgba(0, 200, 100, 0.4);
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
 .my_ads_screen {
   width: 100%;
   min-height: 100vh;
@@ -2581,6 +2777,28 @@ body {
 }
 .notifications_screen .notifications_container .notifications_list .notification_card .notification_actions .notification_confirm_btn:active {
   transform: translateY(0);
+}
+.notifications_screen .notifications_container .notifications_list .notification_card .notification_actions .notification_view_btn {
+  width: 100%;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, rgba(0, 128, 255, 0.2) 0%, rgba(0, 128, 255, 0.1) 100%);
+  border: 1px solid rgba(0, 128, 255, 0.3);
+  border-radius: 12px;
+  color: #0080ff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.notifications_screen .notifications_container .notifications_list .notification_card .notification_actions .notification_view_btn:hover {
+  background: linear-gradient(135deg, rgba(0, 128, 255, 0.3) 0%, rgba(0, 128, 255, 0.2) 100%);
+  border-color: rgba(0, 128, 255, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 128, 255, 0.3);
+}
+.notifications_screen .notifications_container .notifications_list .notification_card .notification_actions .notification_view_btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(0, 128, 255, 0.2);
 }
 
 .balance_footer_actions {
