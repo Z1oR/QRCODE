@@ -1798,6 +1798,12 @@ function openAdDetailsScreen(ad, userAction = 'buy') {
 
 
 
+    // Устанавливаем начальный активный класс на переключателе (для покупки по умолчанию RUB)
+    if (toggleRub && toggleCrypto && userAction === 'buy') {
+        toggleRub.classList.add('active');
+        toggleCrypto.classList.remove('active');
+    }
+
     // Обработчики переключателя валюты
     if (toggleRub && toggleCrypto) {
         // Удаляем старые обработчики
@@ -1808,6 +1814,7 @@ function openAdDetailsScreen(ad, userAction = 'buy') {
         
         newToggleRub.addEventListener('click', () => {
             currentCurrencyMode = 'RUB';
+            ad.currencyMode = 'RUB'; // Сохраняем в объект объявления
             newToggleRub.classList.add('active');
             newToggleCrypto.classList.remove('active');
             if (purchaseCurrency) purchaseCurrency.textContent = 'RUB';
@@ -1832,6 +1839,7 @@ function openAdDetailsScreen(ad, userAction = 'buy') {
         
         newToggleCrypto.addEventListener('click', () => {
             currentCurrencyMode = 'CRYPTO';
+            ad.currencyMode = 'CRYPTO'; // Сохраняем в объект объявления
             newToggleCrypto.classList.add('active');
             newToggleRub.classList.remove('active');
             if (purchaseCurrency) purchaseCurrency.textContent = ad.crypto_currency;
@@ -2028,17 +2036,36 @@ function openAdDetailsScreen(ad, userAction = 'buy') {
         });
     }
     
-    // Сохраняем режим валюты в объекте ad для использования в других функциях
-    // Используем замыкание для доступа к currentCurrencyMode
-    const updateCurrencyMode = (mode) => {
-        ad.currencyMode = mode;
-    };
-    
-    // Режим валюты уже сохранен в обработчиках выше
-    
-    // Сохраняем функцию для обновления режима
-    ad.updateCurrencyMode = updateCurrencyMode;
-    ad.currencyMode = currentCurrencyMode;
+    // Сохраняем начальный режим валюты в объекте ad
+    // После замены элементов проверяем активный класс на новых элементах
+    if (toggleRub && toggleCrypto) {
+        // После клонирования и замены, проверяем активный класс на новых элементах
+        const newToggleRub = document.getElementById('toggle-rub');
+        const newToggleCrypto = document.getElementById('toggle-crypto');
+        
+        if (newToggleRub && newToggleCrypto) {
+            if (newToggleRub.classList.contains('active')) {
+                currentCurrencyMode = 'RUB';
+                ad.currencyMode = 'RUB';
+            } else if (newToggleCrypto.classList.contains('active')) {
+                currentCurrencyMode = 'CRYPTO';
+                ad.currencyMode = 'CRYPTO';
+            } else {
+                // Если ни один не активен, устанавливаем RUB по умолчанию для покупки
+                if (userAction === 'buy') {
+                    currentCurrencyMode = 'RUB';
+                    ad.currencyMode = 'RUB';
+                    newToggleRub.classList.add('active');
+                    newToggleCrypto.classList.remove('active');
+                }
+            }
+        } else {
+            // Если элементы не найдены, используем значение по умолчанию
+            ad.currencyMode = currentCurrencyMode;
+        }
+    } else {
+        ad.currencyMode = currentCurrencyMode;
+    }
 }
 
 // Функция обновления информации о покупке/продаже
@@ -2197,8 +2224,41 @@ document.addEventListener('DOMContentLoaded', () => {
                 let cryptoAmount, fiatAmount;
                 
                 if (userAction === 'buy') {
-                    // Режим ввода: RUB или CRYPTO
-                    const currencyMode = selectedAd.currencyMode || 'RUB';
+                    // Определяем режим ввода: проверяем активный переключатель валют
+                    let currencyMode = selectedAd.currencyMode || 'RUB';
+                    
+                    // Проверяем, какой переключатель активен в DOM (более надежный способ)
+                    const toggleRub = document.getElementById('toggle-rub');
+                    const toggleCrypto = document.getElementById('toggle-crypto');
+                    const purchaseCurrency = document.getElementById('purchase-currency');
+                    
+                    if (toggleRub && toggleCrypto) {
+                        if (toggleRub.classList.contains('active')) {
+                            currencyMode = 'RUB';
+                        } else if (toggleCrypto.classList.contains('active')) {
+                            currencyMode = 'CRYPTO';
+                        }
+                    } else if (purchaseCurrency) {
+                        // Если переключателей нет, проверяем текст валюты
+                        const currencyText = purchaseCurrency.textContent.trim();
+                        if (currencyText === 'RUB' || currencyText === '₽') {
+                            currencyMode = 'RUB';
+                        } else {
+                            currencyMode = 'CRYPTO';
+                        }
+                    }
+                    
+                    // Обновляем currencyMode в selectedAd
+                    selectedAd.currencyMode = currencyMode;
+                    
+                    console.log('Режим валюты определен:', {
+                        currencyMode,
+                        purchaseAmount,
+                        toggleRubActive: toggleRub?.classList.contains('active'),
+                        toggleCryptoActive: toggleCrypto?.classList.contains('active'),
+                        purchaseCurrencyText: purchaseCurrency?.textContent
+                    });
+                    
                     if (currencyMode === 'RUB') {
                         // Пользователь вводит сумму ФИАТА
                         fiatAmount = purchaseAmount;
