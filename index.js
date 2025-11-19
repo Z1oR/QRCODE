@@ -1312,13 +1312,17 @@ function initPreviewScreen() {
                 return
             }
             
-            // Валидация метода оплаты и реквизитов для объявлений на продажу
+            // Валидация метода оплаты и реквизитов для всех объявлений
+            // Для покупки (action === 'buy'): покупатель указывает свои реквизиты, чтобы продавец мог перевести ему фиат
+            // Для продажи (action === 'sell'): продавец указывает свои реквизиты, чтобы покупатель мог перевести ему фиат
+            if (!bankName || !paymentDetails) {
+                const actionText = action === 'buy' ? 'покупку' : 'продажу';
+                alert(`Пожалуйста, выберите метод оплаты и укажите реквизиты для получения платежей.\n\nДля объявления на ${actionText} необходимо указать ваши банковские реквизиты.`);
+                return;
+            }
+            
+            // Проверка баланса только для продажи (продавец должен иметь криптовалюту)
             if (action === 'sell') {
-                if (!bankName || !paymentDetails) {
-                    alert('Пожалуйста, выберите метод оплаты и укажите реквизиты для получения платежей')
-                    return
-                }
-                
                 const userBalance = userData?.balance || 0;
                 const requiredAmount = amount; // Количество криптовалюты, которое хотим продать
                 
@@ -2592,9 +2596,32 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 
                 if (!response.ok) {
-                    const errorText = await response.text().catch(() => 'Не удалось прочитать ошибку');
-                    console.error('Ошибка создания сделки:', response.status, errorText);
-                    throw new Error(`Ошибка создания сделки: ${response.status} ${errorText}`);
+                    let errorMessage = 'Не удалось создать сделку';
+                    try {
+                        const errorData = await response.json().catch(() => null);
+                        if (errorData && errorData.detail) {
+                            errorMessage = errorData.detail;
+                        } else {
+                            const errorText = await response.text().catch(() => 'Неизвестная ошибка');
+                            errorMessage = errorText;
+                        }
+                    } catch (e) {
+                        const errorText = await response.text().catch(() => 'Неизвестная ошибка');
+                        errorMessage = errorText;
+                    }
+                    
+                    console.error('Ошибка создания сделки:', response.status, errorMessage);
+                    
+                    // Специальная обработка ошибки о недостающих реквизитах покупателя
+                    if (errorMessage && errorMessage.includes('не содержит реквизиты покупателя')) {
+                        alert('Ошибка: Объявление на покупку не содержит реквизиты покупателя.\n\nЭто означает, что создатель объявления не указал свои банковские реквизиты при создании объявления.\n\nПожалуйста, выберите другое объявление или попросите создателя объявления добавить реквизиты.');
+                        // Возвращаемся к экрану деталей объявления
+                        const adDetailsScreen = document.getElementById('ad-details-screen');
+                        if (adDetailsScreen) adDetailsScreen.style.display = 'block';
+                        return;
+                    }
+                    
+                    throw new Error(`Ошибка создания сделки: ${response.status} ${errorMessage}`);
                 }
                 
                 currentTransaction = await response.json();
