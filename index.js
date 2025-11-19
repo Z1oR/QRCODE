@@ -2611,12 +2611,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 // Логируем данные перед открытием экрана оплаты
                 console.log('Открытие экрана оплаты:', {
-                    selectedAd,
-                    currentTransaction,
+                    selectedAd: {
+                        ...selectedAd,
+                        payment_details: selectedAd.payment_details ? '***СКРЫТО***' : 'null'
+                    },
+                    currentTransaction: currentTransaction ? {
+                        ...currentTransaction,
+                        seller_payment_details: currentTransaction.seller_payment_details ? '***СКРЫТО***' : 'null',
+                        buyer_payment_details: currentTransaction.buyer_payment_details ? '***СКРЫТО***' : 'null'
+                    } : null,
                     purchaseAmount,
                     userAction,
                     bank_name: selectedAd.bank_name,
-                    payment_details: selectedAd.payment_details,
                     transactionId: currentTransaction.id
                 });
                 
@@ -2785,44 +2791,77 @@ function openPaymentScreen(ad, usdtAmount, userAction = 'buy') {
     
     let bankName, paymentDetails;
     
-    // ВАЖНО: Реквизиты (payment_details) берутся ТОЛЬКО из транзакции после создания сделки!
-    // В целях безопасности реквизиты не показываются до создания сделки
+    // ВАЖНО: Личные реквизиты (payment_details - номер карты/телефона) показываются только после создания сделки!
+    // Название банка (bank_name) можно показывать из объявления - это безопасно
+    // Личные реквизиты должны браться из объявления или транзакции, но только после того как сделка создана
     
-    // Определяем, откуда брать реквизиты
-    if (userAction === 'buy') {
-        // Покупка: показываем реквизиты продавца
-        // Реквизиты берутся ТОЛЬКО из транзакции (введенные продавцом при создании сделки)
-        if (currentTransaction && currentTransaction.seller_bank_name && currentTransaction.seller_payment_details) {
-            bankName = currentTransaction.seller_bank_name;
-            paymentDetails = currentTransaction.seller_payment_details;
-        } else {
-            // Если транзакция еще не создана или реквизиты не указаны - показываем только название банка из объявления
-            bankName = ad.bank_name || 'Не указан';
-            paymentDetails = null; // Реквизиты недоступны до создания сделки
-        }
-    } else {
-        // Продажа (userAction === 'sell'): показываем реквизиты покупателя
-        // Реквизиты берутся ТОЛЬКО из транзакции (введенные покупателем при создании сделки)
-        if (currentTransaction && currentTransaction.buyer_bank_name && currentTransaction.buyer_payment_details) {
-            bankName = currentTransaction.buyer_bank_name;
-            paymentDetails = currentTransaction.buyer_payment_details;
-        } else {
-            // Если транзакция еще не создана или реквизиты не указаны - показываем только название банка из объявления
-            bankName = ad.bank_name || 'Не указан';
-            paymentDetails = null; // Реквизиты недоступны до создания сделки
-        }
-    }
-    
-    // Проверяем, что реквизиты есть в транзакции
-    if (!paymentDetails) {
-        console.error('Ошибка: реквизиты недоступны. Сделка должна быть создана сначала.');
+    // Проверяем, что транзакция создана (currentTransaction должен быть установлен перед вызовом openPaymentScreen)
+    if (!currentTransaction) {
+        console.error('Ошибка: транзакция не создана, реквизиты недоступны до создания сделки.');
         alert('Ошибка: реквизиты недоступны. Пожалуйста, создайте сделку сначала.');
-        // Возвращаемся на экран деталей объявления
         const paymentScreen = document.getElementById('payment-screen');
         const adDetailsScreen = document.getElementById('ad-details-screen');
         if (paymentScreen) paymentScreen.style.display = 'none';
         if (adDetailsScreen) adDetailsScreen.style.display = 'block';
         return;
+    }
+    
+    // Определяем, откуда брать реквизиты
+    if (userAction === 'buy') {
+        // Покупка: показываем реквизиты продавца для перевода денег
+        // Реквизиты продавца должны быть в объявлении (ad.bank_name, ad.payment_details)
+        // Или в транзакции (currentTransaction.seller_bank_name, currentTransaction.seller_payment_details)
+        
+        // Сначала пытаемся взять из транзакции (если там есть)
+        if (currentTransaction.seller_bank_name && currentTransaction.seller_payment_details) {
+            bankName = currentTransaction.seller_bank_name;
+            paymentDetails = currentTransaction.seller_payment_details;
+        } 
+        // Если нет в транзакции, берем из объявления (они там должны быть для объявлений на продажу)
+        else if (ad.bank_name && ad.payment_details) {
+            bankName = ad.bank_name;
+            paymentDetails = ad.payment_details;
+        }
+        // Если нет нигде - ошибка
+        else {
+            console.error('Ошибка: реквизиты продавца не найдены ни в транзакции, ни в объявлении.');
+            console.error('Транзакция:', currentTransaction);
+            console.error('Объявление:', ad);
+            alert('Ошибка: реквизиты продавца недоступны. Пожалуйста, обратитесь в поддержку.');
+            const paymentScreen = document.getElementById('payment-screen');
+            const adDetailsScreen = document.getElementById('ad-details-screen');
+            if (paymentScreen) paymentScreen.style.display = 'none';
+            if (adDetailsScreen) adDetailsScreen.style.display = 'block';
+            return;
+        }
+    } else {
+        // Продажа (userAction === 'sell'): показываем реквизиты покупателя
+        // Когда продавец продает, покупатель уже создал объявление на покупку
+        // Реквизиты покупателя должны быть в объявлении покупателя (ad.bank_name, ad.payment_details)
+        // Или в транзакции (currentTransaction.buyer_bank_name, currentTransaction.buyer_payment_details)
+        
+        // Сначала пытаемся взять из транзакции (если там есть)
+        if (currentTransaction.buyer_bank_name && currentTransaction.buyer_payment_details) {
+            bankName = currentTransaction.buyer_bank_name;
+            paymentDetails = currentTransaction.buyer_payment_details;
+        }
+        // Если нет в транзакции, берем из объявления покупателя
+        else if (ad.bank_name && ad.payment_details) {
+            bankName = ad.bank_name;
+            paymentDetails = ad.payment_details;
+        }
+        // Если нет нигде - ошибка
+        else {
+            console.error('Ошибка: реквизиты покупателя не найдены ни в транзакции, ни в объявлении.');
+            console.error('Транзакция:', currentTransaction);
+            console.error('Объявление:', ad);
+            alert('Ошибка: реквизиты покупателя недоступны. Пожалуйста, обратитесь в поддержку.');
+            const paymentScreen = document.getElementById('payment-screen');
+            const adDetailsScreen = document.getElementById('ad-details-screen');
+            if (paymentScreen) paymentScreen.style.display = 'none';
+            if (adDetailsScreen) adDetailsScreen.style.display = 'block';
+            return;
+        }
     }
     
     console.log('Заполнение реквизитов:', {
