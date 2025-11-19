@@ -2609,25 +2609,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     selectedAd.transactionId = currentTransaction.id;
                 }
                 
-                // Если это продажа, пытаемся получить объявление покупателя заново, чтобы получить реквизиты
-                // (если бэкенд возвращает их в детальном ответе)
-                if (userAction === 'sell' && selectedAd && selectedAd.Id) {
-                    try {
-                        const adResponse = await makeAuthenticatedRequest(`${API_BASE_URL}/api/ads/${selectedAd.Id}`, {
-                            method: 'GET'
-                        });
-                        if (adResponse.ok) {
-                            const adDetails = await adResponse.json();
-                            // Обновляем объявление с детальными данными (может содержать payment_details)
-                            if (adDetails) {
-                                Object.assign(selectedAd, adDetails);
-                            }
-                        }
-                    } catch (error) {
-                        console.warn('Не удалось получить детали объявления:', error);
-                        // Продолжаем работу, даже если не удалось получить детали
-                    }
-                }
+                // Реквизиты теперь автоматически сохраняются бэкендом в транзакцию при её создании
+                // Дополнительный запрос объявления не нужен
                 
                 // Логируем данные перед открытием экрана оплаты
                 console.log('Открытие экрана оплаты:', {
@@ -2845,27 +2828,17 @@ function openPaymentScreen(ad, usdtAmount, userAction = 'buy', transaction = nul
         // Реквизиты продавца должны быть в объявлении (ad.bank_name, ad.payment_details)
         // Или в транзакции (txData.seller_bank_name, txData.seller_payment_details)
         
-        // Сначала пытаемся взять из транзакции (если там есть)
+        // ВАЖНО: Реквизиты берутся ТОЛЬКО из транзакции!
+        // Бэкенд автоматически сохраняет реквизиты из объявления в транзакцию при создании сделки
         if (txData && txData.seller_bank_name && txData.seller_payment_details) {
             bankName = txData.seller_bank_name;
             paymentDetails = txData.seller_payment_details;
             console.log('Реквизиты продавца взяты из транзакции');
-        } 
-        // Если нет в транзакции, берем из объявления (они там должны быть для объявлений на продажу)
-        else if (ad && ad.bank_name && ad.payment_details) {
-            bankName = ad.bank_name;
-            paymentDetails = ad.payment_details;
-            console.log('Реквизиты продавца взяты из объявления');
-        }
-        // Если нет нигде - ошибка
-        else {
-            console.error('Ошибка: реквизиты продавца не найдены ни в транзакции, ни в объявлении.');
+        } else {
+            console.error('Ошибка: реквизиты продавца не найдены в транзакции.');
             console.error('Транзакция:', txData);
-            console.error('Объявление:', ad);
             console.error('Транзакция имеет seller_bank_name?', txData?.seller_bank_name);
             console.error('Транзакция имеет seller_payment_details?', !!txData?.seller_payment_details);
-            console.error('Объявление имеет bank_name?', ad?.bank_name);
-            console.error('Объявление имеет payment_details?', !!ad?.payment_details);
             alert('Ошибка: реквизиты продавца недоступны. Пожалуйста, обратитесь в поддержку.');
             const paymentScreen = document.getElementById('payment-screen');
             const adDetailsScreen = document.getElementById('ad-details-screen');
@@ -2879,55 +2852,23 @@ function openPaymentScreen(ad, usdtAmount, userAction = 'buy', transaction = nul
         // Реквизиты покупателя должны быть в объявлении покупателя (ad.bank_name, ad.payment_details)
         // Или в транзакции (txData.buyer_bank_name, txData.buyer_payment_details)
         
-        // Сначала пытаемся взять из транзакции (если там есть)
+        // ВАЖНО: Реквизиты берутся ТОЛЬКО из транзакции!
+        // Бэкенд автоматически сохраняет реквизиты из объявления покупателя в транзакцию при создании сделки
         if (txData && txData.buyer_bank_name && txData.buyer_payment_details) {
             bankName = txData.buyer_bank_name;
             paymentDetails = txData.buyer_payment_details;
             console.log('Реквизиты покупателя взяты из транзакции');
-        }
-        // Если нет в транзакции, берем из объявления покупателя
-        else if (ad && ad.bank_name && ad.payment_details) {
-            bankName = ad.bank_name;
-            paymentDetails = ad.payment_details;
-            console.log('Реквизиты покупателя взяты из объявления');
-        }
-        // Если нет нигде - для продажи это может быть нормально
-        // Показываем хотя бы название банка, если оно есть
-        else {
-            console.warn('Реквизиты покупателя не найдены, проверяем наличие транзакции...');
-            // Если транзакция вообще не создана, показываем ошибку
-            if (!txData || !txData.id) {
-                console.error('Ошибка: транзакция не создана.');
-                alert('Ошибка: реквизиты недоступны. Пожалуйста, создайте сделку сначала.');
-                const paymentScreen = document.getElementById('payment-screen');
-                const adDetailsScreen = document.getElementById('ad-details-screen');
-                if (paymentScreen) paymentScreen.style.display = 'none';
-                if (adDetailsScreen) adDetailsScreen.style.display = 'block';
-                return;
-            }
-            
-            // Если транзакция есть, но реквизитов нет - возможно бэкенд их скрывает
-            // Показываем хотя бы название банка, если оно есть
-            if (ad && ad.bank_name) {
-                bankName = ad.bank_name;
-                paymentDetails = 'Реквизиты будут доступны после подтверждения сделки покупателем';
-                console.warn('Реквизиты покупателя недоступны, показываем только название банка');
-            } else {
-                // Если даже банка нет - ошибка
-                console.error('Ошибка: реквизиты покупателя не найдены ни в транзакции, ни в объявлении.');
-                console.error('Транзакция:', txData);
-                console.error('Объявление:', ad);
-                console.error('Транзакция имеет buyer_bank_name?', txData?.buyer_bank_name);
-                console.error('Транзакция имеет buyer_payment_details?', !!txData?.buyer_payment_details);
-                console.error('Объявление имеет bank_name?', ad?.bank_name);
-                console.error('Объявление имеет payment_details?', !!ad?.payment_details);
-                alert('Ошибка: реквизиты покупателя недоступны. Пожалуйста, обратитесь в поддержку.');
-                const paymentScreen = document.getElementById('payment-screen');
-                const adDetailsScreen = document.getElementById('ad-details-screen');
-                if (paymentScreen) paymentScreen.style.display = 'none';
-                if (adDetailsScreen) adDetailsScreen.style.display = 'block';
-                return;
-            }
+        } else {
+            console.error('Ошибка: реквизиты покупателя не найдены в транзакции.');
+            console.error('Транзакция:', txData);
+            console.error('Транзакция имеет buyer_bank_name?', txData?.buyer_bank_name);
+            console.error('Транзакция имеет buyer_payment_details?', !!txData?.buyer_payment_details);
+            alert('Ошибка: реквизиты покупателя недоступны. Пожалуйста, обратитесь в поддержку.');
+            const paymentScreen = document.getElementById('payment-screen');
+            const adDetailsScreen = document.getElementById('ad-details-screen');
+            if (paymentScreen) paymentScreen.style.display = 'none';
+            if (adDetailsScreen) adDetailsScreen.style.display = 'block';
+            return;
         }
     }
     
