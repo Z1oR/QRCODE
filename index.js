@@ -2566,6 +2566,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Для покупки передаем сумму в рублях, для продажи - в криптовалюте
                 const amountForPayment = userAction === 'buy' ? fiatAmount : cryptoAmount;
                 openPaymentScreen(selectedAd, amountForPayment, userAction);
+                
+                // Обновляем уведомления (новая сделка появится у создателя объявления)
+                await checkPendingTransactions();
             } catch (error) {
                 console.error('Ошибка при создании сделки:', error);
                 alert('Ошибка создания сделки: ' + error.message);
@@ -2637,7 +2640,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     throw new Error(`Ошибка подтверждения оплаты: ${errorText}`);
                 }
                 
-                alert('Оплата подтверждена! Продавец получит уведомление.');
+                alert('Оплата подтверждена! Вторая сторона получит уведомление.');
+                
                 // Закрываем экран оплаты и возвращаемся на главный
                 document.getElementById('payment-screen').style.display = 'none';
                 document.getElementById('main__screen').style.display = 'block';
@@ -2646,6 +2650,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (userData) {
                     await refreshUserBalance();
                 }
+                
+                // Обновляем уведомления
+                await checkPendingTransactions();
                 
                 // Очищаем переменные
                 selectedAd = null;
@@ -2814,6 +2821,110 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+// Функция открытия экрана подтверждения получения средств
+function openPaymentReceivedScreen(transaction) {
+    const paymentReceivedScreen = document.getElementById('payment-received-screen');
+    const mainScreen = document.getElementById('main__screen');
+    const notificationsScreen = document.getElementById('notifications-screen');
+    
+    if (!paymentReceivedScreen) {
+        console.error('Экран подтверждения получения средств не найден');
+        return;
+    }
+    
+    // Скрываем другие экраны
+    if (mainScreen) {
+        mainScreen.style.display = 'none';
+    }
+    if (notificationsScreen) {
+        notificationsScreen.style.display = 'none';
+    }
+    
+    // Заполняем сумму
+    const paymentReceivedAmount = document.getElementById('payment-received-amount');
+    if (paymentReceivedAmount) {
+        paymentReceivedAmount.textContent = `${transaction.fiat_amount.toFixed(2)} RUB`;
+    }
+    
+    // Заполняем детали сделки
+    const paymentReceivedDetails = document.getElementById('payment-received-details');
+    if (paymentReceivedDetails) {
+        let detailsHTML = `
+            <div class="payment_received_detail_item">
+                <span class="payment_received_detail_label">Криптовалюта:</span>
+                <span class="payment_received_detail_value">${transaction.crypto_amount.toFixed(6)} ${transaction.crypto_currency}</span>
+            </div>
+            <div class="payment_received_detail_item">
+                <span class="payment_received_detail_label">Цена:</span>
+                <span class="payment_received_detail_value">${transaction.price.toFixed(2)} RUB</span>
+            </div>
+            <div class="payment_received_detail_item">
+                <span class="payment_received_detail_label">Дата перевода:</span>
+                <span class="payment_received_detail_value">${transaction.buyer_paid_at ? new Date(transaction.buyer_paid_at).toLocaleString('ru-RU') : 'Не указана'}</span>
+            </div>
+        `;
+        
+        paymentReceivedDetails.innerHTML = detailsHTML;
+    }
+    
+    // Сохраняем ID транзакции для подтверждения
+    if (paymentReceivedScreen) {
+        paymentReceivedScreen.setAttribute('data-transaction-id', transaction.id);
+    }
+    
+    // Показываем экран
+    paymentReceivedScreen.style.display = 'block';
+    window.scrollTo(0, 0);
+}
+
+// Функция проверки и открытия экрана подтверждения получения средств
+async function checkAndShowPaymentReceived() {
+    try {
+        // Используем эндпоинт /api/transactions/pending - это сделки где другая сторона перевела средства
+        // и ждет подтверждения получателя (продавца)
+        const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/transactions/pending`, {
+            method: 'GET'
+        });
+        
+        if (!response.ok) {
+            return;
+        }
+        
+        const transactions = await response.json();
+        
+        if (!transactions || !Array.isArray(transactions) || transactions.length === 0) {
+            return;
+        }
+        
+        // Берем самую новую сделку ожидающую подтверждения
+        const latestTransaction = transactions.sort((a, b) => 
+            new Date((b.buyer_paid_at || b.created_at)) - new Date((a.buyer_paid_at || a.created_at))
+        )[0];
+        
+        // Проверяем не показывали ли мы уже это уведомление
+        const lastShownTransactionId = localStorage.getItem('lastShownPaymentReceivedTransactionId');
+        
+        // Если это новая сделка или пользователь находится на главном экране, показываем экран
+        const currentScreen = document.getElementById('payment-received-screen');
+        const isPaymentReceivedScreenVisible = currentScreen && currentScreen.style.display !== 'none';
+        
+        if (lastShownTransactionId !== latestTransaction.id.toString() && !isPaymentReceivedScreenVisible) {
+            // Показываем экран только если пользователь на главном экране или на экране уведомлений
+            const mainScreen = document.getElementById('main__screen');
+            const notificationsScreen = document.getElementById('notifications-screen');
+            const isMainScreenVisible = mainScreen && mainScreen.style.display !== 'none';
+            const isNotificationsScreenVisible = notificationsScreen && notificationsScreen.style.display !== 'none';
+            
+            if (isMainScreenVisible || isNotificationsScreenVisible) {
+                openPaymentReceivedScreen(latestTransaction);
+                localStorage.setItem('lastShownPaymentReceivedTransactionId', latestTransaction.id.toString());
+            }
+        }
+    } catch (error) {
+        console.error('Ошибка при проверке получения средств:', error);
+    }
 }
 
 // ========== ЭКРАН "МОИ ОБЪЯВЛЕНИЯ" ==========
@@ -3005,34 +3116,115 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // Периодическая проверка уведомлений (каждые 30 секунд)
+    // Обработчик кнопки "Назад" на экране подтверждения получения средств
+    const backFromPaymentReceivedBtn = document.getElementById('back-from-payment-received');
+    if (backFromPaymentReceivedBtn) {
+        backFromPaymentReceivedBtn.addEventListener('click', () => {
+            document.getElementById('payment-received-screen').style.display = 'none';
+            document.getElementById('main__screen').style.display = 'block';
+        });
+    }
+    
+    // Обработчик кнопки "Подтвердить получение" на экране подтверждения получения средств
+    const paymentReceivedConfirmBtn = document.getElementById('payment-received-confirm-btn');
+    if (paymentReceivedConfirmBtn) {
+        paymentReceivedConfirmBtn.addEventListener('click', async () => {
+            const paymentReceivedScreen = document.getElementById('payment-received-screen');
+            const transactionId = parseInt(paymentReceivedScreen?.getAttribute('data-transaction-id'));
+            
+            if (!transactionId) {
+                alert('Ошибка: ID сделки не найден');
+                return;
+            }
+            
+            // Используем функцию confirmTransaction
+            await confirmTransaction(transactionId, null, null);
+            
+            // Закрываем экран и возвращаемся на главный
+            document.getElementById('payment-received-screen').style.display = 'none';
+            document.getElementById('main__screen').style.display = 'block';
+            
+            // Обновляем уведомления
+            await checkPendingTransactions();
+        });
+    }
+    
+    // Периодическая проверка уведомлений и получения средств (каждые 30 секунд)
     setInterval(async () => {
         await checkPendingTransactions();
+        await checkAndShowPaymentReceived();
     }, 30000);
     
     // Первоначальная проверка
     checkPendingTransactions();
+    
+    // Проверяем получение средств при загрузке страницы (с задержкой 2 секунды)
+    setTimeout(async () => {
+        await checkAndShowPaymentReceived();
+    }, 2000);
 });
 
 // ========== ФУНКЦИИ ДЛЯ УВЕДОМЛЕНИЙ ==========
 
-// Функция проверки ожидающих сделок
+// Функция проверки ожидающих сделок (все типы уведомлений)
 async function checkPendingTransactions() {
     try {
-        const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/transactions/pending`, {
+        // Загружаем сделки ожидающие подтверждения (оплаченные, но не подтвержденные)
+        const pendingResponse = await makeAuthenticatedRequest(`${API_BASE_URL}/api/transactions/pending`, {
             method: 'GET'
         });
         
-        if (!response.ok) {
-            return;
+        // Загружаем все сделки пользователя для поиска новых
+        const myTransactionsResponse = await makeAuthenticatedRequest(`${API_BASE_URL}/api/transactions/my`, {
+            method: 'GET'
+        });
+        
+        let totalCount = 0;
+        let pendingTransactionsList = [];
+        
+        // Считаем сделки ожидающие подтверждения (оплаченные, но не подтвержденные продавцом)
+        if (pendingResponse.ok) {
+            pendingTransactionsList = await pendingResponse.json();
+            if (pendingTransactionsList && Array.isArray(pendingTransactionsList)) {
+                totalCount += pendingTransactionsList.length;
+            }
         }
         
-        const transactions = await response.json();
+        // Считаем новые сделки (pending статус - только созданы, для владельца объявления)
+        if (myTransactionsResponse.ok) {
+            const myTransactions = await myTransactionsResponse.json();
+            if (myTransactions && Array.isArray(myTransactions)) {
+                const userId = userData?.id;
+                if (userId) {
+                    // Фильтруем новые сделки где:
+                    // 1. Статус pending (только созданы)
+                    // 2. Пользователь владелец объявления (seller_id или buyer_id)
+                    const newPendingTransactions = myTransactions.filter(t => {
+                        if (t.status !== 'pending') return false;
+                        
+                        // Пользователь является владельцем объявления если:
+                        // - seller_id === userId (пользователь продавец/владелец объявления на продажу)
+                        // - buyer_id === userId (пользователь покупатель/владелец объявления на покупку)
+                        const isOwner = (t.seller_id === userId || t.buyer_id === userId);
+                        
+                        // Проверяем что это не та же сделка что уже в pending (ожидающие подтверждения)
+                        // чтобы не считать дважды
+                        const alreadyInPending = pendingTransactionsList.some(p => p.id === t.id);
+                        if (alreadyInPending) return false;
+                        
+                        return isOwner;
+                    });
+                    
+                    totalCount += newPendingTransactions.length;
+                }
+            }
+        }
+        
         const badge = document.getElementById('notifications-badge');
         
-        if (transactions && transactions.length > 0) {
+        if (totalCount > 0) {
             if (badge) {
-                badge.textContent = transactions.length;
+                badge.textContent = totalCount;
                 badge.style.display = 'flex';
             }
         } else {
@@ -3045,19 +3237,77 @@ async function checkPendingTransactions() {
     }
 }
 
-// Функция загрузки ожидающих сделок
+// Функция загрузки всех типов уведомлений
 async function loadPendingTransactions() {
     try {
-        const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/transactions/pending`, {
+        // Загружаем сделки ожидающие подтверждения (оплаченные, но не подтвержденные)
+        const pendingResponse = await makeAuthenticatedRequest(`${API_BASE_URL}/api/transactions/pending`, {
             method: 'GET'
         });
         
-        if (!response.ok) {
-            throw new Error('Ошибка загрузки уведомлений');
+        // Загружаем новые сделки (для владельца объявления)
+        const myTransactionsResponse = await makeAuthenticatedRequest(`${API_BASE_URL}/api/transactions/my`, {
+            method: 'GET'
+        });
+        
+        let allNotifications = [];
+        let paidTransactionsIds = new Set();
+        
+        // Ожидающие подтверждения (статус paid - продавец должен подтвердить получение)
+        if (pendingResponse.ok) {
+            const paidTransactions = await pendingResponse.json();
+            if (paidTransactions && Array.isArray(paidTransactions)) {
+                paidTransactions.forEach(t => {
+                    paidTransactionsIds.add(t.id);
+                    allNotifications.push({
+                        ...t,
+                        type: 'paid', // Покупатель перевел, ждет подтверждения продавца
+                        notificationType: 'awaiting_confirmation'
+                    });
+                });
+            }
         }
         
-        const transactions = await response.json();
-        displayPendingTransactions(transactions);
+        // Новые сделки (статус pending - только созданы, для владельца объявления)
+        if (myTransactionsResponse.ok) {
+            const myTransactions = await myTransactionsResponse.json();
+            if (myTransactions && Array.isArray(myTransactions)) {
+                const userId = userData?.id;
+                if (userId) {
+                    const newPendingTransactions = myTransactions.filter(t => {
+                        // Фильтруем только pending сделки
+                        if (t.status !== 'pending') return false;
+                        
+                        // Исключаем сделки которые уже в списке ожидающих подтверждения
+                        if (paidTransactionsIds.has(t.id)) return false;
+                        
+                        // Пользователь должен быть владельцем объявления, но не инициатором сделки
+                        // (кто-то другой создал сделку на его объявление)
+                        const isOwner = (t.seller_id === userId && t.buyer_id !== userId) || 
+                                       (t.buyer_id === userId && t.seller_id !== userId);
+                        
+                        return isOwner;
+                    });
+                    
+                    newPendingTransactions.forEach(t => {
+                        // Определяем роль пользователя
+                        const isSeller = t.seller_id === userId;
+                        
+                        allNotifications.push({
+                            ...t,
+                            type: 'new',
+                            notificationType: 'new_transaction',
+                            userRole: isSeller ? 'seller' : 'buyer'
+                        });
+                    });
+                }
+            }
+        }
+        
+        // Сортируем по дате создания (новые сначала)
+        allNotifications.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        
+        displayPendingTransactions(allNotifications);
     } catch (error) {
         console.error('Ошибка при загрузке уведомлений:', error);
         const notificationsList = document.getElementById('notifications-list');
@@ -3067,64 +3317,112 @@ async function loadPendingTransactions() {
     }
 }
 
-// Функция отображения ожидающих сделок
-function displayPendingTransactions(transactions) {
+// Функция отображения всех типов уведомлений
+function displayPendingTransactions(notifications) {
     const notificationsList = document.getElementById('notifications-list');
     if (!notificationsList) return;
     
     notificationsList.innerHTML = '';
     
-    if (!transactions || transactions.length === 0) {
-        notificationsList.innerHTML = '<p style="text-align: center; color: rgba(255,255,255,0.6); padding: 40px;">Нет ожидающих подтверждения сделок</p>';
+    if (!notifications || notifications.length === 0) {
+        notificationsList.innerHTML = '<p style="text-align: center; color: rgba(255,255,255,0.6); padding: 40px;">Нет новых уведомлений</p>';
         return;
     }
     
-    transactions.forEach(transaction => {
+    notifications.forEach(notification => {
         const notificationCard = document.createElement('div');
         notificationCard.className = 'notification_card';
-        notificationCard.innerHTML = `
-            <div class="notification_header">
-                <div class="notification_badge_new">Новое</div>
-                <div class="notification_time">${new Date(transaction.buyer_paid_at).toLocaleString('ru-RU')}</div>
-            </div>
-            <div class="notification_content">
+        
+        let headerBadge = '';
+        let notificationText = '';
+        let actionButton = '';
+        
+        if (notification.notificationType === 'awaiting_confirmation') {
+            // Покупатель перевел средства, продавец должен подтвердить
+            headerBadge = '<div class="notification_badge_new">Ожидает подтверждения</div>';
+            const paidDate = notification.buyer_paid_at ? new Date(notification.buyer_paid_at).toLocaleString('ru-RU') : new Date(notification.created_at).toLocaleString('ru-RU');
+            notificationText = `
                 <div class="notification_text">
-                    Покупатель перевел <strong>${transaction.fiat_amount.toFixed(2)} RUB</strong>
+                    Покупатель перевел <strong>${notification.fiat_amount.toFixed(2)} RUB</strong>
                 </div>
                 <div class="notification_details">
                     <div class="notification_detail_row">
                         <span>Криптовалюта:</span>
-                        <span>${transaction.crypto_amount.toFixed(1)} ${transaction.crypto_currency}</span>
+                        <span>${notification.crypto_amount.toFixed(6)} ${notification.crypto_currency}</span>
                     </div>
                     <div class="notification_detail_row">
                         <span>Цена:</span>
-                        <span>${transaction.price.toFixed(2)} RUB</span>
+                        <span>${notification.price.toFixed(2)} RUB</span>
                     </div>
-                    ${transaction.buyer_bank_name && transaction.buyer_payment_details ? `
+                    ${notification.buyer_bank_name && notification.buyer_payment_details ? `
                     <div class="notification_detail_row">
                         <span>Реквизиты покупателя:</span>
-                        <span>${transaction.buyer_bank_name} - ${transaction.buyer_payment_details}</span>
+                        <span>${notification.buyer_bank_name} - ${notification.buyer_payment_details}</span>
                     </div>
                     ` : ''}
                 </div>
-            </div>
-            <div class="notification_actions">
-                <button class="notification_confirm_btn" data-transaction-id="${transaction.id}" id="confirm-${transaction.id}">
+            `;
+            actionButton = `
+                <button class="notification_confirm_btn" data-transaction-id="${notification.id}" data-action="confirm">
                     Подтвердить получение
                 </button>
+            `;
+        } else if (notification.notificationType === 'new_transaction') {
+            // Новая сделка создана
+            headerBadge = '<div class="notification_badge_new">Новая сделка</div>';
+            const role = notification.userRole === 'seller' ? 'Покупатель' : 'Продавец';
+            notificationText = `
+                <div class="notification_text">
+                    ${role} создал сделку на <strong>${notification.fiat_amount.toFixed(2)} RUB</strong>
+                </div>
+                <div class="notification_details">
+                    <div class="notification_detail_row">
+                        <span>Криптовалюта:</span>
+                        <span>${notification.crypto_amount.toFixed(6)} ${notification.crypto_currency}</span>
+                    </div>
+                    <div class="notification_detail_row">
+                        <span>Цена:</span>
+                        <span>${notification.price.toFixed(2)} RUB</span>
+                    </div>
+                </div>
+            `;
+            actionButton = `
+                <button class="notification_view_btn" data-transaction-id="${notification.id}" data-action="view">
+                    Открыть сделку
+                </button>
+            `;
+        }
+        
+        notificationCard.innerHTML = `
+            <div class="notification_header">
+                ${headerBadge}
+                <div class="notification_time">${new Date(notification.created_at).toLocaleString('ru-RU')}</div>
+            </div>
+            <div class="notification_content">
+                ${notificationText}
+            </div>
+            <div class="notification_actions">
+                ${actionButton}
             </div>
         `;
         
         notificationsList.appendChild(notificationCard);
     });
     
-    // Добавляем обработчики кнопок подтверждения
+    // Добавляем обработчики кнопок
     document.querySelectorAll('.notification_confirm_btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             const transactionId = parseInt(btn.getAttribute('data-transaction-id'));
-            
-            // Реквизиты продавца уже указаны в объявлении, поэтому просто подтверждаем
             await confirmTransaction(transactionId, null, null);
+        });
+    });
+    
+    document.querySelectorAll('.notification_view_btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const transactionId = parseInt(btn.getAttribute('data-transaction-id'));
+            await openTransactionDetails(transactionId);
+            // Закрываем экран уведомлений
+            document.getElementById('notifications-screen').style.display = 'none';
         });
     });
 }
@@ -3153,7 +3451,7 @@ async function confirmTransaction(transactionId, bankName, paymentDetails) {
             throw new Error('Ошибка подтверждения сделки');
         }
         
-        alert('Сделка подтверждена! Криптовалюта переведена покупателю.');
+        alert('Сделка подтверждена! Криптовалюта переведена второй стороне.');
         
         // Обновляем список уведомлений
         await loadPendingTransactions();
@@ -3164,6 +3462,13 @@ async function confirmTransaction(transactionId, bankName, paymentDetails) {
         // Обновляем баланс пользователя
         if (userData) {
             await refreshUserBalance();
+        }
+        
+        // Очищаем сохраненный ID последнего показанного уведомления
+        const paymentReceivedScreen = document.getElementById('payment-received-screen');
+        const transactionIdAttr = paymentReceivedScreen?.getAttribute('data-transaction-id');
+        if (transactionIdAttr) {
+            localStorage.setItem('lastShownPaymentReceivedTransactionId', transactionIdAttr);
         }
         
         // Если открыт экран деталей сделки, закрываем его и возвращаемся к списку
@@ -3537,7 +3842,7 @@ async function markTransactionPaid(transactionId) {
             throw new Error('Ошибка подтверждения перевода');
         }
         
-        alert('Перевод подтвержден! Продавец получит уведомление.');
+        alert('Перевод подтвержден! Вторая сторона получит уведомление.');
         
         // Обновляем детали сделки
         await openTransactionDetails(transactionId);
@@ -3546,6 +3851,9 @@ async function markTransactionPaid(transactionId) {
         if (userData) {
             await refreshUserBalance();
         }
+        
+        // Обновляем уведомления
+        await checkPendingTransactions();
     } catch (error) {
         console.error('Ошибка при подтверждении перевода:', error);
         alert('Ошибка подтверждения перевода: ' + error.message);
