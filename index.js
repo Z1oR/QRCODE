@@ -1804,8 +1804,8 @@ async function openAdDetailsScreen(ad, userAction = 'buy') {
         toggleCrypto.classList.remove('active');
     }
 
-    // Обработчики переключателя валюты
-    if (toggleRub && toggleCrypto) {
+    // Обработчики переключателя валюты (только для покупки)
+    if (toggleRub && toggleCrypto && userAction === 'buy') {
         // Удаляем старые обработчики
         const newToggleRub = toggleRub.cloneNode(true);
         const newToggleCrypto = toggleCrypto.cloneNode(true);
@@ -1814,17 +1814,15 @@ async function openAdDetailsScreen(ad, userAction = 'buy') {
         
         newToggleRub.addEventListener('click', () => {
             currentCurrencyMode = 'RUB';
-            ad.currencyMode = 'RUB'; // Сохраняем в объект объявления
+            ad.currencyMode = 'RUB';
             newToggleRub.classList.add('active');
             newToggleCrypto.classList.remove('active');
             if (purchaseCurrency) purchaseCurrency.textContent = 'RUB';
             
-            // Обновляем лимиты и значение
             const purchaseAmountInput = document.getElementById('purchase-amount');
             if (purchaseAmountInput) {
                 const currentValue = parseFloat(purchaseAmountInput.value) || 0;
                 if (currentValue > 0) {
-                    // Конвертируем из криптовалюты в рубли
                     const rubValue = currentValue * ad.price;
                     purchaseAmountInput.value = rubValue.toFixed(2);
                     purchaseAmountInput.min = ad.min_limit || 0;
@@ -1839,17 +1837,15 @@ async function openAdDetailsScreen(ad, userAction = 'buy') {
         
         newToggleCrypto.addEventListener('click', () => {
             currentCurrencyMode = 'CRYPTO';
-            ad.currencyMode = 'CRYPTO'; // Сохраняем в объект объявления
+            ad.currencyMode = 'CRYPTO';
             newToggleCrypto.classList.add('active');
             newToggleRub.classList.remove('active');
             if (purchaseCurrency) purchaseCurrency.textContent = ad.crypto_currency;
             
-            // Обновляем лимиты и значение
             const purchaseAmountInput = document.getElementById('purchase-amount');
             if (purchaseAmountInput) {
                 const currentValue = parseFloat(purchaseAmountInput.value) || 0;
                 if (currentValue > 0) {
-                    // Конвертируем из рублей в криптовалюту
                     const cryptoValue = currentValue / ad.price;
                     purchaseAmountInput.value = cryptoValue.toFixed(6);
                     const minLimit = ad.min_limit || 0;
@@ -1862,6 +1858,72 @@ async function openAdDetailsScreen(ad, userAction = 'buy') {
                     const maxLimit = ad.max_limit;
                     purchaseAmountInput.min = minLimit / ad.price;
                     purchaseAmountInput.max = maxLimit ? maxLimit / ad.price : 999999;
+                }
+            }
+        });
+    } else if (toggleRub && toggleCrypto && userAction === 'sell') {
+        // Для продажи тоже добавляем переключатель, но с другой логикой
+        const newToggleRub = toggleRub.cloneNode(true);
+        const newToggleCrypto = toggleCrypto.cloneNode(true);
+        toggleRub.parentNode.replaceChild(newToggleRub, toggleRub);
+        toggleCrypto.parentNode.replaceChild(newToggleCrypto, toggleCrypto);
+        
+        newToggleRub.addEventListener('click', () => {
+            currentCurrencyMode = 'RUB';
+            ad.currencyMode = 'RUB';
+            newToggleRub.classList.add('active');
+            newToggleCrypto.classList.remove('active');
+            if (purchaseCurrency) purchaseCurrency.textContent = 'RUB';
+            
+            const purchaseAmountInput = document.getElementById('purchase-amount');
+            if (purchaseAmountInput) {
+                const currentValue = parseFloat(purchaseAmountInput.value) || 0;
+                if (currentValue > 0) {
+                    // Конвертируем из криптовалюты в рубли (сколько рублей получим)
+                    const rubValue = currentValue * ad.price;
+                    purchaseAmountInput.value = rubValue.toFixed(2);
+                    const minLimit = ad.sell_min_limit || ad.min_limit || 0;
+                    const maxLimit = ad.sell_max_limit || ad.max_limit;
+                    purchaseAmountInput.min = minLimit;
+                    purchaseAmountInput.max = maxLimit || 999999;
+                    purchaseAmountInput.step = '0.01';
+                    updatePurchaseInfo(ad, rubValue, 'RUB');
+                } else {
+                    const minLimit = ad.sell_min_limit || ad.min_limit || 0;
+                    const maxLimit = ad.sell_max_limit || ad.max_limit;
+                    purchaseAmountInput.min = minLimit;
+                    purchaseAmountInput.max = maxLimit || 999999;
+                    purchaseAmountInput.step = '0.01';
+                }
+            }
+        });
+        
+        newToggleCrypto.addEventListener('click', () => {
+            currentCurrencyMode = 'CRYPTO';
+            ad.currencyMode = 'CRYPTO';
+            newToggleCrypto.classList.add('active');
+            newToggleRub.classList.remove('active');
+            if (purchaseCurrency) purchaseCurrency.textContent = ad.crypto_currency;
+            
+            const purchaseAmountInput = document.getElementById('purchase-amount');
+            if (purchaseAmountInput) {
+                const currentValue = parseFloat(purchaseAmountInput.value) || 0;
+                if (currentValue > 0) {
+                    // Конвертируем из рублей в криптовалюту (сколько крипты продаем)
+                    const cryptoValue = currentValue / ad.price;
+                    purchaseAmountInput.value = cryptoValue.toFixed(6);
+                    const minLimit = ad.sell_min_limit || ad.min_limit || 0;
+                    const maxLimit = ad.sell_max_limit || ad.max_limit;
+                    purchaseAmountInput.min = minLimit / ad.price;
+                    purchaseAmountInput.max = maxLimit ? maxLimit / ad.price : 999999;
+                    purchaseAmountInput.step = '0.000001';
+                    updatePurchaseInfo(ad, cryptoValue, 'CRYPTO');
+                } else {
+                    const minLimit = ad.sell_min_limit || ad.min_limit || 0;
+                    const maxLimit = ad.sell_max_limit || ad.max_limit;
+                    purchaseAmountInput.min = minLimit / ad.price;
+                    purchaseAmountInput.max = maxLimit ? maxLimit / ad.price : 999999;
+                    purchaseAmountInput.step = '0.000001';
                 }
             }
         });
@@ -1991,17 +2053,20 @@ async function openAdDetailsScreen(ad, userAction = 'buy') {
         ad.sell_min_limit = ad.min_limit || 0;
         ad.sell_max_limit = ad.max_limit;
         
-        // Для продажи всегда вводим количество криптовалюты
+        // Для продажи по умолчанию вводим количество криптовалюты, но можно переключить на рубли
         ad.currencyMode = 'CRYPTO';
         currentCurrencyMode = 'CRYPTO';
         
-        // Скрываем переключатель валюты (для продажи он не нужен)
+        // Показываем переключатель валюты для продажи (можно вводить в рублях или криптовалюте)
         if (toggleRub && toggleCrypto) {
-            toggleRub.style.display = 'none';
-            toggleCrypto.style.display = 'none';
+            toggleRub.style.display = '';
+            toggleCrypto.style.display = '';
+            // Устанавливаем активным переключатель криптовалюты
+            toggleCrypto.classList.add('active');
+            toggleRub.classList.remove('active');
         }
         
-        // Устанавливаем валюту в поле ввода
+        // Устанавливаем валюту в поле ввода (по умолчанию криптовалюта)
         if (purchaseCurrency) {
             purchaseCurrency.textContent = ad.crypto_currency;
         }
@@ -2055,8 +2120,25 @@ async function openAdDetailsScreen(ad, userAction = 'buy') {
                 // Для покупки: используем текущий режим валюты (RUB или CRYPTO)
                 updatePurchaseInfo(ad, value, currentCurrencyMode);
             } else {
-                // Для продажи: всегда вводим криптовалюту
-                updatePurchaseInfo(ad, value, 'CRYPTO');
+                // Для продажи: используем текущий режим валюты (RUB или CRYPTO)
+                // Нужно получить актуальный режим из DOM
+                const toggleRub = document.getElementById('toggle-rub');
+                const toggleCrypto = document.getElementById('toggle-crypto');
+                const purchaseCurrency = document.getElementById('purchase-currency');
+                
+                let sellCurrencyMode = 'CRYPTO';
+                if (toggleRub && toggleCrypto) {
+                    if (toggleRub.classList.contains('active')) {
+                        sellCurrencyMode = 'RUB';
+                    } else if (toggleCrypto.classList.contains('active')) {
+                        sellCurrencyMode = 'CRYPTO';
+                    }
+                } else if (purchaseCurrency) {
+                    const currencyText = purchaseCurrency.textContent.trim();
+                    sellCurrencyMode = (currencyText === 'RUB' || currencyText === '₽') ? 'RUB' : 'CRYPTO';
+                }
+                
+                updatePurchaseInfo(ad, value, sellCurrencyMode);
             }
         });
     }
@@ -2141,9 +2223,16 @@ function updatePurchaseInfo(ad, amount, currencyMode = 'RUB') {
 
     // 🔴 ПРОДАЖА КРИПТОВАЛЮТЫ
     else if (userAction === 'sell') {
-        // Для продажи amount всегда в криптовалюте (currencyMode игнорируется)
-        cryptoAmount = amount;
-        rubAmount = cryptoAmount * ad.price;
+        // Для продажи amount может быть в рублях или криптовалюте (зависит от currencyMode)
+        if (currencyMode === 'RUB') {
+            // Пользователь вводит сумму в рублях (сколько рублей хочет получить)
+            rubAmount = amount;
+            cryptoAmount = rubAmount / ad.price; // Сколько криптовалюты нужно продать
+        } else {
+            // Пользователь вводит количество криптовалюты (сколько крипты продаем)
+            cryptoAmount = amount;
+            rubAmount = cryptoAmount * ad.price; // Сколько рублей получим
+        }
 
         // Получаем лимиты объявления покупателя (в рублях)
         const minLimit = ad.sell_min_limit || ad.min_limit || 0;
@@ -2188,10 +2277,19 @@ function updatePurchaseInfo(ad, amount, currencyMode = 'RUB') {
         }
 
         // Все проверки пройдены - показываем информацию о продаже
-        out.innerHTML =
-            `<span class="purchase_info_text">
-                Вы получите: <b>${rubAmount.toFixed(2)}</b> RUB за <b>${cryptoAmount.toFixed(6)}</b> ${ad.crypto_currency}
-            </span>`;
+        if (currencyMode === 'RUB') {
+            // Если вводили в рублях, показываем сколько крипты продадим
+            out.innerHTML =
+                `<span class="purchase_info_text">
+                    Вы продадите: <b>${cryptoAmount.toFixed(6)}</b> ${ad.crypto_currency} и получите <b>${rubAmount.toFixed(2)}</b> RUB
+                </span>`;
+        } else {
+            // Если вводили в криптовалюте, показываем сколько рублей получим
+            out.innerHTML =
+                `<span class="purchase_info_text">
+                    Вы получите: <b>${rubAmount.toFixed(2)}</b> RUB за <b>${cryptoAmount.toFixed(6)}</b> ${ad.crypto_currency}
+                </span>`;
+        }
 
         return;
     }
@@ -2307,9 +2405,42 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 } else {
                     // ПРОДАЖА КРИПТОВАЛЮТЫ
-                    // purchaseAmount - это количество криптовалюты, которое продаем
-                    cryptoAmount = purchaseAmount;
-                    fiatAmount = cryptoAmount * selectedAd.price; // Рубли, которые получим
+                    // Определяем режим ввода для продажи
+                    let currencyMode = selectedAd.currencyMode || 'CRYPTO';
+                    
+                    // Проверяем, какой переключатель активен в DOM
+                    const toggleRub = document.getElementById('toggle-rub');
+                    const toggleCrypto = document.getElementById('toggle-crypto');
+                    const purchaseCurrency = document.getElementById('purchase-currency');
+                    
+                    if (toggleRub && toggleCrypto) {
+                        if (toggleRub.classList.contains('active')) {
+                            currencyMode = 'RUB';
+                        } else if (toggleCrypto.classList.contains('active')) {
+                            currencyMode = 'CRYPTO';
+                        }
+                    } else if (purchaseCurrency) {
+                        const currencyText = purchaseCurrency.textContent.trim();
+                        if (currencyText === 'RUB' || currencyText === '₽') {
+                            currencyMode = 'RUB';
+                        } else {
+                            currencyMode = 'CRYPTO';
+                        }
+                    }
+                    
+                    // Обновляем currencyMode в selectedAd
+                    selectedAd.currencyMode = currencyMode;
+                    
+                    // Рассчитываем суммы в зависимости от режима ввода
+                    if (currencyMode === 'RUB') {
+                        // Пользователь вводит сумму в рублях (сколько рублей хочет получить)
+                        fiatAmount = purchaseAmount;
+                        cryptoAmount = fiatAmount / selectedAd.price; // Сколько криптовалюты нужно продать
+                    } else {
+                        // Пользователь вводит количество криптовалюты (сколько крипты продаем)
+                        cryptoAmount = purchaseAmount;
+                        fiatAmount = cryptoAmount * selectedAd.price; // Рубли, которые получим
+                    }
                     
                     // Получаем лимиты объявления покупателя (в рублях)
                     const minLimit = selectedAd.sell_min_limit || selectedAd.min_limit || 0;
