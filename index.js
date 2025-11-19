@@ -2163,8 +2163,10 @@ function debugTradeInfo(title, data) {
 
 
 // Обработчик кнопки "Купить" на экране деталей
-document.addEventListener('DOMContentLoaded', () => {
+const confirmPurchaseBtn = document.getElementById('confirm-purchase-btn');
+confirmPurchaseBtn.addEventListener('click', async () => {
     // нормализация входных данных — чтобы точно работать с числами
+    
     const userAction = (selectedAd.userAction || 'buy').toString(); // 'buy' или 'sell'
     const price = Number(selectedAd.price) || 0;
     const min_limit = Number(selectedAd.min_limit) || 0;
