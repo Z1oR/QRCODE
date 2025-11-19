@@ -2921,45 +2921,22 @@ function startPaymentStatusCheck(transactionId) {
             if (response.ok) {
                 const transaction = await response.json();
                 
-                // Если статус изменился на 'paid' (покупатель перевел средства), обновляем экран
+                // Если статус изменился на 'paid' (покупатель перевел средства), открываем экран "Получение средств"
                 if (transaction.status === 'paid' && transaction.buyer_paid_at) {
-                    // Обновляем предупреждение
-                    const paymentWarning = document.querySelector('.payment_warning span');
-                    if (paymentWarning) {
-                        paymentWarning.textContent = 'Покупатель перевел средства! Проверьте получение и подтвердите сделку.';
-                        paymentWarning.style.color = '#00c864';
-                    }
-                    
-                    // Показываем информацию о переводе
-                    const paymentDetailsEl = document.getElementById('payment-details');
-                    if (paymentDetailsEl) {
-                        const paidInfo = document.createElement('div');
-                        paidInfo.className = 'payment_paid_info';
-                        paidInfo.style.cssText = 'margin-top: 16px; padding: 16px; background: rgba(0, 200, 100, 0.1); border: 1px solid rgba(0, 200, 100, 0.3); border-radius: 12px;';
-                        paidInfo.innerHTML = `
-                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="color: #00c864;">
-                                    <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                                <span style="color: #00c864; font-weight: 600;">Средства переведены</span>
-                            </div>
-                            <div style="font-size: 13px; color: rgba(255,255,255,0.7);">
-                                Дата перевода: ${new Date(transaction.buyer_paid_at).toLocaleString('ru-RU')}
-                            </div>
-                        `;
-                        
-                        // Проверяем, нет ли уже этого блока
-                        const existingPaidInfo = paymentDetailsEl.querySelector('.payment_paid_info');
-                        if (!existingPaidInfo) {
-                            paymentDetailsEl.appendChild(paidInfo);
-                        }
-                    }
-                    
                     // Останавливаем проверку, так как статус изменился
                     if (window.paymentStatusCheckInterval) {
                         clearInterval(window.paymentStatusCheckInterval);
                         window.paymentStatusCheckInterval = null;
                     }
+                    
+                    // Скрываем экран оплаты
+                    const paymentScreen = document.getElementById('payment-screen');
+                    if (paymentScreen) {
+                        paymentScreen.style.display = 'none';
+                    }
+                    
+                    // Открываем экран "Получение средств"
+                    openPaymentReceivedScreen(transaction);
                     
                     // Обновляем уведомления
                     await checkPendingTransactions();
@@ -2992,6 +2969,8 @@ function openPaymentReceivedScreen(transaction) {
     const paymentReceivedScreen = document.getElementById('payment-received-screen');
     const mainScreen = document.getElementById('main__screen');
     const notificationsScreen = document.getElementById('notifications-screen');
+    const paymentScreen = document.getElementById('payment-screen');
+    const adDetailsScreen = document.getElementById('ad-details-screen');
     
     if (!paymentReceivedScreen) {
         console.error('Экран подтверждения получения средств не найден');
@@ -3004,6 +2983,12 @@ function openPaymentReceivedScreen(transaction) {
     }
     if (notificationsScreen) {
         notificationsScreen.style.display = 'none';
+    }
+    if (paymentScreen) {
+        paymentScreen.style.display = 'none';
+    }
+    if (adDetailsScreen) {
+        adDetailsScreen.style.display = 'none';
     }
     
     // Заполняем сумму
