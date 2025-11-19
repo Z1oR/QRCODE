@@ -2144,178 +2144,150 @@ function updatePurchaseInfo(ad, amount, currencyMode = 'RUB') {
     }
 }
 
+function debugTradeInfo(title, data) {
+    console.group(
+        `%c⚡ ${title}`,
+        "color:#fff; background:#4b8bff; padding:4px 10px; border-radius:4px; font-weight:700;"
+    );
+
+    for (const [key, value] of Object.entries(data)) {
+        console.log(
+            `%c${key}: %c${value}`,
+            "color:#00e676; font-weight:bold;",
+            "color:#fff;"
+        );
+    }
+
+    console.groupEnd();
+}
 
 
 // Обработчик кнопки "Купить" на экране деталей
 document.addEventListener('DOMContentLoaded', () => {
-    const confirmPurchaseBtn = document.getElementById('confirm-purchase-btn');
-    if (confirmPurchaseBtn) {
-        confirmPurchaseBtn.addEventListener('click', async () => {
-            const purchaseAmount = parseFloat(document.getElementById('purchase-amount').value);
-            
-            if (!selectedAd) {
-                alert('Ошибка: объявление не выбрано');
-                return;
-            }
-            
-            if (!purchaseAmount || purchaseAmount <= 0) {
-                alert('Введите сумму');
-                return;
-            }
-            try {
-                const userAction = selectedAd.userAction || 'buy';
-                let cryptoAmount, fiatAmount;
-                
-                if (userAction === 'buy') {
-                    // Режим ввода: RUB или CRYPTO
-                    const currencyMode = selectedAd.currencyMode || 'RUB';
-                    let fiatAmount, cryptoAmount;
-                    if (currencyMode === 'RUB') {
-                        // Пользователь вводит сумму ФИАТА
-                        fiatAmount = purchaseAmount;
-                        cryptoAmount = fiatAmount / selectedAd.price;
-                    } else {
-                        // Пользователь вводит сумму КРИПТЫ
-                        cryptoAmount = purchaseAmount;
-                        fiatAmount = cryptoAmount * selectedAd.price;
-                    }
-                
-                    // === Проверка лимитов ===
-                    // Всегда проверяем в ФИАТЕ (min_limit / max_limit — всегда RUB)
-                    if (fiatAmount < selectedAd.min_limit) {
-                        const minCrypto = selectedAd.min_limit / selectedAd.price;
-                
-                        alert(`Минимальная сумма: ${selectedAd.min_limit.toFixed(2)} RUB (${minCrypto.toFixed(6)} ${selectedAd.crypto_currency})`);
-                        return;
-                    }
-                
-                    if (selectedAd.max_limit && fiatAmount > selectedAd.max_limit) {
-                        const maxCrypto = selectedAd.max_limit / selectedAd.price;
-                
-                        alert(`Максимальная сумма: ${selectedAd.max_limit.toFixed(2)} RUB (${maxCrypto.toFixed(6)} ${selectedAd.crypto_currency})`);
-                        return;
-                    }
-                
-                    // === Проверка доступной крипты на обменнике ===
-                    const availableCrypto = selectedAd.crypto_amount || 0;
-                
-                    if (cryptoAmount > availableCrypto) {
-                        alert(`Доступно только ${availableCrypto.toFixed(6)} ${selectedAd.crypto_currency}`);
-                        return;
-                    }
-                } else {
-                    // Продажа: purchaseAmount - это количество криптовалюты, которое продаем
-                    // Конвертируем в рубли для проверки лимитов
-                    fiatAmount = purchaseAmount * selectedAd.price; // Рубли, которые получим
-                    
-                    // Проверяем лимиты в рублях
-                    if (fiatAmount < selectedAd.min_limit) {
-                        alert(`Минимальная сумма продажи: ${selectedAd.min_limit.toFixed(2)} RUB (${(selectedAd.min_limit / selectedAd.price).toFixed(1)} ${selectedAd.crypto_currency})`);
-                        return;
-                    }
-                    
-                    if (selectedAd.max_limit && fiatAmount > selectedAd.max_limit) {
-                        alert(`Максимальная сумма продажи: ${selectedAd.max_limit.toFixed(2)} RUB (${(selectedAd.max_limit / selectedAd.price).toFixed(1)} ${selectedAd.crypto_currency})`);
-                        return;
-                    }
-                    
-                    cryptoAmount = purchaseAmount;
-                    
-                    // Проверяем, что продавец ввел реквизиты для получения денег
-                    const sellerBankName = document.getElementById('seller-bank-name')?.value.trim();
-                    const sellerPaymentDetails = document.getElementById('seller-payment-details')?.value.trim();
-                    
-                    if (!sellerBankName || !sellerPaymentDetails) {
-                        alert('Пожалуйста, укажите реквизиты для получения денег (банк и номер карты/телефона)');
-                        
-                        // Подсвечиваем незаполненные поля
-                        const sellerBankNameInput = document.getElementById('seller-bank-name');
-                        const sellerPaymentDetailsInput = document.getElementById('seller-payment-details');
-                        if (sellerBankNameInput && !sellerBankName) {
-                            sellerBankNameInput.classList.add('error');
-                        }
-                        if (sellerPaymentDetailsInput && !sellerPaymentDetails) {
-                            sellerPaymentDetailsInput.classList.add('error');
-                        }
-                        return;
-                    }
-                }
-                const transactionData = {
-                    ad_id: selectedAd.Id,
-                    crypto_currency: selectedAd.crypto_currency,
-                    crypto_amount: cryptoAmount,
-                    fiat_amount: fiatAmount
-                };
-                if (userAction === 'sell') {
-                    const sellerBankName = document.getElementById('seller-bank-name')?.value.trim();
-                    const sellerPaymentDetails = document.getElementById('seller-payment-details')?.value.trim();
-                    
-                    transactionData.seller_bank_name = sellerBankName;
-                    transactionData.seller_payment_details = sellerPaymentDetails;
-                }
-                
-                console.log('Создание транзакции:', {
-                    userAction,
-                    adType: selectedAd.type,
-                    transactionData
-                });
-                
-                console.log('Отправка transactionData:', transactionData);
-                
-                // Проверяем наличие токена перед отправкой
-                const currentToken = accessToken || getCookie('ACCESS_TOKEN');
-                if (!currentToken) {
-                    console.warn('Токен не найден перед созданием сделки, пытаемся аутентифицироваться...');
-                    await authenticateWithTelegram();
-                }
-                
-                const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/transactions`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(transactionData)
-                });
-                
-                if (!response.ok) {
-                    const errorText = await response.text().catch(() => 'Не удалось прочитать ошибку');
-                    console.error('Ошибка создания сделки:', response.status, errorText);
-                    throw new Error(`Ошибка создания сделки: ${response.status} ${errorText}`);
-                }
-                
-                currentTransaction = await response.json();
-                
-                // Проверяем, что транзакция была успешно создана
-                if (!currentTransaction || !currentTransaction.id) {
-                    throw new Error('Не удалось создать транзакцию: сервер не вернул данные транзакции');
-                }
-                
-                // Сохраняем ID транзакции в selectedAd для восстановления при необходимости
-                if (selectedAd && currentTransaction) {
-                    selectedAd.transactionId = currentTransaction.id;
-                }
-                
-                // Логируем данные перед открытием экрана оплаты
-                console.log('Открытие экрана оплаты:', {
-                    selectedAd,
-                    currentTransaction,
-                    purchaseAmount,
-                    userAction,
-                    bank_name: selectedAd.bank_name,
-                    payment_details: selectedAd.payment_details,
-                    transactionId: currentTransaction.id
-                });
-                
-                // Открываем экран оплаты
-                // Для покупки передаем сумму в рублях, для продажи - в криптовалюте
-                const amountForPayment = userAction === 'buy' ? fiatAmount : cryptoAmount;
-                openPaymentScreen(selectedAd, amountForPayment, userAction);
-            } catch (error) {
-                console.error('Ошибка при создании сделки:', error);
-                alert('Ошибка создания сделки: ' + error.message);
-            }
-        });
+    // нормализация входных данных — чтобы точно работать с числами
+    const userAction = (selectedAd.userAction || 'buy').toString(); // 'buy' или 'sell'
+    const price = Number(selectedAd.price) || 0;
+    const min_limit = Number(selectedAd.min_limit) || 0;
+    const max_limit = (selectedAd.max_limit !== undefined && selectedAd.max_limit !== null)
+        ? Number(selectedAd.max_limit)
+        : null; // может быть null/0
+    // если у тебя есть отдельные полs для продажи — используем их
+    const sell_min_limit = (selectedAd.sell_min_limit !== undefined) ? Number(selectedAd.sell_min_limit) : min_limit;
+    const sell_max_limit = (selectedAd.sell_max_limit !== undefined) ? Number(selectedAd.sell_max_limit) : max_limit;
+
+    let cryptoAmount = 0;
+    let fiatAmount = 0;
+
+    // purchaseAmount — из input, может быть строкой
+    const rawAmount = Number(purchaseAmount);
+    if (isNaN(rawAmount) || rawAmount <= 0) {
+        alert("Неверная сумма");
+        return;
     }
+
+    // === BUY ===
+    if (userAction === 'buy') {
+        const currencyMode = (selectedAd.currencyMode || 'RUB').toString(); // 'RUB' или 'CRYPTO' (привести к твоему формату)
+
+        if (currencyMode === 'RUB') {
+            fiatAmount = rawAmount;
+            cryptoAmount = fiatAmount / price;
+        } else {
+            cryptoAmount = rawAmount;
+            fiatAmount = cryptoAmount * price;
+        }
+
+        console.log("BUY calc:", { fiatAmount, cryptoAmount, price, min_limit, max_limit, availableCrypto: selectedAd.crypto_amount });
+
+        // Проверяем лимиты (в рублях)
+        if (fiatAmount < min_limit) {
+            const minCrypto = min_limit / price;
+            alert(`Минимальная сумма: ${min_limit.toFixed(2)} RUB (${minCrypto.toFixed(6)} ${selectedAd.crypto_currency})`);
+            return;
+        }
+        if (max_limit && fiatAmount > max_limit) {
+            const maxCrypto = max_limit / price;
+            alert(`Максимальная сумма: ${max_limit.toFixed(2)} RUB (${maxCrypto.toFixed(6)} ${selectedAd.crypto_currency})`);
+            return;
+        }
+
+        // Проверка доступной крипты на обменнике (продавца)
+        const availableCrypto = Number(selectedAd.crypto_amount) || 0;
+        if (cryptoAmount > availableCrypto) {
+            alert(`Доступно только ${availableCrypto.toFixed(6)} ${selectedAd.crypto_currency}`);
+            return;
+        }
+        debugTradeInfo("BUY — расчёт", {
+            price,
+            currencyMode: selectedAd.currencyMode,
+            purchaseAmount: rawAmount,
+            fiatAmount,
+            cryptoAmount,
+            min_limit,
+            max_limit,
+            availableCrypto: selectedAd.crypto_amount
+        });
+        
+
+        // Всё ок — продолжаем создание ордера...
+    }
+
+    // === SELL ===
+    else {
+        // Тут purchaseAmount воспринимается как количество крипты, которое пользователь продаёт
+        cryptoAmount = rawAmount;
+        fiatAmount = cryptoAmount * price; // сколько получит в рублях
+
+        // используем лимиты для продажи (если их нет, fallback к общим)
+        const minL = sell_min_limit;
+        const maxL = sell_max_limit;
+
+        console.log("SELL calc:", { fiatAmount, cryptoAmount, price, minL, maxL, userCrypto: selectedAd.user_crypto });
+
+        if (fiatAmount < minL) {
+            const minCrypto = minL / price;
+            alert(`Минимальная сумма продажи: ${minL.toFixed(2)} RUB (${minCrypto.toFixed(6)} ${selectedAd.crypto_currency})`);
+            return;
+        }
+        if (maxL && fiatAmount > maxL) {
+            const maxCrypto = maxL / price;
+            alert(`Максимальная сумма продажи: ${maxL.toFixed(2)} RUB (${maxCrypto.toFixed(6)} ${selectedAd.crypto_currency})`);
+            return;
+        }
+
+        // Проверяем, что у пользователя достаточно крипты (если нужно)
+        const userCrypto = Number(selectedAd.user_crypto) || 0;
+        if (cryptoAmount > userCrypto) {
+            alert(`У вас доступно только ${userCrypto.toFixed(6)} ${selectedAd.crypto_currency}`);
+            return;
+        }
+
+        // Проверяем реквизиты (как у тебя)
+        const sellerBankName = document.getElementById('seller-bank-name')?.value.trim();
+        const sellerPaymentDetails = document.getElementById('seller-payment-details')?.value.trim();
+        if (!sellerBankName || !sellerPaymentDetails) {
+            alert('Пожалуйста, укажите реквизиты для получения денег (банк и номер карты/телефона)');
+            if (document.getElementById('seller-bank-name') && !sellerBankName) {
+                document.getElementById('seller-bank-name').classList.add('error');
+            }
+            if (document.getElementById('seller-payment-details') && !sellerPaymentDetails) {
+                document.getElementById('seller-payment-details').classList.add('error');
+            }
+            return;
+        }
+        debugTradeInfo("SELL — расчёт", {
+            price,
+            purchaseAmount: rawAmount,
+            fiatAmount,
+            cryptoAmount,
+            sell_min_limit: sell_min_limit,
+            sell_max_limit: sell_max_limit,
+            userCrypto: selectedAd.user_crypto
+        });
+        
+        // Всё ок — продолжаем
+    }
+
     
     // Обработчик кнопки "Назад" на экране деталей
     const backFromDetailsBtn = document.getElementById('back-from-details');
