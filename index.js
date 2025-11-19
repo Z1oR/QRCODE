@@ -1830,51 +1830,51 @@ async function openAdDetailsScreen(ad, userAction = 'buy') {
                 if (!currentToggleRub || !currentToggleCrypto) return;
                 
                 if (target.id === 'toggle-rub') {
-                    currentCurrencyMode = 'RUB';
+            currentCurrencyMode = 'RUB';
                     ad.currencyMode = 'RUB';
                     currentToggleRub.classList.add('active');
                     currentToggleCrypto.classList.remove('active');
                     if (currentPurchaseCurrency) currentPurchaseCurrency.textContent = 'RUB';
                     
-                    const purchaseAmountInput = document.getElementById('purchase-amount');
-                    if (purchaseAmountInput) {
-                        const currentValue = parseFloat(purchaseAmountInput.value) || 0;
-                        if (currentValue > 0) {
-                            const rubValue = currentValue * ad.price;
-                            purchaseAmountInput.value = rubValue.toFixed(2);
-                            purchaseAmountInput.min = ad.min_limit || 0;
-                            purchaseAmountInput.max = ad.max_limit || 999999;
-                            updatePurchaseInfo(ad, rubValue, 'RUB');
-                        } else {
-                            purchaseAmountInput.min = ad.min_limit || 0;
-                            purchaseAmountInput.max = ad.max_limit || 999999;
-                        }
-                    }
+            const purchaseAmountInput = document.getElementById('purchase-amount');
+            if (purchaseAmountInput) {
+                const currentValue = parseFloat(purchaseAmountInput.value) || 0;
+                if (currentValue > 0) {
+                    const rubValue = currentValue * ad.price;
+                    purchaseAmountInput.value = rubValue.toFixed(2);
+                    purchaseAmountInput.min = ad.min_limit || 0;
+                    purchaseAmountInput.max = ad.max_limit || 999999;
+                    updatePurchaseInfo(ad, rubValue, 'RUB');
+                } else {
+                    purchaseAmountInput.min = ad.min_limit || 0;
+                    purchaseAmountInput.max = ad.max_limit || 999999;
+                }
+            }
                 } else if (target.id === 'toggle-crypto') {
-                    currentCurrencyMode = 'CRYPTO';
+            currentCurrencyMode = 'CRYPTO';
                     ad.currencyMode = 'CRYPTO';
                     currentToggleCrypto.classList.add('active');
                     currentToggleRub.classList.remove('active');
                     if (currentPurchaseCurrency) currentPurchaseCurrency.textContent = ad.crypto_currency;
                     
-                    const purchaseAmountInput = document.getElementById('purchase-amount');
-                    if (purchaseAmountInput) {
-                        const currentValue = parseFloat(purchaseAmountInput.value) || 0;
-                        if (currentValue > 0) {
-                            const cryptoValue = currentValue / ad.price;
-                            purchaseAmountInput.value = cryptoValue.toFixed(6);
-                            const minLimit = ad.min_limit || 0;
-                            const maxLimit = ad.max_limit;
-                            purchaseAmountInput.min = minLimit / ad.price;
-                            purchaseAmountInput.max = maxLimit ? maxLimit / ad.price : 999999;
-                            updatePurchaseInfo(ad, cryptoValue, 'CRYPTO');
-                        } else {
-                            const minLimit = ad.min_limit || 0;
-                            const maxLimit = ad.max_limit;
-                            purchaseAmountInput.min = minLimit / ad.price;
-                            purchaseAmountInput.max = maxLimit ? maxLimit / ad.price : 999999;
-                        }
-                    }
+            const purchaseAmountInput = document.getElementById('purchase-amount');
+            if (purchaseAmountInput) {
+                const currentValue = parseFloat(purchaseAmountInput.value) || 0;
+                if (currentValue > 0) {
+                    const cryptoValue = currentValue / ad.price;
+                    purchaseAmountInput.value = cryptoValue.toFixed(6);
+                    const minLimit = ad.min_limit || 0;
+                    const maxLimit = ad.max_limit;
+                    purchaseAmountInput.min = minLimit / ad.price;
+                    purchaseAmountInput.max = maxLimit ? maxLimit / ad.price : 999999;
+                    updatePurchaseInfo(ad, cryptoValue, 'CRYPTO');
+                } else {
+                    const minLimit = ad.min_limit || 0;
+                    const maxLimit = ad.max_limit;
+                    purchaseAmountInput.min = minLimit / ad.price;
+                    purchaseAmountInput.max = maxLimit ? maxLimit / ad.price : 999999;
+                }
+            }
                 }
             };
             
@@ -2095,7 +2095,7 @@ async function openAdDetailsScreen(ad, userAction = 'buy') {
         }
         
         // Сохраняем баланс пользователя в объект объявления
-        ad.user_crypto = userData?.balance || 0;
+                ad.user_crypto = userData?.balance || 0;
         
         // Используем лимиты объявления покупателя (они в рублях)
         ad.sell_min_limit = ad.min_limit || 0;
@@ -2120,20 +2120,20 @@ async function openAdDetailsScreen(ad, userAction = 'buy') {
         }
         
         // Устанавливаем лимиты в криптовалюте (конвертируем из рублей)
-        if (purchaseAmountInput) {
-            purchaseAmountInput.value = '';
+    if (purchaseAmountInput) {
+        purchaseAmountInput.value = '';
             purchaseAmountInput.min = ad.sell_min_limit / ad.price;
             purchaseAmountInput.max = ad.sell_max_limit ? ad.sell_max_limit / ad.price : 999999;
             purchaseAmountInput.step = '0.000001';
             purchaseAmountInput.placeholder = `0.000000 ${ad.crypto_currency}`;
         }
-    } else {
+        } else {
         // Настройка для покупки криптовалюты
         ad.currencyMode = 'RUB';
         currentCurrencyMode = 'RUB';
         
         // Показываем переключатель валюты
-        if (toggleRub && toggleCrypto) {
+            if (toggleRub && toggleCrypto) {
             toggleRub.style.display = '';
             toggleCrypto.style.display = '';
         }
@@ -2167,11 +2167,11 @@ async function openAdDetailsScreen(ad, userAction = 'buy') {
             
             // Создаем новый обработчик
             window.purchaseAmountInputHandler = (e) => {
-                const value = parseFloat(e.target.value) || 0;
-                if (userAction === 'buy') {
+            const value = parseFloat(e.target.value) || 0;
+            if (userAction === 'buy') {
                     // Для покупки: используем текущий режим валюты (RUB или CRYPTO)
-                    updatePurchaseInfo(ad, value, currentCurrencyMode);
-                } else {
+                updatePurchaseInfo(ad, value, currentCurrencyMode);
+            } else {
                     // Для продажи: используем текущий режим валюты (RUB или CRYPTO)
                     // Нужно получить актуальный режим из DOM
                     const toggleRub = document.getElementById('toggle-rub');
@@ -2179,7 +2179,7 @@ async function openAdDetailsScreen(ad, userAction = 'buy') {
                     const purchaseCurrency = document.getElementById('purchase-currency');
                     
                     let sellCurrencyMode = 'CRYPTO';
-                    if (toggleRub && toggleCrypto) {
+    if (toggleRub && toggleCrypto) {
                         if (toggleRub.classList.contains('active')) {
                             sellCurrencyMode = 'RUB';
                         } else if (toggleCrypto.classList.contains('active')) {
@@ -2295,7 +2295,7 @@ function updatePurchaseInfo(ad, amount, currencyMode = 'RUB') {
         // Получаем лимиты объявления покупателя (в рублях)
         const minLimit = ad.sell_min_limit || ad.min_limit || 0;
         const maxLimit = ad.sell_max_limit || ad.max_limit;
-        
+
         // Получаем баланс пользователя (количество криптовалюты, которое можно продать)
         const userCryptoBalance = ad.user_crypto !== undefined ? ad.user_crypto : (userData?.balance || 0);
 
@@ -2337,10 +2337,10 @@ function updatePurchaseInfo(ad, amount, currencyMode = 'RUB') {
         // Все проверки пройдены - показываем информацию о продаже
         if (currencyMode === 'RUB') {
             // Если вводили в рублях, показываем сколько крипты продадим
-            out.innerHTML =
-                `<span class="purchase_info_text">
+        out.innerHTML =
+            `<span class="purchase_info_text">
                     Вы продадите: <b>${cryptoAmount.toFixed(6)}</b> ${ad.crypto_currency} и получите <b>${rubAmount.toFixed(2)}</b> RUB
-                </span>`;
+            </span>`;
         } else {
             // Если вводили в криптовалюте, показываем сколько рублей получим
             out.innerHTML =
@@ -2496,8 +2496,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         cryptoAmount = fiatAmount / selectedAd.price; // Сколько криптовалюты нужно продать
                     } else {
                         // Пользователь вводит количество криптовалюты (сколько крипты продаем)
-                        cryptoAmount = purchaseAmount;
-                        fiatAmount = cryptoAmount * selectedAd.price; // Рубли, которые получим
+                    cryptoAmount = purchaseAmount;
+                    fiatAmount = cryptoAmount * selectedAd.price; // Рубли, которые получим
                     }
                     
                     // Получаем лимиты объявления покупателя (в рублях)
@@ -2653,6 +2653,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const backFromPaymentBtn = document.getElementById('back-from-payment');
     if (backFromPaymentBtn) {
         backFromPaymentBtn.addEventListener('click', () => {
+            // Останавливаем проверку статуса при выходе с экрана
+            stopPaymentStatusCheck();
             document.getElementById('payment-screen').style.display = 'none';
             document.getElementById('ad-details-screen').style.display = 'block';
             // НЕ очищаем selectedAd и currentTransaction при возврате назад
@@ -2699,6 +2701,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 
                 alert('Оплата подтверждена! Вторая сторона получит уведомление.');
+                
+                // Останавливаем проверку статуса
+                stopPaymentStatusCheck();
                 
                 // Закрываем экран оплаты и возвращаемся на главный
                 document.getElementById('payment-screen').style.display = 'none';
@@ -2871,6 +2876,107 @@ function openPaymentScreen(ad, usdtAmount, userAction = 'buy') {
     
     // Показываем экран оплаты
     paymentScreen.style.display = 'block';
+    
+    // Если это экран ожидания оплаты (продажа), запускаем проверку статуса сделки
+    if (userAction === 'sell' && currentTransaction && currentTransaction.id) {
+        // Сохраняем ID транзакции для проверки
+        paymentScreen.setAttribute('data-transaction-id', currentTransaction.id);
+        // Запускаем проверку статуса
+        startPaymentStatusCheck(currentTransaction.id);
+    }
+}
+
+// Функция периодической проверки статуса сделки для экрана "Ожидание оплаты"
+// Используем window для глобального доступа
+if (!window.paymentStatusCheckInterval) {
+    window.paymentStatusCheckInterval = null;
+}
+
+function startPaymentStatusCheck(transactionId) {
+    // Останавливаем предыдущую проверку, если была
+    if (window.paymentStatusCheckInterval) {
+        clearInterval(window.paymentStatusCheckInterval);
+        window.paymentStatusCheckInterval = null;
+    }
+    
+    // Проверяем статус каждые 5 секунд
+    window.paymentStatusCheckInterval = setInterval(async () => {
+        const paymentScreen = document.getElementById('payment-screen');
+        
+        // Если экран закрыт, останавливаем проверку
+        if (!paymentScreen || paymentScreen.style.display === 'none') {
+            if (window.paymentStatusCheckInterval) {
+                clearInterval(window.paymentStatusCheckInterval);
+                window.paymentStatusCheckInterval = null;
+            }
+            return;
+        }
+        
+        try {
+            // Получаем актуальный статус сделки
+            const response = await makeAuthenticatedRequest(`${API_BASE_URL}/api/transactions/${transactionId}`, {
+                method: 'GET'
+            });
+            
+            if (response.ok) {
+                const transaction = await response.json();
+                
+                // Если статус изменился на 'paid' (покупатель перевел средства), обновляем экран
+                if (transaction.status === 'paid' && transaction.buyer_paid_at) {
+                    // Обновляем предупреждение
+                    const paymentWarning = document.querySelector('.payment_warning span');
+                    if (paymentWarning) {
+                        paymentWarning.textContent = 'Покупатель перевел средства! Проверьте получение и подтвердите сделку.';
+                        paymentWarning.style.color = '#00c864';
+                    }
+                    
+                    // Показываем информацию о переводе
+                    const paymentDetailsEl = document.getElementById('payment-details');
+                    if (paymentDetailsEl) {
+                        const paidInfo = document.createElement('div');
+                        paidInfo.className = 'payment_paid_info';
+                        paidInfo.style.cssText = 'margin-top: 16px; padding: 16px; background: rgba(0, 200, 100, 0.1); border: 1px solid rgba(0, 200, 100, 0.3); border-radius: 12px;';
+                        paidInfo.innerHTML = `
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="color: #00c864;">
+                                    <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                <span style="color: #00c864; font-weight: 600;">Средства переведены</span>
+                            </div>
+                            <div style="font-size: 13px; color: rgba(255,255,255,0.7);">
+                                Дата перевода: ${new Date(transaction.buyer_paid_at).toLocaleString('ru-RU')}
+                            </div>
+                        `;
+                        
+                        // Проверяем, нет ли уже этого блока
+                        const existingPaidInfo = paymentDetailsEl.querySelector('.payment_paid_info');
+                        if (!existingPaidInfo) {
+                            paymentDetailsEl.appendChild(paidInfo);
+                        }
+                    }
+                    
+                    // Останавливаем проверку, так как статус изменился
+                    if (window.paymentStatusCheckInterval) {
+                        clearInterval(window.paymentStatusCheckInterval);
+                        window.paymentStatusCheckInterval = null;
+                    }
+                    
+                    // Обновляем уведомления
+                    await checkPendingTransactions();
+                }
+            }
+        } catch (error) {
+            console.error('Ошибка при проверке статуса сделки:', error);
+        }
+    }, 5000);
+}
+
+// Функция остановки проверки статуса сделки
+function stopPaymentStatusCheck() {
+    if (window.paymentStatusCheckInterval) {
+        clearInterval(window.paymentStatusCheckInterval);
+        window.paymentStatusCheckInterval = null;
+    }
 }
 
 // Функция для экранирования HTML
