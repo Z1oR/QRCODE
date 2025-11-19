@@ -2785,40 +2785,44 @@ function openPaymentScreen(ad, usdtAmount, userAction = 'buy') {
     
     let bankName, paymentDetails;
     
+    // ВАЖНО: Реквизиты (payment_details) берутся ТОЛЬКО из транзакции после создания сделки!
+    // В целях безопасности реквизиты не показываются до создания сделки
+    
     // Определяем, откуда брать реквизиты
     if (userAction === 'buy') {
         // Покупка: показываем реквизиты продавца
-        // Если объявление на продажу (ad.type === 'sell'), реквизиты продавца из объявления
-        // Если объявление на покупку (ad.type === 'buy'), реквизиты продавца из транзакции (введенные при создании сделки)
-        if (ad.type === 'sell') {
-            // Объявление на продажу: реквизиты продавца из объявления
-            bankName = ad.bank_name || 'Не указан';
-            paymentDetails = ad.payment_details || 'Не указаны';
+        // Реквизиты берутся ТОЛЬКО из транзакции (введенные продавцом при создании сделки)
+        if (currentTransaction && currentTransaction.seller_bank_name && currentTransaction.seller_payment_details) {
+            bankName = currentTransaction.seller_bank_name;
+            paymentDetails = currentTransaction.seller_payment_details;
         } else {
-            // Объявление на покупку: реквизиты продавца из транзакции (введенные при создании сделки)
-            if (currentTransaction && currentTransaction.seller_bank_name && currentTransaction.seller_payment_details) {
-                bankName = currentTransaction.seller_bank_name;
-                paymentDetails = currentTransaction.seller_payment_details;
-            } else {
-                // Fallback на реквизиты из объявления (на случай, если они там есть)
-                bankName = ad.bank_name || 'Не указан';
-                paymentDetails = ad.payment_details || 'Не указаны';
-            }
+            // Если транзакция еще не создана или реквизиты не указаны - показываем только название банка из объявления
+            bankName = ad.bank_name || 'Не указан';
+            paymentDetails = null; // Реквизиты недоступны до создания сделки
         }
     } else {
         // Продажа (userAction === 'sell'): показываем реквизиты покупателя
-        // Когда пользователь продает, объявление должно быть на покупку (ad.type === 'buy')
-        // В этом случае владелец объявления - покупатель, его реквизиты в ad.bank_name и ad.payment_details
-        // Но также нужно проверить реквизиты из транзакции, если они там есть
+        // Реквизиты берутся ТОЛЬКО из транзакции (введенные покупателем при создании сделки)
         if (currentTransaction && currentTransaction.buyer_bank_name && currentTransaction.buyer_payment_details) {
-            // Используем реквизиты покупателя из транзакции
             bankName = currentTransaction.buyer_bank_name;
             paymentDetails = currentTransaction.buyer_payment_details;
         } else {
-            // Fallback на реквизиты из объявления
+            // Если транзакция еще не создана или реквизиты не указаны - показываем только название банка из объявления
             bankName = ad.bank_name || 'Не указан';
-            paymentDetails = ad.payment_details || 'Не указаны';
+            paymentDetails = null; // Реквизиты недоступны до создания сделки
         }
+    }
+    
+    // Проверяем, что реквизиты есть в транзакции
+    if (!paymentDetails) {
+        console.error('Ошибка: реквизиты недоступны. Сделка должна быть создана сначала.');
+        alert('Ошибка: реквизиты недоступны. Пожалуйста, создайте сделку сначала.');
+        // Возвращаемся на экран деталей объявления
+        const paymentScreen = document.getElementById('payment-screen');
+        const adDetailsScreen = document.getElementById('ad-details-screen');
+        if (paymentScreen) paymentScreen.style.display = 'none';
+        if (adDetailsScreen) adDetailsScreen.style.display = 'block';
+        return;
     }
     
     console.log('Заполнение реквизитов:', {
@@ -2833,7 +2837,7 @@ function openPaymentScreen(ad, usdtAmount, userAction = 'buy') {
     // Очищаем содержимое перед заполнением
     paymentDetailsEl.innerHTML = '';
     
-    // Создаем элементы реквизитов
+    // Создаем элементы реквизитов (только из транзакции!)
     const bankItem = document.createElement('div');
     bankItem.className = 'payment_detail_item';
     bankItem.innerHTML = `
@@ -2899,8 +2903,8 @@ function startPaymentStatusCheck(transactionId) {
         window.paymentStatusCheckInterval = null;
     }
     
-    // Проверяем статус каждые 5 секунд
-    window.paymentStatusCheckInterval = setInterval(async () => {
+    // Проверяем статус сразу и затем каждые 2 секунды (быстрее для лучшего UX)
+    const checkStatus = async () => {
         const paymentScreen = document.getElementById('payment-screen');
         
         // Если экран закрыт, останавливаем проверку
@@ -2929,23 +2933,30 @@ function startPaymentStatusCheck(transactionId) {
                         window.paymentStatusCheckInterval = null;
                     }
                     
-                    // Скрываем экран оплаты
+                    // Сразу открываем экран "Получение средств" без задержек
+                    // Скрываем экран оплаты синхронно
                     const paymentScreen = document.getElementById('payment-screen');
                     if (paymentScreen) {
                         paymentScreen.style.display = 'none';
                     }
                     
-                    // Открываем экран "Получение средств"
+                    // Открываем экран "Получение средств" сразу
                     openPaymentReceivedScreen(transaction);
                     
-                    // Обновляем уведомления
-                    await checkPendingTransactions();
+                    // Обновляем уведомления асинхронно (не блокируем открытие экрана)
+                    checkPendingTransactions().catch(err => console.error('Ошибка обновления уведомлений:', err));
                 }
             }
         } catch (error) {
             console.error('Ошибка при проверке статуса сделки:', error);
         }
-    }, 5000);
+    };
+    
+    // Проверяем сразу (первая проверка без задержки)
+    checkStatus();
+    
+    // Затем проверяем каждые 2 секунды
+    window.paymentStatusCheckInterval = setInterval(checkStatus, 2000);
 }
 
 // Функция остановки проверки статуса сделки
@@ -2977,7 +2988,7 @@ function openPaymentReceivedScreen(transaction) {
         return;
     }
     
-    // Скрываем другие экраны
+    // Сначала скрываем другие экраны синхронно (для мгновенного переключения)
     if (mainScreen) {
         mainScreen.style.display = 'none';
     }
@@ -2991,7 +3002,7 @@ function openPaymentReceivedScreen(transaction) {
         adDetailsScreen.style.display = 'none';
     }
     
-    // Заполняем сумму
+    // Заполняем данные синхронно перед показом экрана
     const paymentReceivedAmount = document.getElementById('payment-received-amount');
     if (paymentReceivedAmount) {
         paymentReceivedAmount.textContent = `${transaction.fiat_amount.toFixed(2)} RUB`;
@@ -3023,8 +3034,10 @@ function openPaymentReceivedScreen(transaction) {
         paymentReceivedScreen.setAttribute('data-transaction-id', transaction.id);
     }
     
-    // Показываем экран
+    // Показываем экран сразу (без задержек)
     paymentReceivedScreen.style.display = 'block';
+    
+    // Прокручиваем вверх
     window.scrollTo(0, 0);
 }
 
@@ -3883,15 +3896,11 @@ async function displayTransactionDetails(transaction, ad) {
         let sellerBankName = null;
         let sellerPaymentDetails = null;
         
-        // Сначала проверяем реквизиты продавца из транзакции
+        // ВАЖНО: Реквизиты берутся ТОЛЬКО из транзакции в целях безопасности!
+        // Реквизиты не показываются из объявления до создания сделки
         if (transaction.seller_bank_name && transaction.seller_payment_details) {
             sellerBankName = transaction.seller_bank_name;
             sellerPaymentDetails = transaction.seller_payment_details;
-        } 
-        // Если объявление на продажу, реквизиты продавца из объявления
-        else if (ad && ad.type === 'sell' && ad.bank_name && ad.payment_details) {
-            sellerBankName = ad.bank_name;
-            sellerPaymentDetails = ad.payment_details;
         }
         
         if (sellerBankName && sellerPaymentDetails) {
@@ -3910,17 +3919,19 @@ async function displayTransactionDetails(transaction, ad) {
             `;
         }
     } else if (isSeller) {
-        if (ad && ad.type === 'buy' && ad.bank_name && ad.payment_details) {
+        // ВАЖНО: Реквизиты покупателя берутся ТОЛЬКО из транзакции в целях безопасности!
+        // Реквизиты не показываются из объявления до создания сделки
+        if (transaction.buyer_bank_name && transaction.buyer_payment_details) {
             detailsHTML += `
                 <div class="transaction_details_section">
                     <div class="transaction_details_section_title">Реквизиты покупателя:</div>
                     <div class="transaction_details_row">
                         <span class="transaction_details_label">Банк:</span>
-                        <span class="transaction_details_value">${escapeHtml(ad.bank_name)}</span>
+                        <span class="transaction_details_value">${escapeHtml(transaction.buyer_bank_name)}</span>
                     </div>
                     <div class="transaction_details_row">
                         <span class="transaction_details_label">Реквизиты:</span>
-                        <span class="transaction_details_value">${escapeHtml(ad.payment_details)}</span>
+                        <span class="transaction_details_value">${escapeHtml(transaction.buyer_payment_details)}</span>
                     </div>
                 </div>
             `;
