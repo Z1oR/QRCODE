@@ -2162,8 +2162,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert('Введите сумму');
                 return;
             }
-            
-            // Создаем сделку
             try {
                 const userAction = selectedAd.userAction || 'buy';
                 let cryptoAmount, fiatAmount;
@@ -2171,9 +2169,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (userAction === 'buy') {
                     // Режим ввода: RUB или CRYPTO
                     const currencyMode = selectedAd.currencyMode || 'RUB';
-                
                     let fiatAmount, cryptoAmount;
-                
                     if (currencyMode === 'RUB') {
                         // Пользователь вводит сумму ФИАТА
                         fiatAmount = purchaseAmount;
@@ -2244,16 +2240,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         return;
                     }
                 }
-                
-                // Формируем данные транзакции
                 const transactionData = {
                     ad_id: selectedAd.Id,
                     crypto_currency: selectedAd.crypto_currency,
                     crypto_amount: cryptoAmount,
                     fiat_amount: fiatAmount
                 };
-                
-                // Если это продажа, добавляем реквизиты продавца
                 if (userAction === 'sell') {
                     const sellerBankName = document.getElementById('seller-bank-name')?.value.trim();
                     const sellerPaymentDetails = document.getElementById('seller-payment-details')?.value.trim();
@@ -2423,7 +2415,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
-
 // Функция открытия экрана оплаты
 function openPaymentScreen(ad, usdtAmount, userAction = 'buy') {
     const paymentScreen = document.getElementById('payment-screen');
@@ -3177,8 +3168,6 @@ async function displayTransactionDetails(transaction, ad) {
                 <span class="transaction_details_value">${new Date(transaction.created_at).toLocaleString('ru-RU')}</span>
             </div>
     `;
-    
-    // Добавляем реквизиты в зависимости от роли пользователя
     if (isBuyer) {
         // Покупатель видит реквизиты продавца для перевода денег
         let sellerBankName = null;
@@ -3211,7 +3200,6 @@ async function displayTransactionDetails(transaction, ad) {
             `;
         }
     } else if (isSeller) {
-        // Продавец видит реквизиты покупателя (из объявления на покупку)
         if (ad && ad.type === 'buy' && ad.bank_name && ad.payment_details) {
             detailsHTML += `
                 <div class="transaction_details_section">
@@ -3228,8 +3216,6 @@ async function displayTransactionDetails(transaction, ad) {
             `;
         }
     }
-    
-    // Если покупатель перевел деньги, показываем дату
     if (transaction.buyer_paid_at) {
         detailsHTML += `
             <div class="transaction_details_row">
@@ -3238,12 +3224,9 @@ async function displayTransactionDetails(transaction, ad) {
             </div>
         `;
     }
-    
     detailsHTML += `</div>`;
-    
     detailsCard.innerHTML = detailsHTML;
-    
-    // Формируем кнопки действий
+
     let actionsHTML = '';
     
     if (isBuyer && transaction.status === 'pending') {
