@@ -2629,7 +2629,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Открываем экран оплаты
                 // Для покупки передаем сумму в рублях, для продажи - в криптовалюте
                 const amountForPayment = userAction === 'buy' ? fiatAmount : cryptoAmount;
-                openPaymentScreen(selectedAd, amountForPayment, userAction);
+                // Передаем currentTransaction напрямую в функцию для гарантии, что он там доступен
+                openPaymentScreen(selectedAd, amountForPayment, userAction, currentTransaction);
                 
                 // Обновляем уведомления (новая сделка появится у создателя объявления)
                 await checkPendingTransactions();
@@ -2748,7 +2749,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 // Функция открытия экрана оплаты
-function openPaymentScreen(ad, usdtAmount, userAction = 'buy') {
+function openPaymentScreen(ad, usdtAmount, userAction = 'buy', transaction = null) {
     const paymentScreen = document.getElementById('payment-screen');
     const detailsScreen = document.getElementById('ad-details-screen');
     
@@ -2795,9 +2796,14 @@ function openPaymentScreen(ad, usdtAmount, userAction = 'buy') {
     // Название банка (bank_name) можно показывать из объявления - это безопасно
     // Личные реквизиты должны браться из объявления или транзакции, но только после того как сделка создана
     
-    // Проверяем, что транзакция создана (currentTransaction должен быть установлен перед вызовом openPaymentScreen)
-    if (!currentTransaction) {
+    // Используем переданную транзакцию или глобальную переменную
+    const txData = transaction || currentTransaction;
+    
+    // Проверяем, что транзакция создана
+    if (!txData) {
         console.error('Ошибка: транзакция не создана, реквизиты недоступны до создания сделки.');
+        console.error('Параметр transaction:', transaction);
+        console.error('Глобальная currentTransaction:', currentTransaction);
         alert('Ошибка: реквизиты недоступны. Пожалуйста, создайте сделку сначала.');
         const paymentScreen = document.getElementById('payment-screen');
         const adDetailsScreen = document.getElementById('ad-details-screen');
@@ -2813,9 +2819,9 @@ function openPaymentScreen(ad, usdtAmount, userAction = 'buy') {
         // Или в транзакции (currentTransaction.seller_bank_name, currentTransaction.seller_payment_details)
         
         // Сначала пытаемся взять из транзакции (если там есть)
-        if (currentTransaction.seller_bank_name && currentTransaction.seller_payment_details) {
-            bankName = currentTransaction.seller_bank_name;
-            paymentDetails = currentTransaction.seller_payment_details;
+        if (txData.seller_bank_name && txData.seller_payment_details) {
+            bankName = txData.seller_bank_name;
+            paymentDetails = txData.seller_payment_details;
         } 
         // Если нет в транзакции, берем из объявления (они там должны быть для объявлений на продажу)
         else if (ad.bank_name && ad.payment_details) {
@@ -2825,7 +2831,7 @@ function openPaymentScreen(ad, usdtAmount, userAction = 'buy') {
         // Если нет нигде - ошибка
         else {
             console.error('Ошибка: реквизиты продавца не найдены ни в транзакции, ни в объявлении.');
-            console.error('Транзакция:', currentTransaction);
+            console.error('Транзакция:', txData);
             console.error('Объявление:', ad);
             alert('Ошибка: реквизиты продавца недоступны. Пожалуйста, обратитесь в поддержку.');
             const paymentScreen = document.getElementById('payment-screen');
@@ -2838,12 +2844,12 @@ function openPaymentScreen(ad, usdtAmount, userAction = 'buy') {
         // Продажа (userAction === 'sell'): показываем реквизиты покупателя
         // Когда продавец продает, покупатель уже создал объявление на покупку
         // Реквизиты покупателя должны быть в объявлении покупателя (ad.bank_name, ad.payment_details)
-        // Или в транзакции (currentTransaction.buyer_bank_name, currentTransaction.buyer_payment_details)
+        // Или в транзакции (transaction.buyer_bank_name, transaction.buyer_payment_details)
         
         // Сначала пытаемся взять из транзакции (если там есть)
-        if (currentTransaction.buyer_bank_name && currentTransaction.buyer_payment_details) {
-            bankName = currentTransaction.buyer_bank_name;
-            paymentDetails = currentTransaction.buyer_payment_details;
+        if (txData.buyer_bank_name && txData.buyer_payment_details) {
+            bankName = txData.buyer_bank_name;
+            paymentDetails = txData.buyer_payment_details;
         }
         // Если нет в транзакции, берем из объявления покупателя
         else if (ad.bank_name && ad.payment_details) {
@@ -2853,7 +2859,7 @@ function openPaymentScreen(ad, usdtAmount, userAction = 'buy') {
         // Если нет нигде - ошибка
         else {
             console.error('Ошибка: реквизиты покупателя не найдены ни в транзакции, ни в объявлении.');
-            console.error('Транзакция:', currentTransaction);
+            console.error('Транзакция:', txData);
             console.error('Объявление:', ad);
             alert('Ошибка: реквизиты покупателя недоступны. Пожалуйста, обратитесь в поддержку.');
             const paymentScreen = document.getElementById('payment-screen');
@@ -2921,11 +2927,12 @@ function openPaymentScreen(ad, usdtAmount, userAction = 'buy') {
     paymentScreen.style.display = 'block';
     
     // Если это экран ожидания оплаты (продажа), запускаем проверку статуса сделки
-    if (userAction === 'sell' && currentTransaction && currentTransaction.id) {
+    // Используем переданную транзакцию или глобальную переменную
+    if (userAction === 'sell' && txData && txData.id) {
         // Сохраняем ID транзакции для проверки
-        paymentScreen.setAttribute('data-transaction-id', currentTransaction.id);
+        paymentScreen.setAttribute('data-transaction-id', txData.id);
         // Запускаем проверку статуса
-        startPaymentStatusCheck(currentTransaction.id);
+        startPaymentStatusCheck(txData.id);
     }
 }
 
