@@ -1292,6 +1292,7 @@ function initPreviewScreen() {
             let bankName = ''
             let paymentDetails = ''
             
+            // Реквизиты нужны ТОЛЬКО для объявлений на продажу
             if (action === 'sell') {
                 const selectedMethod = document.querySelector('.payment_method_item.selected')
                 if (selectedMethod) {
@@ -1304,6 +1305,10 @@ function initPreviewScreen() {
                     }
                 }
                 paymentDetails = document.querySelector('#payment-details2')?.value || ''
+            } else {
+                // Для покупки реквизиты не нужны
+                bankName = null;
+                paymentDetails = null;
             }
             
             // Валидация данных
@@ -1312,12 +1317,11 @@ function initPreviewScreen() {
                 return
             }
             
-            // Валидация метода оплаты и реквизитов для всех объявлений
-            // Для покупки (action === 'buy'): покупатель указывает свои реквизиты, чтобы продавец мог перевести ему фиат
+            // Валидация метода оплаты и реквизитов ТОЛЬКО для объявлений на продажу
+            // Для покупки (action === 'buy'): реквизиты НЕ нужны, так как покупатель будет переводить фиат продавцу
             // Для продажи (action === 'sell'): продавец указывает свои реквизиты, чтобы покупатель мог перевести ему фиат
-            if (!bankName || !paymentDetails) {
-                const actionText = action === 'buy' ? 'покупку' : 'продажу';
-                alert(`Пожалуйста, выберите метод оплаты и укажите реквизиты для получения платежей.\n\nДля объявления на ${actionText} необходимо указать ваши банковские реквизиты.`);
+            if (action === 'sell' && (!bankName || !paymentDetails)) {
+                alert('Пожалуйста, выберите метод оплаты и укажите реквизиты для получения платежей.\n\nДля объявления на продажу необходимо указать ваши банковские реквизиты.');
                 return;
             }
             
@@ -2602,7 +2606,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (errorData && errorData.detail) {
                             errorMessage = errorData.detail;
                         } else {
-                            const errorText = await response.text().catch(() => 'Неизвестная ошибка');
+                            const errorText = await response.text().catch(( ) => 'Неизвестная ошибка');
                             errorMessage = errorText;
                         }
                     } catch (e) {
@@ -2887,21 +2891,25 @@ function openPaymentScreen(ad, usdtAmount, userAction = 'buy', transaction = nul
         console.log('buyer_bank_name:', txData?.buyer_bank_name);
         console.log('buyer_payment_details:', txData?.buyer_payment_details ? '***ЕСТЬ***' : 'null');
         
+        // Для продажи на объявление покупателя:
+        // - Продавец переводит крипту покупателю
+        // - Покупатель переводит фиат продавцу
+        // Реквизиты покупателя НЕ нужны, так как покупатель сам переводит фиат продавцу
+        // Реквизиты продавца уже переданы при создании транзакции (seller_bank_name, seller_payment_details)
+        // Но для отображения на экране оплаты продавцу нужны реквизиты покупателя, чтобы продавец знал, куда переводить крипту
+        // Однако, если реквизиты покупателя не указаны в объявлении (что нормально), то их просто нет
+        // В этом случае показываем сообщение, что покупатель сам переведет фиат после получения крипты
+        
         if (txData && txData.buyer_bank_name && txData.buyer_payment_details) {
             bankName = txData.buyer_bank_name;
             paymentDetails = txData.buyer_payment_details;
             console.log('Реквизиты покупателя взяты из транзакции');
         } else {
-            console.error('Ошибка: реквизиты покупателя не найдены в транзакции.');
-            console.error('Транзакция:', txData);
-            console.error('Транзакция имеет buyer_bank_name?', txData?.buyer_bank_name);
-            console.error('Транзакция имеет buyer_payment_details?', !!txData?.buyer_payment_details);
-            alert('Ошибка: реквизиты покупателя недоступны. Пожалуйста, обратитесь в поддержку.');
-            const paymentScreen = document.getElementById('payment-screen');
-            const adDetailsScreen = document.getElementById('ad-details-screen');
-            if (paymentScreen) paymentScreen.style.display = 'none';
-            if (adDetailsScreen) adDetailsScreen.style.display = 'block';
-            return;
+            // Реквизиты покупателя не указаны - это нормально для объявлений на покупку
+            // Показываем сообщение, что покупатель сам переведет фиат после получения крипты
+            console.log('Реквизиты покупателя не указаны в объявлении на покупку - это нормально');
+            bankName = 'Покупатель переведет фиат после получения крипты';
+            paymentDetails = 'Реквизиты покупателя не требуются. Покупатель сам переведет фиат на ваши реквизиты после получения криптовалюты.';
         }
     }
     
