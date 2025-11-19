@@ -2854,7 +2854,12 @@ function openPaymentScreen(ad, usdtAmount, userAction = 'buy', transaction = nul
         
         // ВАЖНО: Реквизиты берутся ТОЛЬКО из транзакции!
         // Бэкенд автоматически сохраняет реквизиты из объявления покупателя в транзакцию при создании сделки
-        console.log('txData', txData);
+        // ВАЖНО: Реквизиты берутся ТОЛЬКО из транзакции!
+        // Бэкенд автоматически сохраняет реквизиты из объявления покупателя в транзакцию при создании сделки
+        console.log('txData для продажи:', txData);
+        console.log('buyer_bank_name:', txData?.buyer_bank_name);
+        console.log('buyer_payment_details:', txData?.buyer_payment_details ? '***ЕСТЬ***' : 'null');
+        
         if (txData && txData.buyer_bank_name && txData.buyer_payment_details) {
             bankName = txData.buyer_bank_name;
             paymentDetails = txData.buyer_payment_details;
