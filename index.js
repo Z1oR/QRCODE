@@ -2878,38 +2878,31 @@ function openPaymentScreen(ad, usdtAmount, userAction = 'buy', transaction = nul
             return;
         }
     } else {
-        // Продажа (userAction === 'sell'): показываем реквизиты покупателя
-        // Когда продавец продает, покупатель уже создал объявление на покупку
-        // Реквизиты покупателя должны быть в объявлении покупателя (ad.bank_name, ad.payment_details)
-        // Или в транзакции (txData.buyer_bank_name, txData.buyer_payment_details)
+        // Продажа (userAction === 'sell'): показываем реквизиты продавца
+        // Продавец ввел свои реквизиты при создании сделки (seller-bank-name, seller-payment-details)
+        // Эти реквизиты сохраняются в транзакции как seller_bank_name и seller_payment_details
+        // Продавец должен видеть свои реквизиты на экране "Ожидание оплаты", чтобы знать, куда покупатель должен перевести фиат
         
-        // ВАЖНО: Реквизиты берутся ТОЛЬКО из транзакции!
-        // Бэкенд автоматически сохраняет реквизиты из объявления покупателя в транзакцию при создании сделки
-        // ВАЖНО: Реквизиты берутся ТОЛЬКО из транзакции!
-        // Бэкенд автоматически сохраняет реквизиты из объявления покупателя в транзакцию при создании сделки
         console.log('txData для продажи:', txData);
-        console.log('buyer_bank_name:', txData?.buyer_bank_name);
-        console.log('buyer_payment_details:', txData?.buyer_payment_details ? '***ЕСТЬ***' : 'null');
+        console.log('seller_bank_name:', txData?.seller_bank_name);
+        console.log('seller_payment_details:', txData?.seller_payment_details ? '***ЕСТЬ***' : 'null');
         
-        // Для продажи на объявление покупателя:
-        // - Продавец переводит крипту покупателю
-        // - Покупатель переводит фиат продавцу
-        // Реквизиты покупателя НЕ нужны, так как покупатель сам переводит фиат продавцу
-        // Реквизиты продавца уже переданы при создании транзакции (seller_bank_name, seller_payment_details)
-        // Но для отображения на экране оплаты продавцу нужны реквизиты покупателя, чтобы продавец знал, куда переводить крипту
-        // Однако, если реквизиты покупателя не указаны в объявлении (что нормально), то их просто нет
-        // В этом случае показываем сообщение, что покупатель сам переведет фиат после получения крипты
-        
-        if (txData && txData.buyer_bank_name && txData.buyer_payment_details) {
-            bankName = txData.buyer_bank_name;
-            paymentDetails = txData.buyer_payment_details;
-            console.log('Реквизиты покупателя взяты из транзакции');
+        // Берем реквизиты продавца из транзакции
+        if (txData && txData.seller_bank_name && txData.seller_payment_details) {
+            bankName = txData.seller_bank_name;
+            paymentDetails = txData.seller_payment_details;
+            console.log('Реквизиты продавца взяты из транзакции');
         } else {
-            // Реквизиты покупателя не указаны - это нормально для объявлений на покупку
-            // Показываем сообщение, что покупатель сам переведет фиат после получения крипты
-            console.log('Реквизиты покупателя не указаны в объявлении на покупку - это нормально');
-            bankName = 'Покупатель переведет фиат после получения крипты';
-            paymentDetails = 'Реквизиты покупателя не требуются. Покупатель сам переведет фиат на ваши реквизиты после получения криптовалюты.';
+            console.error('Ошибка: реквизиты продавца не найдены в транзакции.');
+            console.error('Транзакция:', txData);
+            console.error('Транзакция имеет seller_bank_name?', txData?.seller_bank_name);
+            console.error('Транзакция имеет seller_payment_details?', !!txData?.seller_payment_details);
+            alert('Ошибка: реквизиты продавца недоступны. Пожалуйста, обратитесь в поддержку.');
+            const paymentScreen = document.getElementById('payment-screen');
+            const adDetailsScreen = document.getElementById('ad-details-screen');
+            if (paymentScreen) paymentScreen.style.display = 'none';
+            if (adDetailsScreen) adDetailsScreen.style.display = 'block';
+            return;
         }
     }
     
@@ -2924,6 +2917,16 @@ function openPaymentScreen(ad, usdtAmount, userAction = 'buy', transaction = nul
     
     // Очищаем содержимое перед заполнением
     paymentDetailsEl.innerHTML = '';
+    
+    // Обновляем заголовок секции реквизитов в зависимости от действия
+    const paymentDetailsLabel = document.querySelector('.payment_details_label');
+    if (paymentDetailsLabel) {
+        if (userAction === 'buy') {
+            paymentDetailsLabel.textContent = 'Реквизиты для перевода';
+        } else {
+            paymentDetailsLabel.textContent = 'Ваши реквизиты для получения платежа';
+        }
+    }
     
     // Создаем элементы реквизитов (только из транзакции!)
     const bankItem = document.createElement('div');
