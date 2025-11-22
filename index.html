@@ -186,6 +186,21 @@
                     <input type="number" class="purchase_input" id="purchase-amount" placeholder="0.00" step="0.01" min="0">
                     <span class="purchase_currency" id="purchase-currency">RUB</span>
                 </div>
+                
+                <!-- Быстрые кнопки сумм -->
+                <div class="quick_amount_buttons" id="quick-amount-buttons">
+                    <button class="quick_amount_btn" data-percent="25">25%</button>
+                    <button class="quick_amount_btn" data-percent="50">50%</button>
+                    <button class="quick_amount_btn" data-percent="75">75%</button>
+                    <button class="quick_amount_btn" data-percent="100">100%</button>
+                    <button class="quick_amount_btn quick_amount_btn_max" data-percent="max">Макс</button>
+                </div>
+                
+                <!-- Подсказка по лимитам -->
+                <div class="purchase_limits_hint" id="purchase-limits-hint">
+                    <span class="limits_hint_text">Лимиты: <span id="limits-min">0</span> - <span id="limits-max">∞</span></span>
+                </div>
+                
                 <div class="purchase_info" id="purchase-info">
                     <span class="purchase_info_text">Вы получите: <span id="crypto-amount">0.00</span> <span id="crypto-type">BTC</span></span>
                 </div>
