@@ -1579,6 +1579,11 @@ function displayAds(ads, action = 'buy') {
                     </div>
                     <div class="listing__actions">
                         <button class="${buttonClass}" data-ad-id="${ad.Id}" data-ad-data='${JSON.stringify(ad)}' data-action="${action}">${buttonText}</button>
+                        ${action === 'buy' ? `<button class="quick_buy_btn" data-ad-id="${ad.Id}" data-ad-data='${JSON.stringify(ad)}' data-action="${action}" title="Быстрая покупка на минимальную сумму">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                                <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>` : ''}
                     </div>
                 </div>
                 <div class="listing__seller">
@@ -1607,6 +1612,38 @@ function displayAds(ads, action = 'buy') {
         
         listingsContainer.innerHTML += cardHTML
     })
+    
+    // Добавляем обработчики для кнопок быстрой покупки
+    const quickBuyButtons = listingsContainer.querySelectorAll('.quick_buy_btn');
+    quickBuyButtons.forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const adDataStr = btn.getAttribute('data-ad-data');
+            if (!adDataStr) return;
+            
+            try {
+                const ad = JSON.parse(adDataStr);
+                ad.userAction = action;
+                
+                // Открываем экран деталей
+                await openAdDetailsScreen(ad, action);
+                
+                // Устанавливаем минимальную сумму
+                const purchaseAmountInput = document.getElementById('purchase-amount');
+                if (purchaseAmountInput && ad.min_limit) {
+                    const toggleRub = document.getElementById('toggle-rub');
+                    if (toggleRub && toggleRub.classList.contains('active')) {
+                        purchaseAmountInput.value = ad.min_limit.toFixed(2);
+                    } else {
+                        purchaseAmountInput.value = (ad.min_limit / ad.price).toFixed(6);
+                    }
+                    purchaseAmountInput.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            } catch (error) {
+                console.error('Ошибка при быстрой покупке:', error);
+            }
+        });
+    });
 }
 
 function getRandomColor() {
@@ -2164,6 +2201,12 @@ async function openAdDetailsScreen(ad, userAction = 'buy') {
     // Показываем экран деталей
     detailsScreen.style.display = 'block';
     
+    // Инициализируем быстрые кнопки сумм
+    initQuickAmountButtons(ad, userAction);
+    
+    // Обновляем подсказку по лимитам
+    updateLimitsHint(ad, userAction);
+    
     // Обработчик изменения суммы покупки/продажи
     // Используем проверку существования и делегирование для избежания конфликтов
     if (purchaseAmountInput) {
@@ -2215,6 +2258,12 @@ async function openAdDetailsScreen(ad, userAction = 'buy') {
 // currencyMode - 'RUB' или 'CRYPTO' (для покупки), для продажи всегда 'CRYPTO'
 function updatePurchaseInfo(ad, amount, currencyMode = 'RUB') {
     const out = document.getElementById('purchase-info');
+    const purchaseAmountInput = document.getElementById('purchase-amount');
+    
+    // Сбрасываем визуальные индикаторы ошибок
+    if (purchaseAmountInput) {
+        purchaseAmountInput.classList.remove('error', 'success');
+    }
 
     // Если нет данных или сумма <= 0 — очистка
     if (!ad || amount <= 0) {
@@ -2251,6 +2300,7 @@ function updatePurchaseInfo(ad, amount, currencyMode = 'RUB') {
 
         // --- проверки ---
         if (minLimit > 0 && rubAmount < minLimit) {
+            if (purchaseAmountInput) purchaseAmountInput.classList.add('error');
             return out.innerHTML =
                 `<span class="purchase_info_text error">
                     Минимальная сумма: ${minLimit.toFixed(2)} RUB (${(minLimit / ad.price).toFixed(6)} ${ad.crypto_currency})
@@ -2258,6 +2308,7 @@ function updatePurchaseInfo(ad, amount, currencyMode = 'RUB') {
         }
 
         if (maxLimit && rubAmount > maxLimit) {
+            if (purchaseAmountInput) purchaseAmountInput.classList.add('error');
             return out.innerHTML =
                 `<span class="purchase_info_text error">
                     Максимальная сумма: ${maxLimit.toFixed(2)} RUB (${(maxLimit / ad.price).toFixed(6)} ${ad.crypto_currency})
@@ -2265,11 +2316,15 @@ function updatePurchaseInfo(ad, amount, currencyMode = 'RUB') {
         }
 
         if (availableCrypto > 0 && cryptoAmount > availableCrypto) {
+            if (purchaseAmountInput) purchaseAmountInput.classList.add('error');
             return out.innerHTML =
                 `<span class="purchase_info_text error">
                     Доступно только ${availableCrypto.toFixed(6)} ${ad.crypto_currency}
                 </span>`;
         }
+        
+        // Если все проверки пройдены, показываем успешное состояние
+        if (purchaseAmountInput) purchaseAmountInput.classList.add('success');
 
         // --- всё ок ---
         if (currencyMode === 'RUB') {
@@ -2310,6 +2365,7 @@ function updatePurchaseInfo(ad, amount, currencyMode = 'RUB') {
         // Проверка 1: Минимальный лимит сделки (в рублях)
         if (minLimit > 0 && rubAmount < minLimit) {
             const minCrypto = minLimit / ad.price;
+            if (purchaseAmountInput) purchaseAmountInput.classList.add('error');
             return out.innerHTML =
                 `<span class="purchase_info_text error">
                     Минимальная сумма сделки: ${minLimit.toFixed(2)} RUB (${minCrypto.toFixed(6)} ${ad.crypto_currency})
@@ -2319,6 +2375,7 @@ function updatePurchaseInfo(ad, amount, currencyMode = 'RUB') {
         // Проверка 2: Максимальный лимит сделки (в рублях)
         if (maxLimit && rubAmount > maxLimit) {
             const maxCrypto = maxLimit / ad.price;
+            if (purchaseAmountInput) purchaseAmountInput.classList.add('error');
             return out.innerHTML =
                 `<span class="purchase_info_text error">
                     Максимальная сумма сделки: ${maxLimit.toFixed(2)} RUB (${maxCrypto.toFixed(6)} ${ad.crypto_currency})
@@ -2327,6 +2384,7 @@ function updatePurchaseInfo(ad, amount, currencyMode = 'RUB') {
 
         // Проверка 3: Достаточно ли криптовалюты на балансе
         if (cryptoAmount > userCryptoBalance) {
+            if (purchaseAmountInput) purchaseAmountInput.classList.add('error');
             return out.innerHTML =
                 `<span class="purchase_info_text error">
                     Недостаточно средств. Доступно: ${userCryptoBalance.toFixed(6)} ${ad.crypto_currency}
@@ -2336,11 +2394,15 @@ function updatePurchaseInfo(ad, amount, currencyMode = 'RUB') {
         // Проверка 4: Достаточно ли криптовалюты у покупателя (из объявления)
         const buyerAvailableCrypto = ad.crypto_amount || 0;
         if (cryptoAmount > buyerAvailableCrypto) {
+            if (purchaseAmountInput) purchaseAmountInput.classList.add('error');
             return out.innerHTML =
                 `<span class="purchase_info_text error">
                     Покупатель может купить только ${buyerAvailableCrypto.toFixed(6)} ${ad.crypto_currency}
                 </span>`;
         }
+        
+        // Если все проверки пройдены, показываем успешное состояние
+        if (purchaseAmountInput) purchaseAmountInput.classList.add('success');
 
         // Все проверки пройдены - показываем информацию о продаже
         if (currencyMode === 'RUB') {
@@ -2358,6 +2420,144 @@ function updatePurchaseInfo(ad, amount, currencyMode = 'RUB') {
         }
 
         return;
+    }
+}
+
+// Функция инициализации быстрых кнопок сумм
+function initQuickAmountButtons(ad, userAction) {
+    const quickButtons = document.getElementById('quick-amount-buttons');
+    if (!quickButtons) return;
+    
+    // Удаляем старые обработчики
+    const oldButtons = quickButtons.querySelectorAll('.quick_amount_btn');
+    oldButtons.forEach(btn => {
+        btn.replaceWith(btn.cloneNode(true));
+    });
+    
+    // Добавляем новые обработчики
+    const buttons = quickButtons.querySelectorAll('.quick_amount_btn');
+    buttons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const percent = btn.getAttribute('data-percent');
+            setQuickAmount(ad, userAction, percent);
+        });
+    });
+}
+
+// Функция установки быстрой суммы
+function setQuickAmount(ad, userAction, percent) {
+    const purchaseAmountInput = document.getElementById('purchase-amount');
+    if (!purchaseAmountInput) return;
+    
+    const toggleRub = document.getElementById('toggle-rub');
+    const toggleCrypto = document.getElementById('toggle-crypto');
+    const isRubMode = toggleRub && toggleRub.classList.contains('active');
+    const currencyMode = isRubMode ? 'RUB' : 'CRYPTO';
+    
+    let maxAmount;
+    
+    if (userAction === 'buy') {
+        // Для покупки: максимальная сумма = минимальное из (max_limit, доступная крипта * цена)
+        const maxLimit = ad.max_limit || Infinity;
+        const availableInRub = (ad.crypto_amount || 0) * ad.price;
+        maxAmount = Math.min(maxLimit, availableInRub);
+        
+        if (currencyMode === 'RUB') {
+            // В рублях
+            if (percent === 'max') {
+                purchaseAmountInput.value = maxAmount.toFixed(2);
+            } else {
+                purchaseAmountInput.value = (maxAmount * (parseInt(percent) / 100)).toFixed(2);
+            }
+        } else {
+            // В криптовалюте
+            const maxCrypto = Math.min(
+                ad.max_limit ? ad.max_limit / ad.price : Infinity,
+                ad.crypto_amount || 0
+            );
+            if (percent === 'max') {
+                purchaseAmountInput.value = maxCrypto.toFixed(6);
+            } else {
+                purchaseAmountInput.value = (maxCrypto * (parseInt(percent) / 100)).toFixed(6);
+            }
+        }
+    } else {
+        // Для продажи
+        const userBalance = ad.user_crypto !== undefined ? ad.user_crypto : (userData?.balance || 0);
+        const maxLimit = ad.max_limit || Infinity;
+        const maxCryptoFromLimit = maxLimit / ad.price;
+        const maxCrypto = Math.min(userBalance, maxCryptoFromLimit, ad.crypto_amount || 0);
+        
+        if (currencyMode === 'RUB') {
+            // В рублях
+            const maxRub = maxCrypto * ad.price;
+            if (percent === 'max') {
+                purchaseAmountInput.value = maxRub.toFixed(2);
+            } else {
+                purchaseAmountInput.value = (maxRub * (parseInt(percent) / 100)).toFixed(2);
+            }
+        } else {
+            // В криптовалюте
+            if (percent === 'max') {
+                purchaseAmountInput.value = maxCrypto.toFixed(6);
+            } else {
+                purchaseAmountInput.value = (maxCrypto * (parseInt(percent) / 100)).toFixed(6);
+            }
+        }
+    }
+    
+    // Триггерим событие input для обновления информации
+    purchaseAmountInput.dispatchEvent(new Event('input', { bubbles: true }));
+    
+    // Сохраняем последнюю использованную сумму
+    saveLastAmount(percent);
+}
+
+// Функция обновления подсказки по лимитам
+function updateLimitsHint(ad, userAction) {
+    const limitsHint = document.getElementById('purchase-limits-hint');
+    const limitsMin = document.getElementById('limits-min');
+    const limitsMax = document.getElementById('limits-max');
+    
+    if (!limitsHint || !limitsMin || !limitsMax) return;
+    
+    const minLimit = ad.min_limit || 0;
+    const maxLimit = ad.max_limit;
+    
+    limitsMin.textContent = formatNumber(minLimit) + ' RUB';
+    if (maxLimit) {
+        limitsMax.textContent = formatNumber(maxLimit) + ' RUB';
+    } else {
+        limitsMax.textContent = '∞';
+    }
+    
+    // Показываем подсказку
+    limitsHint.style.display = 'block';
+}
+
+// Функция сохранения последней использованной суммы
+function saveLastAmount(percent) {
+    try {
+        const lastAmounts = JSON.parse(localStorage.getItem('lastAmounts') || '[]');
+        if (!lastAmounts.includes(percent)) {
+            lastAmounts.unshift(percent);
+            // Оставляем только последние 5
+            if (lastAmounts.length > 5) {
+                lastAmounts.pop();
+            }
+            localStorage.setItem('lastAmounts', JSON.stringify(lastAmounts));
+        }
+    } catch (e) {
+        console.warn('Не удалось сохранить последнюю сумму:', e);
+    }
+}
+
+// Функция загрузки последних использованных сумм
+function loadLastAmounts() {
+    try {
+        return JSON.parse(localStorage.getItem('lastAmounts') || '[]');
+    } catch (e) {
+        return [];
     }
 }
 
